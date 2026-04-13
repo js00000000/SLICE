@@ -35,3 +35,6 @@ VITE_FIREBASE_APP_ID=your_app_id
 - Remember user identity via LocalStorage
 - Add expenses and see live balances
 - Equal split calculation
+- **Host System**: Claim host status to gain administrative privileges (only one host per group).
+- **Moderation**: Hosts can delete all group expense records.
+- **Confirmation**: Protection against accidental deletions for both individual and group records.

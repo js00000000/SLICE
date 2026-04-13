@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  User as LucideUser, Plus, DollarSign, Receipt, ArrowRight, LogOut, CheckCircle2, X, Edit2, CreditCard, Copy
+  User as LucideUser, Plus, DollarSign, Receipt, ArrowRight, LogOut, CheckCircle2, X, Edit2, CreditCard, Copy, Shield
 } from 'lucide-react';
 import { 
   onAuthStateChanged, 
@@ -29,6 +29,7 @@ interface Member {
   updatedAt?: Timestamp;
   bankCode?: string;
   bankAccount?: string;
+  isHost?: boolean;
 }
 
 interface Expense {
@@ -169,12 +170,41 @@ export default function App() {
 
   const handleUpdateProfile = async (data: Partial<Member>) => {
     if (!user || !currentMemberId) return;
-    const memberRef = doc(db, 'members', currentMemberId);
-    await updateDoc(memberRef, {
-      ...data,
-      updatedAt: serverTimestamp()
-    });
-    setIsProfileModalOpen(false);
+
+    try {
+      // 如果新資料包含成為主持人，則先移除現有的主持人
+      if (data.isHost) {
+        const currentHost = members.find(m => m.isHost && m.id !== currentMemberId);
+        if (currentHost) {
+          await updateDoc(doc(db, 'members', currentHost.id), {
+            isHost: false,
+            updatedAt: serverTimestamp()
+          });
+        }
+      }
+
+      const memberRef = doc(db, 'members', currentMemberId);
+      await updateDoc(memberRef, {
+        ...data,
+        updatedAt: serverTimestamp()
+      });
+      setIsProfileModalOpen(false);
+    } catch (error) {
+      console.error("Update profile error:", error);
+    }
+  };
+
+  const handleDeleteAllExpenses = async () => {
+    if (!user) return;
+    try {
+      // 這裡簡單地逐一刪除，實務上如果資料量大建議用 WriteBatch
+      for (const exp of expenses) {
+        await deleteDoc(doc(db, 'expenses', exp.id));
+      }
+      setIsProfileModalOpen(false);
+    } catch (error) {
+      console.error("Delete all expenses error:", error);
+    }
   };
 
   const handleAddExpense = async (expenseData: Omit<Expense, 'id' | 'createdBy' | 'createdAt'>) => {
@@ -340,12 +370,13 @@ export default function App() {
         />
       )}
 
-      {isProfileModalOpen && (
-        <ProfileModal 
-          currentMember={currentMember} 
+      {isProfileModalOpen && currentMember && (
+        <ProfileModal
+          currentMember={currentMember}
           onClose={() => setIsProfileModalOpen(false)}
           onSave={handleUpdateProfile}
           onDelete={handleDeleteMember}
+          onDeleteAllExpenses={handleDeleteAllExpenses}
         />
       )}
     </div>
@@ -809,11 +840,12 @@ function ExpenseModal({ members, currentMemberId, initialData, onClose, onSave }
   );
 }
 
-function ProfileModal({ currentMember, onClose, onSave, onDelete }: { 
+function ProfileModal({ currentMember, onClose, onSave, onDelete, onDeleteAllExpenses }: { 
   currentMember: Member, 
   onClose: () => void, 
   onSave: (data: Partial<Member>) => void,
-  onDelete: () => void
+  onDelete: () => void,
+  onDeleteAllExpenses: () => void
 }) {
   const [name, setName] = useState(currentMember.name || '');
   const [bankCode, setBankCode] = useState(currentMember.bankCode || '');
@@ -834,12 +866,31 @@ function ProfileModal({ currentMember, onClose, onSave, onDelete }: {
     }
   };
 
+  const handleClaimHost = () => {
+    if (window.confirm('確定要成為主持人嗎？這將賦予你最高權限。')) {
+      onSave({ isHost: true });
+    }
+  };
+
+  const handleDeleteAll = () => {
+    if (window.confirm('確定要刪除「所有」支出紀錄嗎？此操作不可復原。')) {
+      onDeleteAllExpenses();
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
       <div className="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between px-5 py-4 border-b">
-          <h2 className="text-lg font-semibold text-gray-900">個人設定</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-gray-900">個人設定</h2>
+            {currentMember.isHost && (
+              <span className="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                <Shield className="w-2.5 h-2.5" /> 主持人
+              </span>
+            )}
+          </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">
             <X className="w-5 h-5" />
           </button>
@@ -887,8 +938,23 @@ function ProfileModal({ currentMember, onClose, onSave, onDelete }: {
               className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors">
               儲存設定
             </button>
+            
+            {currentMember.isHost ? (
+              <button type="button" onClick={handleDeleteAll}
+                className="w-full py-3 bg-red-50 text-red-600 border border-red-100 rounded-xl font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2">
+                <DollarSign className="w-4 h-4" />
+                刪除所有支出紀錄
+              </button>
+            ) : (
+              <button type="button" onClick={handleClaimHost}
+                className="w-full py-3 bg-amber-50 text-amber-700 border border-amber-100 rounded-xl font-medium hover:bg-amber-100 transition-colors flex items-center justify-center gap-2">
+                <Shield className="w-4 h-4" />
+                成為主持人 (最高權限)
+              </button>
+            )}
+
             <button type="button" onClick={handleDelete}
-              className="w-full py-3 bg-white text-red-600 border border-red-200 rounded-xl font-medium hover:bg-red-50 transition-colors flex items-center justify-center gap-2">
+              className="w-full py-3 bg-white text-gray-400 border border-gray-100 rounded-xl font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
               <X className="w-4 h-4" />
               刪除此成員身分
             </button>
