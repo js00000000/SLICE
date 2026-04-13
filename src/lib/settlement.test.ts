@@ -123,4 +123,81 @@ describe('Settlement Logic', () => {
 
     expect(settlements.reduce((sum, s) => sum + s.amount, 0)).toBeCloseTo(66.67, 1);
   });
+
+  it('should handle cases where the payer is not in the splitAmong list', () => {
+    const members: Member[] = [
+      { id: '1', name: 'Alice' },
+      { id: '2', name: 'Bob' },
+      { id: '3', name: 'Charlie' },
+    ];
+    const expenses: Expense[] = [
+      {
+        id: 'e1',
+        description: 'Alice treats Bob and Charlie',
+        amount: 100,
+        paidBy: '1',
+        splitAmong: ['2', '3'], // Alice is NOT in this list
+      },
+    ];
+
+    const { balances, settlements } = calculateBalancesAndSettlements(members, expenses);
+
+    // Alice: +100
+    // Bob: -50
+    // Charlie: -50
+    expect(balances['1']).toBe(100);
+    expect(balances['2']).toBe(-50);
+    expect(balances['3']).toBe(-50);
+    expect(settlements).toHaveLength(2);
+  });
+
+  it('should not crash or produce settlements for expenses with no splitters', () => {
+    const members: Member[] = [
+      { id: '1', name: 'Alice' },
+    ];
+    const expenses: Expense[] = [
+      {
+        id: 'e1',
+        description: 'Empty split',
+        amount: 100,
+        paidBy: '1',
+        splitAmong: [],
+      },
+    ];
+
+    const { balances, settlements } = calculateBalancesAndSettlements(members, expenses);
+
+    expect(balances['1']).toBe(100); // She paid, but nobody owes her anything because nobody was in the split
+    expect(settlements).toHaveLength(0);
+  });
+
+  it('should handle complex debt cycles and minimize transactions', () => {
+    // This test ensures the greedy algorithm correctly settles multiple overlapping debts
+    const members: Member[] = [
+      { id: '1', name: 'A' },
+      { id: '2', name: 'B' },
+      { id: '3', name: 'C' },
+      { id: '4', name: 'D' },
+    ];
+    const expenses: Expense[] = [
+      { id: 'e1', amount: 100, paidBy: '1', splitAmong: ['2'] }, // B owes A 100
+      { id: 'e2', amount: 100, paidBy: '2', splitAmong: ['3'] }, // C owes B 100
+      { id: 'e3', amount: 100, paidBy: '3', splitAmong: ['4'] }, // D owes C 100
+    ];
+
+    const { balances, settlements } = calculateBalancesAndSettlements(members, expenses);
+
+    // A: +100
+    // B: -100 + 100 = 0
+    // C: -100 + 100 = 0
+    // D: -100
+    expect(balances['1']).toBe(100);
+    expect(balances['2']).toBe(0);
+    expect(balances['3']).toBe(0);
+    expect(balances['4']).toBe(-100);
+
+    // Should result in only ONE transaction: D pays A 100
+    expect(settlements).toHaveLength(1);
+    expect(settlements[0]).toEqual({ from: '4', to: '1', amount: 100 });
+  });
 });
