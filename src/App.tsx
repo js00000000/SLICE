@@ -387,7 +387,6 @@ export default function App() {
           currentMember={currentMember}
           onClose={() => setIsProfileModalOpen(false)}
           onSave={handleUpdateProfile}
-          onDelete={handleDeleteMember}
           onDeleteAllExpenses={handleDeleteAllExpenses}
         />
       )}
@@ -845,11 +844,10 @@ function ExpenseModal({ members, currentMemberId, initialData, onClose, onSave }
   );
 }
 
-function ProfileModal({ currentMember, onClose, onSave, onDelete, onDeleteAllExpenses }: { 
+function ProfileModal({ currentMember, onClose, onSave, onDeleteAllExpenses }: { 
   currentMember: Member, 
   onClose: () => void, 
   onSave: (data: Partial<Member>) => void,
-  onDelete: () => void,
   onDeleteAllExpenses: () => void
 }) {
   const [name, setName] = useState(currentMember.name || '');
@@ -863,12 +861,6 @@ function ProfileModal({ currentMember, onClose, onSave, onDelete, onDeleteAllExp
       bankCode: bankCode.trim(),
       bankAccount: bankAccount.trim()
     });
-  };
-
-  const handleDelete = () => {
-    if (window.confirm('確定要刪除此成員嗎？這將會從群組中移除你的身分。')) {
-      onDelete();
-    }
   };
 
   const handleClaimHost = () => {
@@ -963,12 +955,6 @@ function ProfileModal({ currentMember, onClose, onSave, onDelete, onDeleteAllExp
                 成為主持人 (最高權限)
               </button>
             )}
-
-            <button type="button" onClick={handleDelete}
-              className="w-full py-3 bg-white text-gray-400 border border-gray-100 rounded-xl font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
-              <X className="w-4 h-4" />
-              刪除此成員身分
-            </button>
           </div>
         </form>
       </div>
