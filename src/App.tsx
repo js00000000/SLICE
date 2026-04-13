@@ -651,6 +651,12 @@ function ExpensesList({ expenses, members, onEdit, onDelete }: {
   onDelete: (exp: Expense) => void
 }) {
   const getMemberName = (id: string) => members.find(m => m.id === id)?.name || '未知';
+  
+  const formatDate = (timestamp?: Timestamp) => {
+    if (!timestamp) return '';
+    const date = timestamp.toDate();
+    return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+  };
 
   if (expenses.length === 0) {
     return (
@@ -671,8 +677,13 @@ function ExpensesList({ expenses, members, onEdit, onDelete }: {
         {expenses.map(exp => {
           return (
             <div key={exp.id} className="p-5 flex items-start justify-between group">
-              <div>
-                <h3 className="font-medium text-gray-900">{exp.description}</h3>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-medium text-gray-900 truncate">{exp.description}</h3>
+                  <span className="text-[10px] text-gray-400 whitespace-nowrap">
+                    {formatDate(exp.createdAt)}
+                  </span>
+                </div>
                 <div className="text-sm text-gray-500 mt-1 space-y-0.5">
                   <p>
                     <span className="font-medium">{getMemberName(exp.paidBy)}</span> 先付了
