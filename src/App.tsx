@@ -779,14 +779,14 @@ function ExpensesList({ expenses, members, onEdit, onDelete, filterPaidBy, onFil
         
         {/* Filter Selection */}
         <div className="flex items-center gap-2">
-          <label htmlFor="payer-filter" className="text-xs text-gray-500 hidden sm:inline">付款人:</label>
+          <label htmlFor="payer-filter" className="text-xs text-gray-500">付款人:</label>
           <select
             id="payer-filter"
             value={filterPaidBy || ''}
             onChange={(e) => onFilterChange(e.target.value || null)}
             className="text-xs bg-white border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-indigo-600 outline-none"
           >
-            <option value="">全部支出</option>
+            <option value="">全部</option>
             {members.map(member => (
               <option key={member.id} value={member.id}>
                 {member.name}
