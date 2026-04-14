@@ -4,6 +4,7 @@ import {
   onAuthStateChanged,
   signInAnonymously,
   signInWithPopup,
+  linkWithPopup,
   signOut,
 } from 'firebase/auth';
 import type { User } from 'firebase/auth';
@@ -44,7 +45,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const handleGoogleLogin = async () => {
     try {
       setAuthLoading(true);
-      await signInWithPopup(auth, googleProvider);
+      if (auth.currentUser && auth.currentUser.isAnonymous) {
+        try {
+          await linkWithPopup(auth.currentUser, googleProvider);
+        } catch (error: any) {
+          // If the credential is already in use by another user, sign in directly
+          if (error.code === 'auth/credential-already-in-use') {
+            console.log('Google account already exists, switching to sign in...');
+            await signInWithPopup(auth, googleProvider);
+          } else {
+            throw error; // Re-throw other errors
+          }
+        }
+      } else {
+        await signInWithPopup(auth, googleProvider);
+      }
     } catch (error: any) {
       console.error("Google login error:", error);
       setAuthError(error.message);
