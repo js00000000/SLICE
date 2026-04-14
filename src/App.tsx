@@ -7,6 +7,7 @@ import { GroupSelectionPage } from './pages/GroupSelectionPage';
 import { MemberSelectionPage } from './pages/MemberSelectionPage';
 import { GroupDashboard } from './pages/GroupDashboard';
 import { MemberManagementPage } from './pages/MemberManagementPage';
+import { JoinGroupPage } from './pages/JoinGroupPage';
 
 // Import Hooks
 import { useAuth } from './contexts/AuthContext';
@@ -32,6 +33,8 @@ export default function App() {
       } />
 
       <Route path="/group/:groupId/members" element={<MemberManagementPage />} />
+
+      <Route path="/join/:groupId" element={<JoinGroupPage />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

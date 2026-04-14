@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { 
-  Receipt, Copy, User as LucideUser, LogOut, Plus 
+  Receipt, Copy, User as LucideUser, LogOut, Plus, Share2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { Expense } from '../types';
@@ -59,15 +59,27 @@ export function GroupDashboard() {
               <Receipt className="w-5 h-5" />
               <h1 className="font-bold text-base leading-tight">{currentGroup?.name || '群組分帳'}</h1>
             </div>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(groupId);
-                alert('已複製群組 ID');
-              }}
-              className="text-[10px] text-gray-400 flex items-center gap-1 hover:text-indigo-500 transition-colors mt-0.5"
-            >
-              ID: {groupId.slice(0, 8)}... <Copy className="w-2 h-2" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(groupId);
+                  alert('已複製群組 ID');
+                }}
+                className="text-[10px] text-gray-400 flex items-center gap-1 hover:text-indigo-500 transition-colors mt-0.5"
+              >
+                ID: {groupId.slice(0, 8)}... <Copy className="w-2 h-2" />
+              </button>
+              <button
+                onClick={() => {
+                  const url = `${window.location.origin}/join/${groupId}`;
+                  navigator.clipboard.writeText(url);
+                  alert('已複製分享連結');
+                }}
+                className="text-[10px] text-gray-400 flex items-center gap-1 hover:text-indigo-500 transition-colors mt-0.5 border-l border-gray-200 pl-2"
+              >
+                <Share2 className="w-2 h-2" /> 分享連結
+              </button>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <button
