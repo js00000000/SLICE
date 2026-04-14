@@ -4,7 +4,10 @@ import {
   onAuthStateChanged,
   signInAnonymously,
   signInWithPopup,
+  signInWithRedirect,
   linkWithPopup,
+  linkWithRedirect,
+  getRedirectResult,
   signOut,
 } from 'firebase/auth';
 import type { User } from 'firebase/auth';
@@ -26,6 +29,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Handle redirect result (for cases where popup was blocked)
+    getRedirectResult(auth).catch((error) => {
+      console.error("Redirect error catch:", error);
+      if (error.code === 'auth/credential-already-in-use') {
+        // If they tried to link a Google account that already exists via redirect, 
+        // fallback to normal sign-in via redirect
+        signInWithRedirect(auth, googleProvider);
+      } else {
+        setAuthError(error.message);
+      }
+    });
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
@@ -49,16 +64,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           await linkWithPopup(auth.currentUser, googleProvider);
         } catch (error: any) {
-          // If the credential is already in use by another user, sign in directly
-          if (error.code === 'auth/credential-already-in-use') {
-            console.log('Google account already exists, switching to sign in...');
-            await signInWithPopup(auth, googleProvider);
+          if (error.code === 'auth/popup-blocked') {
+            await linkWithRedirect(auth.currentUser, googleProvider);
+          } else if (error.code === 'auth/credential-already-in-use') {
+            // Google account already exists, try to sign in normally
+            try {
+              await signInWithPopup(auth, googleProvider);
+            } catch (popupError: any) {
+              if (popupError.code === 'auth/popup-blocked') {
+                await signInWithRedirect(auth, googleProvider);
+              } else {
+                throw popupError;
+              }
+            }
           } else {
-            throw error; // Re-throw other errors
+            throw error;
           }
         }
       } else {
-        await signInWithPopup(auth, googleProvider);
+        try {
+          await signInWithPopup(auth, googleProvider);
+        } catch (error: any) {
+          if (error.code === 'auth/popup-blocked') {
+            await signInWithRedirect(auth, googleProvider);
+          } else {
+            throw error;
+          }
+        }
       }
     } catch (error: any) {
       console.error("Google login error:", error);
