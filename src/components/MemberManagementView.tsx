@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ArrowLeft, Users, Shield, X, Plus, Copy, Trash2 } from 'lucide-react';
+import { ArrowLeft, Users, Shield, X, Plus, Copy, Trash2, Share2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { Member, Group, Expense } from '../types';
 import { calculateBalancesAndSettlements } from '../lib/settlement';
@@ -187,10 +187,26 @@ export function MemberManagementView({
                     toast.success('已複製群組 ID');
                   }}
                   className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+                  title="複製 ID"
                 >
                   <Copy className="w-4 h-4" />
                 </button>
               </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <span className="text-sm text-gray-500">分享群組</span>
+              <button
+                onClick={() => {
+                  const url = `${window.location.origin}/join/${currentGroup?.id}`;
+                  navigator.clipboard.writeText(url);
+                  toast.success('已複製分享連結');
+                }}
+                className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-medium hover:bg-indigo-100 transition-colors"
+              >
+                <Share2 className="w-4 h-4" />
+                複製邀請連結
+              </button>
             </div>
           </div>
         </section>
