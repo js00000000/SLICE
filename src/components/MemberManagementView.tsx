@@ -112,8 +112,8 @@ export function MemberManagementView({
                         onClick={() => handleDeleteMemberByHost(m)}
                         disabled={!canDelete}
                         className={`p-2 rounded-lg transition-colors ${canDelete
-                            ? 'text-red-500 hover:bg-red-50'
-                            : 'text-gray-300 cursor-not-allowed'
+                          ? 'text-red-500 hover:bg-red-50'
+                          : 'text-gray-300 cursor-not-allowed'
                           }`}
                         title={!canDelete ? "餘額未結清" : "刪除成員"}
                       >
@@ -224,7 +224,7 @@ export function MemberManagementView({
               <button type="button" onClick={onDeleteGroup}
                 className="w-full py-3 bg-red-50 text-red-600 border border-red-200 rounded-xl font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2">
                 <Trash2 className="w-4 h-4" />
-                立即刪除此群組
+                刪除此群組
               </button>
             </div>
           </section>
