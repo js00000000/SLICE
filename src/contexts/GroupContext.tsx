@@ -120,9 +120,13 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       if (docSnap.exists()) {
         setCurrentGroup({ id: docSnap.id, ...docSnap.data() } as Group);
       } else {
-        setGroupId(null);
-        navigate('/');
+        // Doc doesn't exist (deleted), just navigate away. 
+        // The sync effect will handle clearing groupId.
+        navigate('/', { replace: true });
       }
+    }, (error) => {
+      console.error("Group fetch error:", error);
+      navigate('/', { replace: true });
     });
 
     const membersRef = collection(db, 'groups', groupId, 'members');
@@ -196,7 +200,6 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     if (!user) return;
     try {
       await setDoc(doc(db, 'users', user.uid), { lastGroupId: null }, { merge: true });
-      setGroupId(null); setCurrentGroup(null); setMembers([]); setExpenses([]);
       navigate('/');
     } catch (error) { console.error("Leave group error:", error); }
   };
@@ -215,12 +218,20 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     if (isConfirmed) {
       setIsLoading(true);
       try {
-        for (const exp of expenses) await deleteDoc(doc(db, 'groups', groupId, 'expenses', exp.id));
-        for (const m of members) await deleteDoc(doc(db, 'groups', groupId, 'members', m.id));
-        await deleteDoc(doc(db, 'groups', groupId));
-        await setDoc(doc(db, 'users', user.uid), { lastGroupId: null, joinedGroupIds: arrayRemove(groupId) }, { merge: true });
-        navigate('/');
-      } catch (error) { console.error("Delete group error:", error); } finally { setIsLoading(false); }
+        const gid = groupId;
+        // Batch operations would be better, but keeping the current sequential approach for now
+        for (const exp of expenses) await deleteDoc(doc(db, 'groups', gid, 'expenses', exp.id));
+        for (const m of members) await deleteDoc(doc(db, 'groups', gid, 'members', m.id));
+        await deleteDoc(doc(db, 'groups', gid));
+        await setDoc(doc(db, 'users', user.uid), { lastGroupId: null, joinedGroupIds: arrayRemove(gid) }, { merge: true });
+        
+        navigate('/', { replace: true });
+      } catch (error) { 
+        console.error("Delete group error:", error); 
+        toast.error("刪除群組失敗");
+      } finally { 
+        setIsLoading(false); 
+      }
     }
   };
 
