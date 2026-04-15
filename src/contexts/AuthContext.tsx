@@ -31,6 +31,7 @@ interface AuthContextType {
   authLoading: boolean;
   authError: string | null;
   handleGoogleLogin: () => Promise<void>;
+  handleGuestLogin: () => Promise<void>;
   handleLogout: () => Promise<void>;
 }
 
@@ -56,17 +57,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-        setAuthError(null);
-        setAuthLoading(false);
-      } else {
-        signInAnonymously(auth).catch((error) => {
-          console.error("Auth error:", error);
-          setAuthError(error.message);
-          setAuthLoading(false);
-        });
-      }
+      setUser(currentUser);
+      setAuthError(null);
+      setAuthLoading(false);
     });
     return () => unsubscribe();
   }, []);
@@ -101,6 +94,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error: any) {
       console.error("Google login error:", error);
+      setAuthError(error.message);
+      setAuthLoading(false);
+    }
+  };
+
+  const handleGuestLogin = async () => {
+    try {
+      setAuthLoading(true);
+      await signInAnonymously(auth);
+    } catch (error: any) {
+      console.error("Guest login error:", error);
       setAuthError(error.message);
       setAuthLoading(false);
     }
@@ -200,7 +204,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, authLoading, authError, handleGoogleLogin, handleLogout }}>
+    <AuthContext.Provider value={{ user, authLoading, authError, handleGoogleLogin, handleGuestLogin, handleLogout }}>
       {children}
       {showAbandonGuestConfirm && (
         <AbandonGuestConfirmationModal

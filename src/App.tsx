@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthErrorView } from './components/AuthErrorView';
 import { LoadingView } from './components/LoadingView';
+import { LoginView } from './components/LoginView';
 
 // Import Pages
 import { GroupSelectionPage } from './pages/GroupSelectionPage';
@@ -14,11 +15,13 @@ import { useAuth } from './contexts/AuthContext';
 import { useGroup } from './contexts/GroupContext';
 
 export default function App() {
-  const { authLoading, authError } = useAuth();
+  const { user, authLoading, authError, handleGoogleLogin, handleGuestLogin } = useAuth();
   const { currentMemberId, currentMember, isLoading } = useGroup();
 
   if (authError) return <AuthErrorView error={authError} />;
-  if (authLoading || isLoading) return <LoadingView />;
+  if (authLoading) return <LoadingView />;
+  if (!user) return <LoginView onGoogleLogin={handleGoogleLogin} onGuestLogin={handleGuestLogin} />;
+  if (isLoading) return <LoadingView />;
 
   return (
     <Routes>
