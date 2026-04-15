@@ -96,18 +96,16 @@ export function ProfileModal({
             </button>
           </div>
 
-          {currentMember.isHost && (
-            <div className="pt-4 mt-2 border-t">
-              <button 
-                type="button" 
-                onClick={onManageMembers}
-                className="w-full py-3 bg-white text-indigo-600 border border-indigo-200 rounded-xl font-medium hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2"
-              >
-                <Users className="w-4 h-4" />
-                成員與群組管理
-              </button>
-            </div>
-          )}
+          <div className="pt-4 mt-2 border-t">
+            <button 
+              type="button" 
+              onClick={onManageMembers}
+              className="w-full py-3 bg-white text-indigo-600 border border-indigo-200 rounded-xl font-medium hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2"
+            >
+              <Users className="w-4 h-4" />
+              {currentMember.isHost ? '成員與群組管理' : '查看所有成員'}
+            </button>
+          </div>
         </form>
       </div>
     </div>

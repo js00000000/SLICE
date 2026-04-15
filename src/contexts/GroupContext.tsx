@@ -252,6 +252,11 @@ export function GroupProvider({ children }: { children: ReactNode }) {
 
   const handleCreateMemberByHost = async (name: string) => {
     if (!user || !groupId || !name.trim()) return;
+    const currentMember = members.find(m => m.userId === user.uid);
+    if (!currentMember?.isHost) {
+      toast.error("只有主持人可以新增成員");
+      return;
+    }
     // By host, we don't bind a userId so anyone can claim it later
     await addDoc(collection(db, 'groups', groupId, 'members'), { 
       name: name.trim(), 
@@ -262,6 +267,11 @@ export function GroupProvider({ children }: { children: ReactNode }) {
 
   const handleDeleteMember = async (memberId: string) => {
     if (!user || !groupId) return;
+    const currentMember = members.find(m => m.userId === user.uid);
+    if (!currentMember?.isHost) {
+      toast.error("只有主持人可以刪除成員");
+      return;
+    }
     await deleteDoc(doc(db, 'groups', groupId, 'members', memberId));
   };
 
@@ -273,6 +283,11 @@ export function GroupProvider({ children }: { children: ReactNode }) {
 
   const handleUpdateGroupName = async (newName: string) => {
     if (!user || !groupId || !newName.trim()) return;
+    const currentMember = members.find(m => m.userId === user.uid);
+    if (!currentMember?.isHost) {
+      toast.error("只有主持人可以更改群組名稱");
+      return;
+    }
     await updateDoc(doc(db, 'groups', groupId), { name: newName.trim(), updatedAt: serverTimestamp() });
   };
 
