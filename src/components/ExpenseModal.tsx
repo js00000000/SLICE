@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, CheckCircle2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { Member, Expense } from '../types';
 
 interface ExpenseModalProps {
@@ -11,6 +12,7 @@ interface ExpenseModalProps {
 }
 
 export function ExpenseModal({ members, currentMemberId, initialData, onClose, onSave }: ExpenseModalProps) {
+  const { t, i18n } = useTranslation();
   const [description, setDescription] = useState(initialData ? initialData.description : '');
   const [amount, setAmount] = useState(initialData ? initialData.amount.toString() : '');
   const [paidBy, setPaidBy] = useState(initialData ? initialData.paidBy : currentMemberId);
@@ -42,7 +44,7 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
       className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
       <div className="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between px-5 py-4 border-b">
-          <h2 className="text-lg font-semibold text-gray-900">{isEditing ? '編輯支出' : '新增支出'}</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{isEditing ? t('expenses.edit') : t('expenses.add_new')}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">
             <X className="w-5 h-5" />
           </button>
@@ -51,9 +53,9 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
         <form onSubmit={handleSubmit} className="p-5 overflow-y-auto space-y-5">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">用途</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('expenses.description')}</label>
               <input type="text" value={description} onChange={(e) => setDescription(e.target.value)}
-                placeholder="例如：晚餐、計程車"
+                placeholder={i18n.language.startsWith('zh') ? "例如：晚餐、計程車" : "e.g. Dinner, Taxi"}
                 className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600
                 focus:border-transparent outline-none"
                 required
@@ -61,7 +63,7 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">金額</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('expenses.amount')}</label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">$</span>
                 <input type="number" min="0" step="any" value={amount} onChange={(e) =>
@@ -75,7 +77,7 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">付款人 (誰先墊錢)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('expenses.paid_by')}</label>
               <select value={paidBy} onChange={(e) => setPaidBy(e.target.value)}
                 className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600
                 focus:border-transparent outline-none bg-white"
@@ -88,12 +90,12 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">參與分帳的成員</label>
+                <label className="block text-sm font-medium text-gray-700">{t('expenses.split_among')}</label>
                 <button type="button" onClick={() => setSplitAmong(isAllSelected ? [] : members.map(m =>
                   m.id))}
                   className="text-xs text-indigo-600 font-medium hover:text-indigo-800"
                 >
-                  {isAllSelected ? '全不選' : '全選'}
+                  {isAllSelected ? (i18n.language.startsWith('zh') ? '全不選' : 'Unselect All') : t('expenses.select_all')}
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -119,7 +121,7 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
                 })}
               </div>
               {splitAmong.length === 0 && (
-                <p className="text-red-500 text-xs mt-1">請至少選擇一位分帳成員</p>
+                <p className="text-red-500 text-xs mt-1">{i18n.language.startsWith('zh') ? '請至少選擇一位分帳成員' : 'Please select at least one member'}</p>
               )}
             </div>
           </div>
@@ -127,7 +129,7 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
           <div className="pt-4 mt-2 border-t">
             <button type="submit" disabled={!description || !amount || splitAmong.length === 0}
               className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium disabled:opacity-50 hover:bg-indigo-700 transition-colors">
-              {isEditing ? '儲存修改' : '確認新增'}
+              {isEditing ? t('common.save') : t('common.confirm')}
             </button>
           </div>
         </form>

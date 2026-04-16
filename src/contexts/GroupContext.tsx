@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import {
   collection,
@@ -53,6 +54,7 @@ interface GroupContextType {
 const GroupContext = createContext<GroupContextType | undefined>(undefined);
 
 export function GroupProvider({ children }: { children: ReactNode }) {
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -166,13 +168,13 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       const gid = groupRef.id;
       await setDoc(groupRef, { name: name.trim(), createdBy: user.uid, createdAt: serverTimestamp() });
       await setDoc(doc(db, 'groups', gid, 'members', doc(collection(db, 'groups', gid, 'members')).id), {
-        name: user.displayName || '主持人', userId: user.uid, isHost: true, createdAt: serverTimestamp()
+        name: user.displayName || (i18n.language.startsWith('zh') ? '主持人' : 'Host'), userId: user.uid, isHost: true, createdAt: serverTimestamp()
       });
       await setDoc(doc(db, 'users', user.uid), { lastGroupId: gid, joinedGroupIds: arrayUnion(gid) }, { merge: true });
       navigate(`/group/${gid}`);
     } catch (error) { 
       console.error("Create group error:", error); 
-      toast.error("建立群組失敗");
+      toast.error(t('common.error'));
       setIsLoading(false); 
     }
   };
@@ -186,12 +188,12 @@ export function GroupProvider({ children }: { children: ReactNode }) {
         await setDoc(doc(db, 'users', user.uid), { lastGroupId: gid, joinedGroupIds: arrayUnion(gid) }, { merge: true });
         navigate(`/group/${gid}`);
       } else { 
-        toast.error("找不到此群組 ID，請確認後再試。"); 
+        toast.error(i18n.language.startsWith('zh') ? "找不到此群組 ID，請確認後再試。" : "Group ID not found. Please check and try again."); 
         setIsLoading(false); 
       }
     } catch (error) { 
       console.error("Join group error:", error); 
-      toast.error("加入群組失敗");
+      toast.error(t('common.error'));
       setIsLoading(false); 
     }
   };
@@ -209,10 +211,10 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     const currentMember = members.find(m => m.id === currentMemberId);
     if (!currentMember?.isHost) return;
     
-    const isConfirmed = await confirm(`確定要永久刪除群組「${currentGroup?.name}」嗎？`, {
-      title: '刪除群組',
-      confirmLabel: '確定刪除',
-      cancelLabel: '取消'
+    const isConfirmed = await confirm(t('groups.delete_group_msg', { name: currentGroup?.name }), {
+      title: t('groups.delete_group'),
+      confirmLabel: t('common.delete'),
+      cancelLabel: t('common.cancel')
     });
 
     if (isConfirmed) {
@@ -228,7 +230,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
         navigate('/', { replace: true });
       } catch (error) { 
         console.error("Delete group error:", error); 
-        toast.error("刪除群組失敗");
+        toast.error(t('common.error'));
       } finally { 
         setIsLoading(false); 
       }
@@ -239,7 +241,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     if (!user || !groupId) return;
     const member = members.find(m => m.id === memberId);
     if (member && member.userId && member.userId !== user.uid) { 
-      toast.error("此成員已被其他使用者綁定。"); 
+      toast.error(t('members.claimed')); 
       return; 
     }
     await updateDoc(doc(db, 'groups', groupId, 'members', memberId), { userId: user.uid, updatedAt: serverTimestamp() });
@@ -254,7 +256,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     if (!user || !groupId || !name.trim()) return;
     const currentMember = members.find(m => m.userId === user.uid);
     if (!currentMember?.isHost) {
-      toast.error("只有主持人可以新增成員");
+      toast.error(i18n.language.startsWith('zh') ? "只有主持人可以新增成員" : "Only host can add members");
       return;
     }
     // By host, we don't bind a userId so anyone can claim it later
@@ -269,7 +271,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     if (!user || !groupId) return;
     const currentMember = members.find(m => m.userId === user.uid);
     if (!currentMember?.isHost) {
-      toast.error("只有主持人可以刪除成員");
+      toast.error(i18n.language.startsWith('zh') ? "只有主持人可以刪除成員" : "Only host can delete members");
       return;
     }
     await deleteDoc(doc(db, 'groups', groupId, 'members', memberId));
@@ -278,14 +280,14 @@ export function GroupProvider({ children }: { children: ReactNode }) {
   const handleUpdateProfile = async (data: Partial<Member>) => {
     if (!user || !groupId || !currentMemberId) return;
     await updateDoc(doc(db, 'groups', groupId, 'members', currentMemberId), { ...data, updatedAt: serverTimestamp() });
-    toast.success('個人設定已更新');
+    toast.success(t('profile.settings_updated'));
   };
 
   const handleUpdateGroupName = async (newName: string) => {
     if (!user || !groupId || !newName.trim()) return;
     const currentMember = members.find(m => m.userId === user.uid);
     if (!currentMember?.isHost) {
-      toast.error("只有主持人可以更改群組名稱");
+      toast.error(i18n.language.startsWith('zh') ? "只有主持人可以更改群組名稱" : "Only host can change group name");
       return;
     }
     await updateDoc(doc(db, 'groups', groupId), { name: newName.trim(), updatedAt: serverTimestamp() });
@@ -303,8 +305,11 @@ export function GroupProvider({ children }: { children: ReactNode }) {
 
   const handleDeleteExpense = async (expense: Expense) => {
     if (!user || !groupId) return;
-    const isConfirmed = await confirm('確定要刪除這筆支出紀錄嗎？');
-    if (isConfirmed) await deleteDoc(doc(db, 'groups', groupId, 'expenses', expense.id));
+    const isConfirmed = await confirm(t('expenses.delete_msg'));
+    if (isConfirmed) {
+      await deleteDoc(doc(db, 'groups', groupId, 'expenses', expense.id));
+      toast.success(t('expenses.deleted'));
+    }
   };
 
   const currentMember = members.find(m => m.id === currentMemberId);

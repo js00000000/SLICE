@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { ArrowLeft, Users, Shield, X, Plus, Copy, Trash2, Share2 } from 'lucide-react';
+import { ArrowLeft, Users, Shield, X, Plus, Copy, Trash2, Share2, Languages } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import type { Member, Group, Expense } from '../types';
 import { calculateBalancesAndSettlements } from '../lib/settlement';
@@ -28,6 +29,7 @@ export function MemberManagementView({
   onDeleteGroup,
   onCreateMember
 }: MemberManagementViewProps) {
+  const { t, i18n } = useTranslation();
   const { confirm } = useDialog();
   const [newName, setNewName] = useState(currentGroup?.name || '');
   const [newMemberName, setNewMemberName] = useState('');
@@ -36,20 +38,26 @@ export function MemberManagementView({
   const handleSaveGroupName = async () => {
     if (newName.trim() && newName !== currentGroup?.name) {
       onUpdateGroupName(newName);
-      toast.success('群組名稱已更新');
+      toast.success(t('common.success'));
     }
   };
 
   const handleDeleteMemberByHost = async (member: Member) => {
     const balance = balances[member.id] || 0;
     if (Math.abs(balance) > 0.01) {
-      toast.error(`無法刪除成員「${member.name}」，因為該成員還有未結清的款項 (${balance > 0 ? '需收回' : '需支付'} $${Math.abs(balance).toFixed(0)})。`);
+      const balanceStr = balance > 0 
+        ? t('members.receivable', { amount: balance.toFixed(0) }) 
+        : t('members.owe', { amount: Math.abs(balance).toFixed(0) });
+      toast.error(i18n.language.startsWith('zh') 
+        ? `無法刪除成員「${member.name}」，因為該成員還有未結清的款項 (${balanceStr})。`
+        : `Cannot delete member "${member.name}" because they have unsettled balances (${balanceStr}).`
+      );
       return;
     }
-    const isConfirmed = await confirm(`確定要刪除成員「${member.name}」嗎？此操作不可復原。`);
+    const isConfirmed = await confirm(t('members.delete_member_msg', { name: member.name }));
     if (isConfirmed) {
       onDeleteMember(member.id);
-      toast.success('成員已刪除');
+      toast.success(t('common.success'));
     }
   };
 
@@ -57,18 +65,32 @@ export function MemberManagementView({
     if (newMemberName.trim()) {
       onCreateMember(newMemberName.trim());
       setNewMemberName('');
-      toast.success('成員已新增');
+      toast.success(t('common.success'));
     }
+  };
+
+  const toggleLanguage = () => {
+    const newLang = i18n.language.startsWith('zh') ? 'en' : 'zh-TW';
+    i18n.changeLanguage(newLang);
   };
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
       <header className="bg-white border-b sticky top-0 z-10">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-4">
-          <button onClick={onBack} className="p-2 -ml-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors">
-            <ArrowLeft className="w-5 h-5" />
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button onClick={onBack} className="p-2 -ml-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <h1 className="font-semibold text-lg">{t('members.title')}</h1>
+          </div>
+          <button
+            onClick={toggleLanguage}
+            className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors"
+            title={i18n.language.startsWith('zh') ? 'Switch to English' : '切換至繁體中文'}
+          >
+            <Languages className="w-4 h-4" />
           </button>
-          <h1 className="font-semibold text-lg">成員與管理</h1>
         </div>
       </header>
 
@@ -76,9 +98,11 @@ export function MemberManagementView({
         <section className="space-y-4">
           <div className="flex items-center justify-between px-1">
             <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-              <Users className="w-4 h-4 text-indigo-600" /> 成員名單
+              <Users className="w-4 h-4 text-indigo-600" /> {t('members.list')}
             </h2>
-            <span className="text-xs text-gray-500">{members.length} 位成員</span>
+            <span className="text-xs text-gray-500">
+              {members.length} {i18n.language.startsWith('zh') ? '位成員' : 'members'}
+            </span>
           </div>
 
           <div className="bg-white rounded-2xl border shadow-sm overflow-hidden divide-y divide-gray-100">
@@ -96,16 +120,21 @@ export function MemberManagementView({
                     <div className="flex flex-col">
                       <span className="font-medium text-gray-900 flex items-center gap-1">
                         {m.name}
-                        {m.id === currentMember.id && <span className="text-[10px] text-indigo-500 font-normal">(你自己)</span>}
+                        {m.id === currentMember.id && <span className="text-[10px] text-indigo-500 font-normal">({t('members.you')})</span>}
                         {m.isHost && <Shield className="w-3 h-3 text-amber-500" />}
                       </span>
                       <span className={`text-xs ${Math.abs(balance) < 0.01 ? 'text-green-500' : balance > 0 ? 'text-indigo-500' : 'text-red-500'}`}>
-                        {Math.abs(balance) < 0.01 ? '已結清' : `${balance > 0 ? '待收回' : '待支付'} $${Math.abs(balance).toFixed(0)}`}
+                        {Math.abs(balance) < 0.01 
+                          ? t('members.settled') 
+                          : balance > 0 
+                            ? t('members.receivable', { amount: balance.toFixed(0) }) 
+                            : t('members.owe', { amount: Math.abs(balance).toFixed(0) })
+                        }
                       </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {isClaimedByOthers && <div className="text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">已綁定</div>}
+                    {isClaimedByOthers && <div className="text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{t('members.claimed')}</div>}
                     {m.id !== currentMember.id && currentMember.isHost && (
                       <button
                         type="button"
@@ -115,7 +144,7 @@ export function MemberManagementView({
                           ? 'text-red-500 hover:bg-red-50'
                           : 'text-gray-300 cursor-not-allowed'
                           }`}
-                        title={!canDelete ? "餘額未結清" : "刪除成員"}
+                        title={!canDelete ? (i18n.language.startsWith('zh') ? "餘額未結清" : "Balance not settled") : t('members.delete_member')}
                       >
                         <X className="w-5 h-5" />
                       </button>
@@ -131,7 +160,7 @@ export function MemberManagementView({
               <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="新增成員姓名"
+                  placeholder={t('members.enter_name')}
                   value={newMemberName}
                   onChange={(e) => setNewMemberName(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleAddMember()}
@@ -143,7 +172,7 @@ export function MemberManagementView({
                   className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-medium disabled:opacity-50 hover:bg-indigo-700 transition-colors flex items-center gap-1"
                 >
                   <Plus className="w-4 h-4" />
-                  新增
+                  {t('common.add')}
                 </button>
               </div>
             </div>
@@ -152,11 +181,11 @@ export function MemberManagementView({
 
         <section className="space-y-4 pt-4 border-t">
           <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-            <Plus className="w-4 h-4 text-indigo-600" /> 群組資訊
+            <Plus className="w-4 h-4 text-indigo-600" /> {t('groups.group_info')}
           </h2>
           <div className="bg-white rounded-2xl border shadow-sm p-5 space-y-4">
             <div className="flex flex-col gap-2">
-              <span className="text-sm text-gray-500">群組名稱</span>
+              <span className="text-sm text-gray-500">{t('groups.group_name')}</span>
               {currentMember.isHost ? (
                 <div className="flex gap-2">
                   <input
@@ -170,7 +199,7 @@ export function MemberManagementView({
                     disabled={!newName.trim() || newName === currentGroup?.name}
                     className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-medium disabled:opacity-50 hover:bg-indigo-700 transition-colors"
                   >
-                    儲存
+                    {t('common.save')}
                   </button>
                 </div>
               ) : (
@@ -178,16 +207,16 @@ export function MemberManagementView({
               )}
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">群組 ID</span>
+              <span className="text-sm text-gray-500">{t('groups.group_id')}</span>
               <div className="flex items-center gap-2">
                 <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">{currentGroup?.id}</code>
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(currentGroup?.id || '');
-                    toast.success('已複製群組 ID');
+                    toast.success(t('groups.id_copied'));
                   }}
                   className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
-                  title="複製 ID"
+                  title={t('common.copy')}
                 >
                   <Copy className="w-4 h-4" />
                 </button>
@@ -195,17 +224,17 @@ export function MemberManagementView({
             </div>
 
             <div className="flex items-center justify-between pt-2">
-              <span className="text-sm text-gray-500">分享群組</span>
+              <span className="text-sm text-gray-500">{t('common.share')}</span>
               <button
                 onClick={() => {
                   const url = `${window.location.origin}/join/${currentGroup?.id}`;
                   navigator.clipboard.writeText(url);
-                  toast.success('已複製分享連結');
+                  toast.success(t('groups.link_copied'));
                 }}
                 className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-medium hover:bg-indigo-100 transition-colors"
               >
                 <Share2 className="w-4 h-4" />
-                複製邀請連結
+                {t('groups.share_link')}
               </button>
             </div>
           </div>
@@ -214,17 +243,17 @@ export function MemberManagementView({
         {currentMember.isHost && (
           <section className="space-y-4 pt-4 border-t">
             <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-              <Shield className="w-4 h-4 text-amber-500" /> 危險區域
+              <Shield className="w-4 h-4 text-amber-500" /> {t('groups.danger_zone')}
             </h2>
             <div className="bg-white rounded-2xl border border-red-100 p-6 space-y-4">
               <div>
-                <h3 className="text-sm font-semibold text-gray-900 text-red-600">刪除此群組</h3>
-                <p className="text-xs text-gray-500 mt-1">此操作將永久刪除群組「{currentGroup?.name}」及所有成員與支出紀錄，不可復原。</p>
+                <h3 className="text-sm font-semibold text-red-600">{t('groups.delete_group')}</h3>
+                <p className="text-xs text-gray-500 mt-1">{t('groups.delete_group_msg', { name: currentGroup?.name })}</p>
               </div>
               <button type="button" onClick={onDeleteGroup}
                 className="w-full py-3 bg-red-50 text-red-600 border border-red-200 rounded-xl font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2">
                 <Trash2 className="w-4 h-4" />
-                刪除此群組
+                {t('groups.delete_group')}
               </button>
             </div>
           </section>

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Receipt, CheckCircle2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useGroup } from '../contexts/GroupContext';
 
 export function MemberSelectionPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { members, currentGroup, handleSelectMember, handleCreateMember } = useGroup();
   const [newName, setNewName] = useState('');
@@ -23,7 +25,7 @@ export function MemberSelectionPage() {
             </div>
           </div>
           <h1 className="text-xl font-bold text-gray-900">{currentGroup?.name}</h1>
-          <p className="text-gray-500 text-sm">請選擇你的身分，或建立新成員</p>
+          <p className="text-gray-500 text-sm">{t('members.select_identity')}</p>
         </div>
 
         <div className="space-y-6">
@@ -34,7 +36,7 @@ export function MemberSelectionPage() {
                   <div className="w-full border-t border-gray-100"></div>
                 </div>
                 <div className="relative flex justify-center text-[10px] uppercase tracking-wider font-bold">
-                  <span className="px-2 bg-white text-gray-400">選擇既有成員</span>
+                  <span className="px-2 bg-white text-gray-400">{t('members.select_existing')}</span>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -60,7 +62,7 @@ export function MemberSelectionPage() {
                         {isMe && <CheckCircle2 className="w-3 h-3 text-indigo-600" />}
                       </div>
                       <div className="text-[10px] text-gray-400">
-                        {isMe ? '這就是你' : isClaimedByOthers ? '已被綁定' : '尚未綁定'}
+                        {isMe ? t('members.you') : isClaimedByOthers ? t('members.claimed') : t('members.not_claimed')}
                       </div>
                     </button>
                   );
@@ -74,24 +76,24 @@ export function MemberSelectionPage() {
               <div className="w-full border-t border-gray-100"></div>
             </div>
             <div className="relative flex justify-center text-[10px] uppercase tracking-wider font-bold">
-              <span className="px-2 bg-white text-gray-400">或</span>
+              <span className="px-2 bg-white text-gray-400">OR</span>
             </div>
           </div>
 
           <form onSubmit={(e) => { e.preventDefault(); handleCreateMember(newName); }}
             className="space-y-3"
           >
-            <h2 className="text-sm font-medium text-gray-700">建立新成員：</h2>
+            <h2 className="text-sm font-medium text-gray-700">{t('members.or_create')}:</h2>
             <div className="flex gap-2">
               <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)}
-                placeholder="輸入你的名字"
+                placeholder={t('profile.display_name')}
                 className="flex-1 px-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600
                 focus:border-transparent outline-none text-sm"
                 required
               />
               <button type="submit" disabled={!newName.trim()}
                 className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-medium disabled:opacity-50 hover:bg-indigo-700 transition-colors text-sm">
-                進入
+                {t('common.confirm')}
               </button>
             </div>
           </form>

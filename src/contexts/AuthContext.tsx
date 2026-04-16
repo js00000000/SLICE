@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import {
   onAuthStateChanged,
@@ -39,6 +40,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -99,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err: unknown) {
       const error = err as AuthError;
       console.error("Google login error:", error);
-      toast.error("Google 登入失敗");
+      toast.error(t('common.error'));
       setAuthError(error.message || "Failed to sign in with Google.");
       setAuthLoading(false);
     }
@@ -112,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err: unknown) {
       const error = err as AuthError;
       console.error("Guest login error:", error);
-      toast.error("訪客登入失敗");
+      toast.error(t('common.error'));
       setAuthError(error.message || "Failed to sign in as guest.");
       setAuthLoading(false);
     }
@@ -198,7 +200,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err: unknown) {
       const error = err as AuthError;
       console.error("Confirm abandon error:", error);
-      toast.error("切換帳號失敗");
+      toast.error(t('common.error'));
       setAuthError(error.message || "Failed to switch account.");
     } finally {
       setAuthLoading(false);
@@ -209,11 +211,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await signOut(auth);
       setUser(null);
-      toast.success("已登出");
+      toast.success(t('auth.logout'));
     } catch (err: unknown) {
       const error = err as AuthError;
       console.error("Logout error:", error);
-      toast.error("登出失敗");
+      toast.error(t('common.error'));
     }
   };
 

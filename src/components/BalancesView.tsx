@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { DollarSign, CheckCircle2, ArrowRight, CreditCard, Copy } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import type { Member, Expense } from '../types';
 import { calculateBalancesAndSettlements } from '../lib/settlement';
@@ -11,6 +12,7 @@ interface BalancesViewProps {
 }
 
 export function BalancesView({ members, expenses, currentMemberId }: BalancesViewProps) {
+  const { t } = useTranslation();
   const { balances, settlements } = useMemo(() => {
     const { balances: map, settlements: transactions } = calculateBalancesAndSettlements(members, expenses);
 
@@ -32,16 +34,16 @@ export function BalancesView({ members, expenses, currentMemberId }: BalancesVie
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white p-5 rounded-2xl border shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-500 mb-1">我的結算狀態</p>
+            <p className="text-sm text-gray-500 mb-1">{t('balances.net_balance')}</p>
             {Math.abs(myBalance) < 0.01 ? (
-              <p className="text-2xl font-bold text-green-600">已結清</p>
+              <p className="text-2xl font-bold text-green-600">{t('members.settled')}</p>
             ) : myBalance > 0 ? (
               <p className="text-2xl font-bold text-indigo-600">
-                需收回 <span className="text-lg">$</span>{myBalance.toFixed(0)}
+                {t('members.receivable', { amount: myBalance.toFixed(0) })}
               </p>
             ) : (
               <p className="text-2xl font-bold text-red-500">
-                需支付 <span className="text-lg">$</span>{Math.abs(myBalance).toFixed(0)}
+                {t('members.owe', { amount: Math.abs(myBalance).toFixed(0) })}
               </p>
             )}
           </div>
@@ -51,11 +53,11 @@ export function BalancesView({ members, expenses, currentMemberId }: BalancesVie
         </div>
 
         <div className="bg-white p-5 rounded-2xl border shadow-sm">
-          <p className="text-sm text-gray-500 mb-3">總結算建議</p>
+          <p className="text-sm text-gray-500 mb-3">{t('balances.settlements')}</p>
           {settlements.length === 0 ? (
             <div className="flex items-center gap-2 text-gray-400 py-2">
               <CheckCircle2 className="w-5 h-5" />
-              <span>目前沒有未結款項</span>
+              <span>{t('balances.no_expenses')}</span>
             </div>
           ) : (
             <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
@@ -75,7 +77,8 @@ function SettlementRow({ settlement, members, currentMemberId }: {
   members: Member[], 
   currentMemberId: string 
 }) {
-  const getMemberName = (id: string) => members.find(m => m.id === id)?.name || '未知';
+  const { t } = useTranslation();
+  const getMemberName = (id: string) => members.find(m => m.id === id)?.name || t('common.loading');
   const toMember = members.find(m => m.id === settlement.to);
   const isPayer = settlement.from === currentMemberId;
   const isReceiver = settlement.to === currentMemberId;
@@ -87,7 +90,7 @@ function SettlementRow({ settlement, members, currentMemberId }: {
     const text = toMember?.bankAccount || '';
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text)
-        .then(() => toast.success('帳號已複製'))
+        .then(() => toast.success(t('groups.id_copied')))
         .catch(() => fallbackCopy(text));
     } else {
       fallbackCopy(text);
@@ -106,10 +109,10 @@ function SettlementRow({ settlement, members, currentMemberId }: {
     textArea.select();
     try {
       document.execCommand('copy');
-      toast.success('帳號已複製');
+      toast.success(t('groups.id_copied'));
     } catch (err) {
       console.error('Unable to copy', err);
-      toast.error('複製失敗');
+      toast.error(t('common.error'));
     }
     document.body.removeChild(textArea);
   };
@@ -139,7 +142,7 @@ function SettlementRow({ settlement, members, currentMemberId }: {
           <button onClick={handleCopy}
             className="shrink-0 ml-2 text-indigo-600 hover:bg-indigo-50 p-1.5 rounded-md transition-colors flex items-center gap-1">
             <Copy className="w-3.5 h-3.5" />
-            <span className="text-[10px] font-medium hidden sm:inline">複製</span>
+            <span className="text-[10px] font-medium hidden sm:inline">{t('common.copy')}</span>
           </button>
         </div>
       )}

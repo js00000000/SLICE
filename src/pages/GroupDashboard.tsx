@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
 import {
-  Receipt, Copy, User as LucideUser, LogOut, Plus, Share2
+  Receipt, Copy, User as LucideUser, LogOut, Plus, Share2, Languages
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import type { Expense } from '../types';
 import { BalancesView } from '../components/BalancesView';
@@ -14,6 +15,7 @@ import { useGroup } from '../contexts/GroupContext';
 
 export function GroupDashboard() {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
   const {
     groupId,
     currentGroup,
@@ -49,12 +51,23 @@ export function GroupDashboard() {
     setIsExpenseModalOpen(true);
   };
 
+  const toggleLanguage = () => {
+    const newLang = i18n.language.startsWith('zh') ? 'en' : 'zh-TW';
+    i18n.changeLanguage(newLang);
+  };
+
   if (!currentMember || !groupId) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 pb-20 md:pb-8">
       <Helmet>
-        <title>{currentGroup?.name ? `${currentGroup.name} - EasySplit` : '群組控制面板 - EasySplit'}</title>
+        <html lang={i18n.language} />
+        <title>{currentGroup?.name ? `${currentGroup.name} - EasySplit` : `Group Dashboard - EasySplit`}</title>
+        <meta name="description" content={t('common.seo_description')} />
+        <meta property="og:title" content={currentGroup?.name ? `${currentGroup.name} - EasySplit` : `Group Dashboard - EasySplit`} />
+        <meta property="og:description" content={t('common.seo_description')} />
+        <meta property="twitter:title" content={currentGroup?.name ? `${currentGroup.name} - EasySplit` : `Group Dashboard - EasySplit`} />
+        <meta property="twitter:description" content={t('common.seo_description')} />
       </Helmet>
       {/* Header */}
       <header className="bg-white border-b sticky top-0 z-10">
@@ -68,7 +81,7 @@ export function GroupDashboard() {
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(groupId);
-                  toast.success('已複製群組 ID');
+                  toast.success(t('groups.id_copied'));
                 }}
                 className="text-[10px] text-gray-400 flex items-center gap-1 hover:text-indigo-500 transition-colors mt-0.5"
               >
@@ -78,11 +91,11 @@ export function GroupDashboard() {
                 onClick={() => {
                   const url = `${window.location.origin}/join/${groupId}`;
                   navigator.clipboard.writeText(url);
-                  toast.success('已複製分享連結');
+                  toast.success(t('groups.link_copied'));
                 }}
                 className="text-[10px] text-gray-400 flex items-center gap-1 hover:text-indigo-500 transition-colors mt-0.5 border-l border-gray-200 pl-2"
               >
-                <Share2 className="w-2 h-2" /> 分享連結
+                <Share2 className="w-2 h-2" /> {t('common.share')}
               </button>
             </div>
           </div>
@@ -90,14 +103,21 @@ export function GroupDashboard() {
             <button
               onClick={() => setIsProfileModalOpen(true)}
               className="flex items-center gap-2 text-sm text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
-              title="個人設定"
+              title={t('profile.title')}
             >
               <LucideUser className="w-4 h-4" />
               <span className="max-w-[80px] truncate">{currentMember.name}</span>
             </button>
+            <button
+              onClick={toggleLanguage}
+              className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors"
+              title={i18n.language.startsWith('zh') ? 'Switch to English' : '切換至繁體中文'}
+            >
+              <Languages className="w-4 h-4" />
+            </button>
             <button onClick={handleLeaveGroup}
               className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
-              title="切換群組">
+              title={t('auth.logout')}>
               <LogOut className="w-4 h-4" />
             </button>
           </div>
@@ -110,9 +130,8 @@ export function GroupDashboard() {
           expenses={filteredExpenses}
           members={members}
           onEdit={openEditModal}
-          onDelete={async (id) => {
-            await handleDeleteExpense(id);
-            toast.success('支出已刪除')
+          onDelete={async (expense) => {
+            await handleDeleteExpense(expense);
           }}
           filterPaidBy={filterPaidBy}
           onFilterChange={setFilterPaidBy}
@@ -124,7 +143,7 @@ export function GroupDashboard() {
         <button onClick={openAddModal}
           className="bg-indigo-600 text-white p-4 rounded-full shadow-lg hover:bg-indigo-700 hover:scale-105 transition-all flex items-center gap-2">
           <Plus className="w-6 h-6" />
-          <span className="hidden md:inline font-medium pr-2">新增支出</span>
+          <span className="hidden md:inline font-medium pr-2">{t('expenses.add_new')}</span>
         </button>
       </div>
 
