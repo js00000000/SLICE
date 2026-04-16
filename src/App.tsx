@@ -1,7 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
-import { APP_NAME } from './constants';
 import { AuthErrorView } from './components/AuthErrorView';
 import { LoadingView } from './components/LoadingView';
 import { LoginView } from './components/LoginView';
@@ -40,7 +39,7 @@ export default function App() {
       </Helmet>
       <Routes>
         <Route path="/" element={<GroupSelectionPage />} />
-        
+
         <Route path="/group/:groupId" element={
           !currentMemberId || !currentMember ? (
             <MemberSelectionPage />
