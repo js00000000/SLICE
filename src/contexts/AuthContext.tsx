@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
   onAuthStateChanged,
@@ -14,15 +15,15 @@ import {
   deleteUser,
 } from 'firebase/auth';
 import type { User, AuthError } from 'firebase/auth';
-import { 
-  doc, 
-  getDoc, 
-  deleteDoc, 
-  collection, 
-  getDocs, 
-  query, 
-  where, 
-  updateDoc 
+import {
+  doc,
+  getDoc,
+  deleteDoc,
+  collection,
+  getDocs,
+  query,
+  where,
+  updateDoc
 } from 'firebase/firestore';
 import { auth, googleProvider, db } from '../lib/firebase';
 import { AbandonGuestConfirmationModal } from '../components/MergeConfirmationModal';
@@ -31,7 +32,6 @@ import type { UserSettings } from '../types';
 interface AuthContextType {
   user: User | null;
   authLoading: boolean;
-  authError: string | null;
   handleGoogleLogin: () => Promise<void>;
   handleGuestLogin: () => Promise<void>;
   handleLogout: () => Promise<void>;
@@ -41,9 +41,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [authError, setAuthError] = useState<string | null>(null);
   const [showAbandonGuestConfirm, setShowAbandonGuestConfirm] = useState(false);
 
   useEffect(() => {
@@ -56,13 +56,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // we show the confirmation instead of auto-signing in
         setShowAbandonGuestConfirm(true);
       } else {
-        setAuthError(authErr.message || "An error occurred during redirect.");
+        toast.error(authErr.message || "An error occurred during redirect.");
       }
     });
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      setAuthError(null);
       setAuthLoading(false);
     });
     return () => unsubscribe();
@@ -101,8 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err: unknown) {
       const error = err as AuthError;
       console.error("Google login error:", error);
-      toast.error(t('common.error'));
-      setAuthError(error.message || "Failed to sign in with Google.");
+      toast.error(error.message || "Failed to sign in with Google.");
       setAuthLoading(false);
     }
   };
@@ -114,8 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err: unknown) {
       const error = err as AuthError;
       console.error("Guest login error:", error);
-      toast.error(t('common.error'));
-      setAuthError(error.message || "Failed to sign in as guest.");
+      toast.error(error.message || "Failed to sign in as guest.");
       setAuthLoading(false);
     }
   };
@@ -124,11 +121,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setAuthLoading(true);
       setShowAbandonGuestConfirm(false);
-      
+
       const guestUser = auth.currentUser;
       if (guestUser && guestUser.isAnonymous) {
         const guestUid = guestUser.uid;
-        
+
         // 1. Find all groups created by this guest user
         const createdGroupsQuery = query(collection(db, 'groups'), where('createdBy', '==', guestUid));
         const createdGroupsSnap = await getDocs(createdGroupsQuery);
@@ -160,11 +157,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (userDoc.exists()) {
           const userData = userDoc.data() as UserSettings;
           const joinedGroupIds = userData.joinedGroupIds || [];
-          
+
           // 3. Clear userId from members in other groups the user joined but didn't create
           for (const gid of joinedGroupIds) {
             if (deletedGroupIds.has(gid)) continue;
-            
+
             try {
               const membersRef = collection(db, 'groups', gid, 'members');
               const membersSnap = await getDocs(query(membersRef, where('userId', '==', guestUid)));
@@ -175,11 +172,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               console.error(`Error clearing userId in group ${gid}:`, err);
             }
           }
-          
+
           // 4. Delete user document
           await deleteDoc(doc(db, 'users', guestUid));
         }
-        
+
         // 5. Delete the guest user from Auth
         await deleteUser(guestUser).catch(err => {
           console.error("Error deleting guest user from Auth:", err);
@@ -200,8 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err: unknown) {
       const error = err as AuthError;
       console.error("Confirm abandon error:", error);
-      toast.error(t('common.error'));
-      setAuthError(error.message || "Failed to switch account.");
+      toast.error(error.message || "Failed to switch account.");
     } finally {
       setAuthLoading(false);
     }
@@ -212,6 +208,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await signOut(auth);
       setUser(null);
       toast.success(t('auth.logout'));
+      navigate('/');
     } catch (err: unknown) {
       const error = err as AuthError;
       console.error("Logout error:", error);
@@ -220,7 +217,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, authLoading, authError, handleGoogleLogin, handleGuestLogin, handleLogout }}>
+    <AuthContext.Provider value={{ user, authLoading, handleGoogleLogin, handleGuestLogin, handleLogout }}>
       {children}
       {showAbandonGuestConfirm && (
         <AbandonGuestConfirmationModal

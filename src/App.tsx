@@ -1,7 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
-import { AuthErrorView } from './components/AuthErrorView';
 import { LoadingView } from './components/LoadingView';
 import { LoginView } from './components/LoginView';
 
@@ -18,10 +17,9 @@ import { useGroup } from './contexts/GroupContext';
 
 export default function App() {
   const { t, i18n } = useTranslation();
-  const { user, authLoading, authError, handleGoogleLogin, handleGuestLogin } = useAuth();
+  const { user, authLoading, handleGoogleLogin, handleGuestLogin } = useAuth();
   const { currentMemberId, currentMember, isLoading } = useGroup();
 
-  if (authError) return <AuthErrorView error={authError} />;
   if (authLoading) return <LoadingView />;
   if (!user) return <LoginView onGoogleLogin={handleGoogleLogin} onGuestLogin={handleGuestLogin} />;
   if (isLoading) return <LoadingView />;
