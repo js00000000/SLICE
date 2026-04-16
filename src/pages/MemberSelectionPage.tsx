@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Receipt, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { APP_NAME } from '../constants';
 import { useAuth } from '../contexts/AuthContext';
 import { useGroup } from '../contexts/GroupContext';
 
@@ -21,7 +22,7 @@ export function MemberSelectionPage() {
               <ArrowLeft className="w-4 h-4" />
             </button>
             <div className="flex flex-col items-center">
-              <span className="text-[10px] font-black tracking-tighter uppercase text-indigo-400 leading-none mb-1">Slice</span>
+              <span className="text-[10px] font-black tracking-tighter uppercase text-indigo-400 leading-none mb-1">{APP_NAME}</span>
               <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center">
                 <Receipt className="w-5 h-5" />
               </div>

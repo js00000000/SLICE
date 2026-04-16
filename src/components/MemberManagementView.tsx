@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { ArrowLeft, Users, Shield, X, Plus, Copy, Trash2, Share2, Languages } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
+import { APP_NAME } from '../constants';
 import type { Member, Group, Expense } from '../types';
 import { calculateBalancesAndSettlements } from '../lib/settlement';
 import { useDialog } from '../contexts/DialogContext';
@@ -83,7 +84,7 @@ export function MemberManagementView({
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
-              <span className="text-[10px] font-black tracking-tighter uppercase text-indigo-400 leading-none">Slice</span>
+              <span className="text-[10px] font-black tracking-tighter uppercase text-indigo-400 leading-none">{APP_NAME}</span>
               <h1 className="font-semibold text-lg leading-tight">{t('members.title')}</h1>
             </div>
           </div>

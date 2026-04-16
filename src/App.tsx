@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
+import { APP_NAME } from './constants';
 import { AuthErrorView } from './components/AuthErrorView';
 import { LoadingView } from './components/LoadingView';
 import { LoginView } from './components/LoginView';
@@ -30,7 +31,7 @@ export default function App() {
     <>
       <Helmet>
         <html lang={i18n.language} />
-        <title>Slice - {t('common.seo_title')}</title>
+        <title>{APP_NAME} - {t('common.seo_title')}</title>
         <meta name="description" content={t('common.seo_description')} />
         <meta property="og:title" content={t('common.seo_title')} />
         <meta property="og:description" content={t('common.seo_description')} />

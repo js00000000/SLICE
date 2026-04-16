@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
+import { APP_NAME } from '../constants';
 import type { Expense } from '../types';
 import { BalancesView } from '../components/BalancesView';
 import { ExpensesList } from '../components/ExpensesList';
@@ -61,9 +62,9 @@ export function GroupDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 pb-20 md:pb-8">
       <Helmet>
-        <title>{currentGroup?.name ? `${currentGroup.name} - Slice` : `Group Dashboard - Slice`}</title>
-        <meta property="og:title" content={currentGroup?.name ? `${currentGroup.name} - Slice` : `Group Dashboard - Slice`} />
-        <meta property="twitter:title" content={currentGroup?.name ? `${currentGroup.name} - Slice` : `Group Dashboard - Slice`} />
+        <title>{currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `Group Dashboard - ${APP_NAME}`}</title>
+        <meta property="og:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `Group Dashboard - ${APP_NAME}`} />
+        <meta property="twitter:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `Group Dashboard - ${APP_NAME}`} />
       </Helmet>
       {/* Header */}
       <header className="bg-white border-b sticky top-0 z-10">
@@ -72,7 +73,7 @@ export function GroupDashboard() {
             <div className="flex items-center gap-2 text-indigo-600">
               <div className="flex items-center gap-1.5">
                 <Receipt className="w-5 h-5" />
-                <span className="text-xs font-black tracking-tighter uppercase text-indigo-400">Slice</span>
+                <span className="text-xs font-black tracking-tighter uppercase text-indigo-400">{APP_NAME}</span>
               </div>
               <h1 className="font-bold text-base leading-tight border-l border-indigo-100 pl-2">{currentGroup?.name || '群組分帳'}</h1>
             </div>

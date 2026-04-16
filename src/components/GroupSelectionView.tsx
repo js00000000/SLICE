@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Users, LogOut, Clock, ArrowRight, Languages } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { APP_NAME } from '../constants';
 import type { User } from 'firebase/auth';
 import type { Group } from '../types';
 
@@ -38,7 +39,7 @@ export function GroupSelectionView({
       <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border p-6 space-y-8">
         <div className="text-center space-y-2">
           <div className="flex flex-col items-center mb-4">
-            <span className="text-xs font-black tracking-tighter uppercase text-indigo-400 leading-none mb-1">Slice</span>
+            <span className="text-xs font-black tracking-tighter uppercase text-indigo-400 leading-none mb-1">{APP_NAME}</span>
             <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center">
               <Users className="w-6 h-6" />
             </div>
