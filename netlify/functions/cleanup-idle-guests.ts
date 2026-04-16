@@ -33,7 +33,7 @@ export default async (req: Request, context: Context) => {
   
   // If a secret is defined, require it (unless it's a scheduled call from Netlify)
   // Note: Netlify Scheduled functions don't usually send this, so we check if it's a GET/POST from outside.
-  if (cronSecret && authHeader !== \`Bearer \${cronSecret}\` && req.method !== 'SCHEDULE') {
+  if (cronSecret && authHeader !== `Bearer ${cronSecret}` && req.method !== 'SCHEDULE') {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
 
@@ -65,7 +65,7 @@ export default async (req: Request, context: Context) => {
         if (!isIdle) continue;
 
         const uid = userRecord.uid;
-        console.log(\`Cleaning up idle guest: \${uid} (Last sign-in: \${userRecord.metadata.lastSignInTime})\`);
+        console.log(`Cleaning up idle guest: ${uid} (Last sign-in: ${userRecord.metadata.lastSignInTime})`);
 
         // 3. Cleanup Firestore Data
         const batch = db.batch();
@@ -89,7 +89,7 @@ export default async (req: Request, context: Context) => {
 
         // B. Joined groups (unbind)
         const userDoc = await db.collection('users').doc(uid).get();
-        if (userDoc.exists()) {
+        if (userDoc.exists) {
           const userData = userDoc.data() || {};
           const joinedGroupIds = userData.joinedGroupIds || [];
 
@@ -117,7 +117,7 @@ export default async (req: Request, context: Context) => {
 
     } while (nextToken);
 
-    console.log(\`Cleanup complete. Deleted \${totalDeleted} idle guests.\`);
+    console.log(`Cleanup complete. Deleted ${totalDeleted} idle guests.`);
     return new Response(JSON.stringify({ success: true, deletedCount: totalDeleted }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
