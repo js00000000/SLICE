@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /group/*/members
 
-Sitemap: https://easy-split.netlify.app/sitemap.xml
+Sitemap: https://slice.fusion-labs.cc/sitemap.xml

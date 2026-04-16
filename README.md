@@ -1,8 +1,8 @@
-# Slice (群組分帳)
+# SLICE (群組分帳)
 
 A modern, mobile-friendly group expense splitting application built with React, TypeScript, and Firebase.
 
-**Live Demo:** [https://easy-split-14.netlify.app](https://easy-split-14.netlify.app)
+**Live Demo:** [https://slice.fusion-labs.cc](https://slice.fusion-labs.cc)
 
 [![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/js00000000/easy-split)
 

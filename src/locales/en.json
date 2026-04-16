@@ -13,11 +13,11 @@
     "error": "Error",
     "success": "Success",
     "host": "Host",
-    "seo_title": "Slice - Quick & Simple Group Expense Sharing",
-    "seo_description": "Slice is a simple expense sharing tool designed for groups. Support anonymous and Google login, easily track expenses and calculate settlements. Perfect for dining, trips, and roommates."
+    "seo_title": "{{APP_NAME}} - Quick & Simple Group Expense Sharing",
+    "seo_description": "{{APP_NAME}} is a simple expense sharing tool designed for groups. Support anonymous and Google login, easily track expenses and calculate settlements. Perfect for dining, trips, and roommates."
   },
   "auth": {
-    "login_title": "Slice",
+    "login_title": "{{APP_NAME}}",
     "login_subtitle": "Quick & Simple Group Expense Sharing",
     "google_login": "Login with Google",
     "guest_login": "Login as Guest",
