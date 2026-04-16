@@ -75,7 +75,7 @@ export function GroupDashboard() {
                 <Receipt className="w-5 h-5" />
                 <span className="text-xs font-black tracking-tighter uppercase text-indigo-400">{APP_NAME}</span>
               </div>
-              <h1 className="font-bold text-base leading-tight border-l border-indigo-100 pl-2">{currentGroup?.name || '群組分帳'}</h1>
+              <h1 className="font-bold text-base leading-none border-l border-indigo-100 pl-2 mb-0.5">{currentGroup?.name || 'Group Dashboard'}</h1>
             </div>
             <div className="flex items-center gap-2">
               <button
