@@ -32,6 +32,8 @@ import type { UserSettings } from '../types';
 interface AuthContextType {
   user: User | null;
   authLoading: boolean;
+  googleLoading: boolean;
+  guestLoading: boolean;
   handleGoogleLogin: () => Promise<void>;
   handleGuestLogin: () => Promise<void>;
   handleLogout: () => Promise<void>;
@@ -44,6 +46,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [guestLoading, setGuestLoading] = useState(false);
   const [showAbandonGuestConfirm, setShowAbandonGuestConfirm] = useState(false);
 
   useEffect(() => {
@@ -69,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const handleGoogleLogin = async () => {
     try {
-      setAuthLoading(true);
+      setGoogleLoading(true);
       if (auth.currentUser && auth.currentUser.isAnonymous) {
         try {
           await linkWithPopup(auth.currentUser, googleProvider);
@@ -80,7 +84,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           } else if (error.code === 'auth/credential-already-in-use') {
             // Google account already exists, show confirmation before switching
             setShowAbandonGuestConfirm(true);
-            setAuthLoading(false);
           } else {
             throw error;
           }
@@ -101,25 +104,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const error = err as AuthError;
       console.error("Google login error:", error);
       toast.error(error.message || "Failed to sign in with Google.");
-      setAuthLoading(false);
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
   const handleGuestLogin = async () => {
     try {
-      setAuthLoading(true);
+      setGuestLoading(true);
       await signInAnonymously(auth);
     } catch (err: unknown) {
       const error = err as AuthError;
       console.error("Guest login error:", error);
       toast.error(error.message || "Failed to sign in as guest.");
-      setAuthLoading(false);
+    } finally {
+      setGuestLoading(false);
     }
   };
 
   const confirmAbandon = async () => {
     try {
-      setAuthLoading(true);
+      setGoogleLoading(true);
       setShowAbandonGuestConfirm(false);
 
       const guestUser = auth.currentUser;
@@ -199,7 +204,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("Confirm abandon error:", error);
       toast.error(error.message || "Failed to switch account.");
     } finally {
-      setAuthLoading(false);
+      setGoogleLoading(false);
     }
   };
 
@@ -217,7 +222,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, authLoading, handleGoogleLogin, handleGuestLogin, handleLogout }}>
+    <AuthContext.Provider value={{ user, authLoading, googleLoading, guestLoading, handleGoogleLogin, handleGuestLogin, handleLogout }}>
       {children}
       {showAbandonGuestConfirm && (
         <AbandonGuestConfirmationModal

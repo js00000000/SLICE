@@ -1,19 +1,28 @@
-import { UserCircle, Languages, Receipt } from 'lucide-react';
+import { UserCircle, Languages, Receipt, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { APP_NAME } from '../constants';
 
 interface LoginViewProps {
   onGoogleLogin: () => void;
   onGuestLogin: () => void;
+  isGoogleLoading?: boolean;
+  isGuestLoading?: boolean;
 }
 
-export function LoginView({ onGoogleLogin, onGuestLogin }: LoginViewProps) {
+export function LoginView({ 
+  onGoogleLogin, 
+  onGuestLogin,
+  isGoogleLoading = false,
+  isGuestLoading = false
+}: LoginViewProps) {
   const { t, i18n } = useTranslation();
 
   const toggleLanguage = () => {
     const newLang = i18n.language.startsWith('zh') ? 'en' : 'zh-TW';
     i18n.changeLanguage(newLang);
   };
+
+  const isAnyLoading = isGoogleLoading || isGuestLoading;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
@@ -32,9 +41,14 @@ export function LoginView({ onGoogleLogin, onGuestLogin }: LoginViewProps) {
         <div className="space-y-4 pt-4">
           <button
             onClick={onGoogleLogin}
-            className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl font-bold text-gray-700 hover:border-indigo-600 hover:bg-gray-50 transition-all duration-200 group active:scale-[0.98]"
+            disabled={isAnyLoading}
+            className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl font-bold text-gray-700 hover:border-indigo-600 hover:bg-gray-50 transition-all duration-200 group active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100"
           >
-            <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
+            {isGoogleLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
+            ) : (
+              <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
+            )}
             {t('auth.google_login')}
           </button>
 
@@ -49,9 +63,14 @@ export function LoginView({ onGoogleLogin, onGuestLogin }: LoginViewProps) {
 
           <button
             onClick={onGuestLogin}
-            className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all duration-200 active:scale-[0.98]"
+            disabled={isAnyLoading}
+            className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all duration-200 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100"
           >
-            <UserCircle className="w-6 h-6" />
+            {isGuestLoading ? (
+              <Loader2 className="w-6 h-6 animate-spin" />
+            ) : (
+              <UserCircle className="w-6 h-6" />
+            )}
             {t('auth.guest_login')}
           </button>
 

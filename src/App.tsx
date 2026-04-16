@@ -17,11 +17,18 @@ import { useGroup } from './contexts/GroupContext';
 
 export default function App() {
   const { t, i18n } = useTranslation();
-  const { user, authLoading, handleGoogleLogin, handleGuestLogin } = useAuth();
+  const { user, authLoading, googleLoading, guestLoading, handleGoogleLogin, handleGuestLogin } = useAuth();
   const { currentMemberId, currentMember, isLoading } = useGroup();
 
   if (authLoading) return <LoadingView />;
-  if (!user) return <LoginView onGoogleLogin={handleGoogleLogin} onGuestLogin={handleGuestLogin} />;
+  if (!user) return (
+    <LoginView 
+      onGoogleLogin={handleGoogleLogin} 
+      onGuestLogin={handleGuestLogin}
+      isGoogleLoading={googleLoading}
+      isGuestLoading={guestLoading}
+    />
+  );
   if (isLoading) return <LoadingView />;
 
   return (
