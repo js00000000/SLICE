@@ -14,6 +14,7 @@ import {
 import { db } from '../lib/firebase';
 import { firebaseService, type ExpenseInput } from '../lib/firebaseService';
 import type { Member, Group, Expense, UserSettings } from '../types';
+import { calculateBalancesAndSettlements } from '../lib/settlement';
 import { useAuth } from './AuthContext';
 import { useDialog } from './DialogContext';
 
@@ -177,11 +178,39 @@ export function GroupProvider({ children }: { children: ReactNode }) {
   };
 
   const handleLeaveGroup = async () => {
-    if (!user) return;
-    try {
-      await firebaseService.updateUserLastGroup(user.uid, null);
-      navigate('/');
-    } catch (error) { console.error("Leave group error:", error); }
+    if (!user || !groupId || !currentMemberId) return;
+    
+    // 1. Balance check
+    const { balances } = calculateBalancesAndSettlements(members, expenses);
+    const myBalance = balances[currentMemberId] || 0;
+    
+    if (Math.abs(myBalance) > 0.01) {
+      const balanceStr = myBalance > 0 
+        ? t('members.receivable', { amount: myBalance.toFixed(0) }) 
+        : t('members.owe', { amount: Math.abs(myBalance).toFixed(0) });
+      toast.error(t('groups.leave_group_error_unsettled', { balance: balanceStr }));
+      return;
+    }
+
+    const isConfirmed = await confirm(t('groups.leave_group_msg', { name: currentGroup?.name }), {
+      title: t('groups.leave_group'),
+      confirmLabel: t('groups.leave_group'),
+      cancelLabel: t('common.cancel')
+    });
+
+    if (isConfirmed) {
+      setIsLoading(true);
+      try {
+        await firebaseService.leaveGroup(user.uid, groupId, currentMemberId);
+        toast.success(t('groups.leave_group_success'));
+        navigate('/', { replace: true });
+      } catch (error) { 
+        console.error("Leave group error:", error); 
+        toast.error(t('common.error'));
+      } finally {
+        setIsLoading(false);
+      }
+    }
   };
 
   const handleDeleteGroup = async () => {

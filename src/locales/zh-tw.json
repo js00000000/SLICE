@@ -48,7 +48,11 @@
     "group_name": "群組名稱",
     "group_id": "群組 ID",
     "share_link": "複製分享連結",
-    "danger_zone": "危險區域"
+    "danger_zone": "危險區域",
+    "leave_group": "退出群組",
+    "leave_group_msg": "確定要退出群組「{{name}}」嗎？",
+    "leave_group_error_unsettled": "無法退出群組，因為你還有未結清的款項 ({{balance}})。",
+    "leave_group_success": "已成功退出群組"
   },
   "members": {
     "title": "成員與管理",

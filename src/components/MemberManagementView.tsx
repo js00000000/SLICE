@@ -15,6 +15,7 @@ interface MemberManagementViewProps {
   onBack: () => void;
   onDeleteMember: (id: string) => void;
   onUpdateGroupName: (name: string) => void;
+  onLeaveGroup: () => void;
   onDeleteGroup: () => void;
   onCreateMember: (name: string) => void;
 }
@@ -27,6 +28,7 @@ export function MemberManagementView({
   onBack,
   onDeleteMember,
   onUpdateGroupName,
+  onLeaveGroup,
   onDeleteGroup,
   onCreateMember
 }: MemberManagementViewProps) {
@@ -241,24 +243,38 @@ export function MemberManagementView({
           </div>
         </section>
 
-        {currentMember.isHost && (
-          <section className="space-y-4 pt-4 border-t">
-            <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-              <Shield className="w-4 h-4 text-amber-500" /> {t('groups.danger_zone')}
-            </h2>
-            <div className="bg-white rounded-2xl border border-red-100 p-6 space-y-4">
-              <div>
-                <h3 className="text-sm font-semibold text-red-600">{t('groups.delete_group')}</h3>
-                <p className="text-xs text-gray-500 mt-1">{t('groups.delete_group_msg', { name: currentGroup?.name })}</p>
-              </div>
-              <button type="button" onClick={onDeleteGroup}
-                className="w-full py-3 bg-red-50 text-red-600 border border-red-200 rounded-xl font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2">
-                <Trash2 className="w-4 h-4" />
-                {t('groups.delete_group')}
-              </button>
-            </div>
-          </section>
-        )}
+        <section className="space-y-4 pt-4 border-t">
+          <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+            <Shield className="w-4 h-4 text-amber-500" /> {t('groups.danger_zone')}
+          </h2>
+          <div className="bg-white rounded-2xl border border-red-100 p-6 space-y-4">
+            {currentMember.isHost ? (
+              <>
+                <div>
+                  <h3 className="text-sm font-semibold text-red-600">{t('groups.delete_group')}</h3>
+                  <p className="text-xs text-gray-500 mt-1">{t('groups.delete_group_msg', { name: currentGroup?.name })}</p>
+                </div>
+                <button type="button" onClick={onDeleteGroup}
+                  className="w-full py-3 bg-red-50 text-red-600 border border-red-200 rounded-xl font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2">
+                  <Trash2 className="w-4 h-4" />
+                  {t('groups.delete_group')}
+                </button>
+              </>
+            ) : (
+              <>
+                <div>
+                  <h3 className="text-sm font-semibold text-red-600">{t('groups.leave_group')}</h3>
+                  <p className="text-xs text-gray-500 mt-1">{t('groups.leave_group_msg', { name: currentGroup?.name })}</p>
+                </div>
+                <button type="button" onClick={onLeaveGroup}
+                  className="w-full py-3 bg-red-50 text-red-600 border border-red-200 rounded-xl font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2">
+                  <X className="w-4 h-4" />
+                  {t('groups.leave_group')}
+                </button>
+              </>
+            )}
+          </div>
+        </section>
       </main>
     </div>
   );

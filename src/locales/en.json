@@ -48,7 +48,11 @@
     "group_name": "Group Name",
     "group_id": "Group ID",
     "share_link": "Copy Invite Link",
-    "danger_zone": "Danger Zone"
+    "danger_zone": "Danger Zone",
+    "leave_group": "Leave Group",
+    "leave_group_msg": "Are you sure you want to leave the group '{{name}}'?",
+    "leave_group_error_unsettled": "Cannot leave the group because you have unsettled balances ({{balance}}).",
+    "leave_group_success": "Left group successfully"
   },
   "members": {
     "title": "Members & Management",

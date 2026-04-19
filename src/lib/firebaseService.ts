@@ -64,6 +64,24 @@ export const firebaseService = {
     }, { merge: true });
   },
 
+  async leaveGroup(userId: string, groupId: string, memberId: string) {
+    const batch = writeBatch(db);
+
+    // 1. Unbind member from user
+    batch.update(doc(db, 'groups', groupId, 'members', memberId), {
+      userId: null,
+      updatedAt: serverTimestamp(),
+    });
+
+    // 2. Remove group from user's joined list
+    batch.set(doc(db, 'users', userId), {
+      lastGroupId: null,
+      joinedGroupIds: arrayRemove(groupId),
+    }, { merge: true });
+
+    await batch.commit();
+  },
+
   async deleteGroup(userId: string, groupId: string, expenseIds: string[], memberIds: string[]) {
     const batch = writeBatch(db);
 
