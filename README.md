@@ -19,7 +19,10 @@ A modern, mobile-friendly group expense splitting application built with React, 
 - 💰 **One-Click Reimbursement**: 
   - Members can provide **Bank Code and Account** details in their profile.
   - Debtors can copy the receiver's bank account with one click directly from the settlement view.
-- 🛡️ **Host Management**: Dedicated group hosts can manage members, update group settings, or clear records.
+- 🛡️ **Group Management**: 
+  - Hosts can manage members, update group names, or permanently delete groups.
+  - Regular members can **Leave Group** once their balance is fully settled.
+- 🌐 **Internationalization (i18n)**: Full support for **English** and **Traditional Chinese (繁體中文)**.
 - 📱 **Mobile First UI**: Fully responsive design with a clean, intuitive interface built with Tailwind CSS 4 and Lucide Icons.
 - 🔄 **State Persistence**: Remembers your last visited group and syncs joined groups across your user profile.
 
@@ -28,8 +31,9 @@ A modern, mobile-friendly group expense splitting application built with React, 
 - **Frontend**: [React 19](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Vite 8](https://vitejs.dev/)
 - **Routing**: [React Router 7](https://reactrouter.com/)
 - **State Management**: React Context API
-- **Backend**: [Firebase 12](https://firebase.google.com/) (Firestore, Auth & Analytics)
+- **Backend**: [Firebase 12](https://firebase.google.com/) (Firestore, Auth)
 - **Styling**: [Tailwind CSS 4](https://tailwindcss.com/), [Lucide Icons](https://lucide.dev/)
+- **i18n**: [i18next](https://www.i18next.com/), [react-i18next](https://react.i18next.com/)
 - **Notifications**: [React Hot Toast](https://react-hot-toast.com/)
 - **Testing**: [Vitest](https://vitest.dev/)
 
