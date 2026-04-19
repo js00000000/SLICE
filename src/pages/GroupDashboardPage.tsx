@@ -77,18 +77,6 @@ export function GroupDashboardPage() {
               </div>
               <h1 className="font-bold text-base leading-none border-l border-indigo-100 pl-2 mb-0.5">{currentGroup?.name || 'Group Dashboard'}</h1>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  const url = `${window.location.origin}/join/${groupId}`;
-                  navigator.clipboard.writeText(url);
-                  toast.success(t('groups.link_copied'));
-                }}
-                className="text-[10px] text-gray-400 flex items-center gap-1 hover:text-indigo-500 transition-colors mt-0.5"
-              >
-                <Share2 className="w-2 h-2" /> {t('common.share')}
-              </button>
-            </div>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -98,6 +86,17 @@ export function GroupDashboardPage() {
             >
               <LucideUser className="w-4 h-4" />
               <span className="max-w-[80px] truncate">{currentMember.name}</span>
+            </button>
+            <button
+              onClick={() => {
+                const url = `${window.location.origin}/join/${groupId}`;
+                navigator.clipboard.writeText(url);
+                toast.success(t('groups.link_copied'));
+              }}
+              className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors"
+              title={t('common.share')}
+            >
+              <Share2 className="w-4 h-4" />
             </button>
             <button
               onClick={toggleLanguage}
