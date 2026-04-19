@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import {
-  Receipt, Copy, User as LucideUser, LogOut, Plus, Share2, Languages
+  Receipt, Copy, User as LucideUser, LogOut, Plus, Share2, Languages, Users
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -96,6 +96,12 @@ export function GroupDashboardPage() {
                 className="text-[10px] text-gray-400 flex items-center gap-1 hover:text-indigo-500 transition-colors mt-0.5 border-l border-gray-200 pl-2"
               >
                 <Share2 className="w-2 h-2" /> {t('common.share')}
+              </button>
+              <button
+                onClick={() => navigate(`/group/${groupId}/members`)}
+                className="text-[10px] text-gray-400 flex items-center gap-1 hover:text-indigo-500 transition-colors mt-0.5 border-l border-gray-200 pl-2"
+              >
+                <Users className="w-2 h-2" /> {t('members.title')}
               </button>
             </div>
           </div>

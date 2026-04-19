@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { LoadingView } from './components/LoadingView';
 import { LoginView } from './components/LoginView';
+import { AuthGuard } from './components/ProtectedRoute';
 
 // Import Pages
 import { GroupSelectionPage } from './pages/GroupSelectionPage';
@@ -21,15 +22,21 @@ export default function App() {
   const { currentMemberId, currentMember, isLoading } = useGroup();
 
   if (authLoading) return <LoadingView />;
+  
   if (!user) return (
-    <LoginView
-      onGoogleLogin={handleGoogleLogin}
-      onGuestLogin={handleGuestLogin}
-      isGoogleLoading={googleLoading}
-      isGuestLoading={guestLoading}
-    />
+    <>
+      <Helmet>
+        <html lang={i18n.language} />
+        <title>{t('common.seo_title')}</title>
+      </Helmet>
+      <LoginView
+        onGoogleLogin={handleGoogleLogin}
+        onGuestLogin={handleGuestLogin}
+        isGoogleLoading={googleLoading}
+        isGuestLoading={guestLoading}
+      />
+    </>
   );
-  if (isLoading) return <LoadingView />;
 
   return (
     <>
@@ -42,23 +49,29 @@ export default function App() {
         <meta property="twitter:title" content={t('common.seo_title')} />
         <meta property="twitter:description" content={t('common.seo_description')} />
       </Helmet>
-      <Routes>
-        <Route path="/" element={<GroupSelectionPage />} />
+      
+      {isLoading ? (
+        <LoadingView />
+      ) : (
+        <Routes>
+          <Route element={<AuthGuard />}>
+            <Route path="/" element={<GroupSelectionPage />} />
 
-        <Route path="/group/:groupId" element={
-          !currentMemberId || !currentMember ? (
-            <MemberSelectionPage />
-          ) : (
-            <GroupDashboardPage />
-          )
-        } />
+            <Route path="/group/:groupId" element={
+              !currentMemberId || !currentMember ? (
+                <MemberSelectionPage />
+              ) : (
+                <GroupDashboardPage />
+              )
+            } />
 
-        <Route path="/group/:groupId/members" element={<MemberManagementPage />} />
+            <Route path="/group/:groupId/members" element={<MemberManagementPage />} />
+            <Route path="/join/:groupId" element={<JoinGroupPage />} />
+          </Route>
 
-        <Route path="/join/:groupId" element={<JoinGroupPage />} />
-
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      )}
     </>
   );
 }
