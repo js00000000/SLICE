@@ -35,7 +35,7 @@ export function ProfileModal({
   };
 
   const handleLogoutClick = async () => {
-    const isConfirmed = await confirm(t('auth.abandon_guest_msg'), {
+    const isConfirmed = await confirm(t('auth.logout_msg'), {
       title: t('auth.logout'),
       confirmLabel: t('auth.logout'),
       cancelLabel: t('common.cancel')
