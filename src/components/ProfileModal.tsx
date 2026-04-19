@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, User as LucideUser, CreditCard, Users, Shield, LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Member } from '../types';
+import { useDialog } from '../contexts/DialogContext';
 
 interface ProfileModalProps {
   currentMember: Member;
@@ -19,6 +20,7 @@ export function ProfileModal({
   onLogout
 }: ProfileModalProps) {
   const { t } = useTranslation();
+  const { confirm } = useDialog();
   const [name, setName] = useState(currentMember.name || '');
   const [bankCode, setBankCode] = useState(currentMember.bankCode || '');
   const [bankAccount, setBankAccount] = useState(currentMember.bankAccount || '');
@@ -30,6 +32,17 @@ export function ProfileModal({
       bankCode: bankCode.trim(),
       bankAccount: bankAccount.trim()
     });
+  };
+
+  const handleLogoutClick = async () => {
+    const isConfirmed = await confirm(t('auth.abandon_guest_msg'), {
+      title: t('auth.logout'),
+      confirmLabel: t('auth.logout'),
+      cancelLabel: t('common.cancel')
+    });
+    if (isConfirmed) {
+      onLogout();
+    }
   };
 
   return (
@@ -111,7 +124,7 @@ export function ProfileModal({
             </button>
             <button
               type="button"
-              onClick={onLogout}
+              onClick={handleLogoutClick}
               className="w-full py-3 bg-red-50 text-red-600 border border-red-100 rounded-xl font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
             >
               <LogOut className="w-4 h-4" />
