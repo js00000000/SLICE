@@ -9,7 +9,8 @@ import {
   onSnapshot,
   query,
   where,
-  documentId
+  documentId,
+  getDocs
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { firebaseService, type ExpenseInput } from '../lib/firebaseService';
@@ -81,13 +82,11 @@ export function GroupProvider({ children }: { children: ReactNode }) {
             collection(db, 'groups'),
             where(documentId(), 'in', data.joinedGroupIds.slice(0, 30))
           );
-          // Keeping getDocs here for settings as it's a one-time fetch or rarely changes
-          import('firebase/firestore').then(({ getDocs }) => {
-            getDocs(groupsQuery).then(snapshot => {
-              const groupsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Group));
-              setMyGroups(groupsData);
-            }).catch(err => console.error("Fetch my groups error:", err));
-          });
+          
+          getDocs(groupsQuery).then(snapshot => {
+            const groupsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Group));
+            setMyGroups(groupsData);
+          }).catch(err => console.error("Fetch my groups error:", err));
         } else {
           setMyGroups([]);
         }

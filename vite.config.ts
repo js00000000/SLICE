@@ -8,4 +8,15 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/analytics'],
+          'ui-icons': ['lucide-react'],
+          'vendor': ['react', 'react-dom', 'react-router-dom', 'react-helmet-async', 'react-hot-toast', 'i18next', 'react-i18next'],
+        }
+      }
+    }
+  }
 })
