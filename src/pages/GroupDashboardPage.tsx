@@ -18,7 +18,7 @@ import { useAuth } from '../contexts/AuthContext';
 export function GroupDashboardPage() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
-  const { handleLogout } = useAuth();
+  const { handleLogout, handleDeleteAccount } = useAuth();
   const {
     groupId,
     currentGroup,
@@ -188,6 +188,7 @@ export function GroupDashboardPage() {
             navigate(`/group/${groupId}/members`);
           }}
           onLogout={handleLogout}
+          onDeleteAccount={handleDeleteAccount}
         />
       )}
     </div>

@@ -10,6 +10,7 @@ interface ProfileModalProps {
   onSave: (data: Partial<Member>) => void;
   onManageMembers: () => void;
   onLogout: () => void;
+  onDeleteAccount: () => void;
 }
 
 export function ProfileModal({
@@ -17,7 +18,8 @@ export function ProfileModal({
   onClose,
   onSave,
   onManageMembers,
-  onLogout
+  onLogout,
+  onDeleteAccount
 }: ProfileModalProps) {
   const { t } = useTranslation();
   const { confirm } = useDialog();
@@ -42,6 +44,17 @@ export function ProfileModal({
     });
     if (isConfirmed) {
       onLogout();
+    }
+  };
+
+  const handleDeleteAccountClick = async () => {
+    const isConfirmed = await confirm(t('auth.delete_account_msg'), {
+      title: t('auth.delete_account'),
+      confirmLabel: t('auth.delete_account_confirm'),
+      cancelLabel: t('common.cancel')
+    });
+    if (isConfirmed) {
+      onDeleteAccount();
     }
   };
 
@@ -126,10 +139,18 @@ export function ProfileModal({
             <button
               type="button"
               onClick={handleLogoutClick}
-              className="w-full py-3 bg-red-50 text-red-600 border border-red-100 rounded-xl font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3 bg-white text-gray-600 border border-gray-200 rounded-xl font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
             >
               <LogOut className="w-4 h-4" />
               {t('auth.logout')}
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteAccountClick}
+              className="w-full py-3 bg-red-50 text-red-600 border border-red-100 rounded-xl font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+            >
+              <X className="w-4 h-4" />
+              {t('auth.delete_account')}
             </button>
           </div>
         </form>
@@ -137,3 +158,4 @@ export function ProfileModal({
     </div>
   );
 }
+

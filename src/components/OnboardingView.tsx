@@ -15,6 +15,7 @@ interface OnboardingViewProps {
   onCreate: (name: string) => void;
   onGoogleLogin: () => void;
   onLogout: () => void;
+  onDeleteAccount: () => void;
   onCreateGroup: (name: string) => void;
   onJoinGroup: (id: string) => void;
   onLeaveGroup: () => void;
@@ -31,6 +32,7 @@ export function OnboardingView({
   onCreate, 
   onGoogleLogin, 
   onLogout, 
+  onDeleteAccount,
   onCreateGroup, 
   onJoinGroup, 
   onLeaveGroup, 
@@ -46,6 +48,7 @@ export function OnboardingView({
         myGroups={myGroups}
         onGoogleLogin={onGoogleLogin} 
         onLogout={onLogout} 
+        onDeleteAccount={onDeleteAccount}
         onCreateGroup={onCreateGroup} 
         onJoinGroup={onJoinGroup} 
         onSelectGroup={onSelectGroup}

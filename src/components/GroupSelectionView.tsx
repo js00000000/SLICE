@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogOut, Clock, ArrowRight, Languages, Receipt } from 'lucide-react';
+import { LogOut, Clock, ArrowRight, Languages, Receipt, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { APP_NAME } from '../constants';
 import type { User } from 'firebase/auth';
@@ -10,6 +10,7 @@ interface GroupSelectionViewProps {
   myGroups: Group[];
   onGoogleLogin: () => void;
   onLogout: () => void;
+  onDeleteAccount: () => void;
   onCreateGroup: (name: string) => void;
   onJoinGroup: (id: string) => void;
   onSelectGroup: (id: string) => void;
@@ -20,6 +21,7 @@ export function GroupSelectionView({
   myGroups,
   onGoogleLogin,
   onLogout,
+  onDeleteAccount,
   onCreateGroup,
   onJoinGroup,
   onSelectGroup
@@ -70,8 +72,11 @@ export function GroupSelectionView({
               <button onClick={toggleLanguage} className="p-2 text-gray-400 hover:text-indigo-600 transition-colors" title="Change Language">
                 <Languages className="w-4 h-4" />
               </button>
-              <button onClick={onLogout} className="p-2 text-gray-400 hover:text-red-500 transition-colors">
+              <button onClick={onLogout} className="p-2 text-gray-400 hover:text-indigo-600 transition-colors" title={t('auth.logout')}>
                 <LogOut className="w-4 h-4" />
+              </button>
+              <button onClick={onDeleteAccount} className="p-2 text-gray-400 hover:text-red-500 transition-colors" title={t('auth.delete_account')}>
+                <X className="w-4 h-4" />
               </button>
             </div>
           </div>
