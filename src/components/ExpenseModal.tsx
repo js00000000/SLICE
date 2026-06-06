@@ -17,7 +17,7 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
   const [description, setDescription] = useState(initialData ? initialData.description : '');
   const [amount, setAmount] = useState(initialData ? initialData.amount.toString() : '');
   const [paidBy, setPaidBy] = useState(initialData ? initialData.paidBy : currentMemberId);
-  const [splitAmong, setSplitAmong] = useState<string[]>(initialData ? initialData.splitAmong : members.map(m => m.id));
+  const [splitAmong, setSplitAmong] = useState<string[]>(initialData ? initialData.splitAmong : []);
   
   const [isMultiplePayers, setIsMultiplePayers] = useState(!!initialData?.payments && initialData.payments.length > 1);
   const [payments, setPayments] = useState<Payment[]>(
@@ -339,14 +339,14 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
                 </div>
               )}
               
-              {splitAmong.length === 0 && (
+              {!isCustomSplit && splitAmong.length === 0 && (
                 <p className="text-red-500 text-xs mt-1">{i18n.language.startsWith('zh') ? '請至少選擇一位分帳成員' : 'Please select at least one member'}</p>
               )}
             </div>
           </div>
 
           <div className="pt-4 mt-2 border-t">
-            <button type="submit" disabled={!description || !amount || splitAmong.length === 0 || !isAmountValid || !isSplitValid}
+            <button type="submit" disabled={!description || !amount || (isCustomSplit ? splits.filter(s => s.amount > 0).length === 0 : splitAmong.length === 0) || !isAmountValid || !isSplitValid}
               className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium disabled:opacity-50 hover:bg-indigo-700 transition-colors">
               {isEditing ? t('common.save') : t('common.confirm')}
             </button>
