@@ -55,6 +55,18 @@ export function ExpensesList({ expenses, members, onEdit, onDelete, filterPaidBy
       ) : (
         <div className="divide-y">
           {expenses.map(exp => {
+            const myShare = (() => {
+              if (!currentMemberId) return null;
+              if (exp.splits && exp.splits.length > 0) {
+                return exp.splits.find(s => s.memberId === currentMemberId)?.amount || 0;
+              }
+              if (exp.splitAmong.includes(currentMemberId)) {
+                const amount = typeof exp.amount === 'string' ? parseFloat(exp.amount) : exp.amount;
+                return amount / exp.splitAmong.length;
+              }
+              return 0;
+            })();
+
             return (
               <div key={exp.id} className="p-5 flex items-start justify-between group">
                 <div className="min-w-0 flex-1">
@@ -107,21 +119,29 @@ export function ExpensesList({ expenses, members, onEdit, onDelete, filterPaidBy
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 transition-opacity">
-                  <button onClick={() => onEdit(exp)}
-                    className="text-gray-400 hover:text-indigo-600 p-2 rounded-full hover:bg-indigo-50
-                    transition-colors"
-                    title={t('common.edit')}
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => onDelete(exp)}
-                    className="text-gray-400 hover:text-red-500 p-2 rounded-full hover:bg-red-50
-                    transition-colors"
-                    title={t('common.delete')}
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                <div className="flex flex-col items-end gap-2">
+                  <div className="flex items-center gap-1 transition-opacity">
+                    <button onClick={() => onEdit(exp)}
+                      className="text-gray-400 hover:text-indigo-600 p-2 rounded-full hover:bg-indigo-50
+                      transition-colors"
+                      title={t('common.edit')}
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => onDelete(exp)}
+                      className="text-gray-400 hover:text-red-500 p-2 rounded-full hover:bg-red-50
+                      transition-colors"
+                      title={t('common.delete')}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {myShare !== null && myShare > 0 && (
+                    <div className="text-sm font-semibold text-indigo-600">
+                      {formatCurrency(myShare)}
+                    </div>
+                  )}
                 </div>
               </div>
             );
