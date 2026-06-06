@@ -66,11 +66,32 @@ export function ExpensesList({ expenses, members, onEdit, onDelete, filterPaidBy
                   </div>
                   <div className="text-sm text-gray-500 mt-1 space-y-0.5">
                     <div className="flex items-center gap-1 flex-wrap">
-                      <span className={`font-medium ${exp.paidBy === currentMemberId ? 'text-indigo-600 font-semibold' : ''}`}>
-                        {getMemberName(exp.paidBy)}
-                      </span> 
-                      <span>{t('expenses.paid_action')}</span>
-                      <span className="font-medium text-gray-900">{formatCurrency(exp.amount)}</span>
+                      {exp.payments && exp.payments.length > 1 ? (
+                        <>
+                          {(() => {
+                            const paymentsList = exp.payments;
+                            return paymentsList.map((p, idx) => (
+                              <span key={p.memberId}>
+                                <span className={`font-medium ${p.memberId === currentMemberId ? 'text-indigo-600 font-semibold' : 'text-gray-900'}`}>
+                                  {getMemberName(p.memberId)}
+                                </span>
+                                <span className="text-gray-400 text-[10px] ml-0.5">({formatCurrency(p.amount)})</span>
+                                {idx < paymentsList.length - 1 && <span className="mr-1">,</span>}
+                              </span>
+                            ));
+                          })()}
+                          <span className="ml-1">{t('expenses.paid_action')}</span>
+                          <span className="font-medium text-gray-900">{formatCurrency(exp.amount)}</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className={`font-medium ${exp.paidBy === currentMemberId ? 'text-indigo-600 font-semibold' : 'text-gray-900'}`}>
+                            {getMemberName(exp.paidBy)}
+                          </span> 
+                          <span>{t('expenses.paid_action')}</span>
+                          <span className="font-medium text-gray-900">{formatCurrency(exp.amount)}</span>
+                        </>
+                      )}
                     </div>
                     <div className="text-xs text-gray-400 flex flex-wrap gap-x-1">
                       <span>{t('expenses.split_among')}:</span>

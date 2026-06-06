@@ -16,11 +16,17 @@ export interface Group {
   createdAt: Timestamp;
 }
 
+export interface Payment {
+  memberId: string;
+  amount: number;
+}
+
 export interface Expense {
   id: string;
   description: string;
   amount: number;
-  paidBy: string;
+  paidBy: string; // Keep for backward compatibility/primary payer
+  payments?: Payment[]; // Support for multiple payers
   splitAmong: string[];
   createdBy: string;
   createdAt?: Timestamp;

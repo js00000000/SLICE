@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { X, CheckCircle2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, CheckCircle2, Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { Member, Expense } from '../types';
+import type { Member, Expense, Payment } from '../types';
 
 interface ExpenseModalProps {
   members: Member[];
@@ -17,18 +17,36 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
   const [amount, setAmount] = useState(initialData ? initialData.amount.toString() : '');
   const [paidBy, setPaidBy] = useState(initialData ? initialData.paidBy : currentMemberId);
   const [splitAmong, setSplitAmong] = useState<string[]>(initialData ? initialData.splitAmong : members.map(m => m.id));
+  
+  const [isMultiplePayers, setIsMultiplePayers] = useState(!!initialData?.payments && initialData.payments.length > 1);
+  const [payments, setPayments] = useState<Payment[]>(
+    initialData?.payments && initialData.payments.length > 0 
+      ? initialData.payments 
+      : [{ memberId: initialData?.paidBy || currentMemberId, amount: initialData ? initialData.amount : 0 }]
+  );
 
   const isEditing = !!initialData;
   const isAllSelected = members.length > 0 && splitAmong.length === members.length;
 
+  useEffect(() => {
+    if (!isMultiplePayers) {
+      setPayments([{ memberId: paidBy, amount: parseFloat(amount) || 0 }]);
+    }
+  }, [paidBy, amount, isMultiplePayers]);
+
+  const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+  const amountDiff = Math.abs(totalPaid - parseFloat(amount || '0'));
+  const isAmountValid = !isMultiplePayers || amountDiff < 0.01;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!description || !amount || splitAmong.length === 0) return;
+    if (!description || !amount || splitAmong.length === 0 || !isAmountValid) return;
 
     onSave({
       description: description.trim(),
       amount: parseFloat(amount),
-      paidBy,
+      paidBy: isMultiplePayers ? payments[0].memberId : paidBy,
+      payments: isMultiplePayers ? payments : [{ memberId: paidBy, amount: parseFloat(amount) }],
       splitAmong
     }, initialData?.id);
   };
@@ -37,6 +55,22 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
     setSplitAmong(prev =>
       prev.includes(id) ? prev.filter(m => m !== id) : [...prev, id]
     );
+  };
+
+  const addPayer = () => {
+    const existingMemberIds = payments.map(p => p.memberId);
+    const availableMember = members.find(m => !existingMemberIds.includes(m.id)) || members[0];
+    setPayments([...payments, { memberId: availableMember.id, amount: 0 }]);
+  };
+
+  const removePayer = (index: number) => {
+    setPayments(payments.filter((_, i) => i !== index));
+  };
+
+  const updatePayer = (index: number, data: Partial<Payment>) => {
+    const newPayments = [...payments];
+    newPayments[index] = { ...newPayments[index], ...data };
+    setPayments(newPayments);
   };
 
   return (
@@ -77,15 +111,93 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t('expenses.paid_by')}</label>
-              <select value={paidBy} onChange={(e) => setPaidBy(e.target.value)}
-                className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600
-                focus:border-transparent outline-none bg-white"
-              >
-                {members.map(m => (
-                  <option key={m.id} value={m.id}>{m.name}</option>
-                ))}
-              </select>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium text-gray-700">{t('expenses.paid_by')}</label>
+                <button
+                  type="button"
+                  onClick={() => setIsMultiplePayers(!isMultiplePayers)}
+                  className="text-xs text-indigo-600 font-medium hover:text-indigo-800"
+                >
+                  {isMultiplePayers ? t('expenses.single_payer') : t('expenses.multiple_payers')}
+                </button>
+              </div>
+
+              {!isMultiplePayers ? (
+                <select value={paidBy} onChange={(e) => setPaidBy(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600
+                  focus:border-transparent outline-none bg-white"
+                >
+                  {members.map(m => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
+                  ))}
+                </select>
+              ) : (
+                <div className="space-y-2">
+                  {payments.map((p, index) => {
+                    const otherPayerIds = payments
+                      .filter((_, i) => i !== index)
+                      .map(op => op.memberId);
+                    
+                    return (
+                      <div key={index} className="flex gap-2">
+                        <select 
+                          value={p.memberId} 
+                          onChange={(e) => updatePayer(index, { memberId: e.target.value })}
+                          className="flex-1 px-3 py-2 border rounded-xl text-sm outline-none bg-white"
+                        >
+                          {members.map(m => (
+                            <option 
+                              key={m.id} 
+                              value={m.id}
+                              disabled={otherPayerIds.includes(m.id)}
+                            >
+                              {m.name}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="relative w-32">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">$</span>
+                          <input
+                            type="number"
+                            step="any"
+                            value={p.amount || ''}
+                            onChange={(e) => updatePayer(index, { amount: parseFloat(e.target.value) || 0 })}
+                            className="w-full pl-6 pr-3 py-2 border rounded-xl text-sm outline-none font-mono"
+                            placeholder="0.00"
+                          />
+                        </div>
+                        {payments.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removePayer(index)}
+                            className="p-2 text-gray-400 hover:text-red-500"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {payments.length < members.length && (
+                    <button
+                      type="button"
+                      onClick={addPayer}
+                      className="flex items-center gap-1 text-xs text-indigo-600 font-medium hover:text-indigo-800 py-1"
+                    >
+                      <Plus className="w-3 h-3" />
+                      {t('expenses.add_payer')}
+                    </button>
+                  )}
+                  
+                  {!isAmountValid && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {t('expenses.total_amount_mismatch', { 
+                        diff: (parseFloat(amount || '0') - totalPaid).toFixed(2) 
+                      })}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             <div>
@@ -127,7 +239,7 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
           </div>
 
           <div className="pt-4 mt-2 border-t">
-            <button type="submit" disabled={!description || !amount || splitAmong.length === 0}
+            <button type="submit" disabled={!description || !amount || splitAmong.length === 0 || !isAmountValid}
               className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium disabled:opacity-50 hover:bg-indigo-700 transition-colors">
               {isEditing ? t('common.save') : t('common.confirm')}
             </button>

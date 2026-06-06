@@ -201,4 +201,115 @@ describe('Settlement Logic', () => {
     expect(settlements).toHaveLength(1);
     expect(settlements[0]).toEqual({ from: '4', to: '1', amount: 100 });
   });
+
+  it('should calculate correct balances for multiple payers', () => {
+    const members: Member[] = [
+      { id: '1', name: 'Alice' },
+      { id: '2', name: 'Bob' },
+      { id: '3', name: 'Charlie' },
+    ];
+    const expenses: Expense[] = [
+      {
+        id: 'e1',
+        description: 'Dinner',
+        amount: 300,
+        paidBy: '1', // Legacy fallback
+        payments: [
+          { memberId: '1', amount: 200 }, // Alice paid 200
+          { memberId: '2', amount: 100 }, // Bob paid 100
+        ],
+        splitAmong: ['1', '2', '3'], // 100 each
+      },
+    ];
+
+    const { balances, settlements } = calculateBalancesAndSettlements(members, expenses);
+
+    // Alice: +200 (paid) - 100 (share) = +100
+    // Bob: +100 (paid) - 100 (share) = 0
+    // Charlie: -100 (share) = -100
+    expect(balances['1']).toBe(100);
+    expect(balances['2']).toBe(0);
+    expect(balances['3']).toBe(-100);
+
+    expect(settlements).toHaveLength(1);
+    expect(settlements[0]).toEqual({ from: '3', to: '1', amount: 100 });
+  });
+
+  it('should handle multiple payers where some are not in the split', () => {
+    const members: Member[] = [
+      { id: '1', name: 'Alice' },
+      { id: '2', name: 'Bob' },
+      { id: '3', name: 'Charlie' },
+    ];
+    const expenses: Expense[] = [
+      {
+        id: 'e1',
+        description: 'Gift',
+        amount: 100,
+        paidBy: '1',
+        payments: [
+          { memberId: '1', amount: 60 },
+          { memberId: '3', amount: 40 },
+        ],
+        splitAmong: ['2'], // Only Bob benefits
+      },
+    ];
+
+    const { balances } = calculateBalancesAndSettlements(members, expenses);
+
+    // Alice: +60 (paid) - 0 (share) = +60
+    // Bob: +0 (paid) - 100 (share) = -100
+    // Charlie: +40 (paid) - 0 (share) = +40
+    expect(balances['1']).toBe(60);
+    expect(balances['2']).toBe(-100);
+    expect(balances['3']).toBe(40);
+  });
+
+  it('should handle multiple payers with floating point amounts', () => {
+    const members: Member[] = [
+      { id: '1', name: 'Alice' },
+      { id: '2', name: 'Bob' },
+    ];
+    const expenses: Expense[] = [
+      {
+        id: 'e1',
+        description: 'Split Lunch',
+        amount: 33.33,
+        paidBy: '1',
+        payments: [
+          { memberId: '1', amount: 16.66 },
+          { memberId: '2', amount: 16.67 },
+        ],
+        splitAmong: ['1', '2'], // 16.665 each
+      },
+    ];
+
+    const { balances } = calculateBalancesAndSettlements(members, expenses);
+
+    const share = 33.33 / 2; // 16.665
+    expect(balances['1']).toBeCloseTo(16.66 - share, 2);
+    expect(balances['2']).toBeCloseTo(16.67 - share, 2);
+  });
+
+  it('should fallback to single payer if payments array is empty', () => {
+    const members: Member[] = [
+      { id: '1', name: 'Alice' },
+      { id: '2', name: 'Bob' },
+    ];
+    const expenses: Expense[] = [
+      {
+        id: 'e1',
+        description: 'Legacy Style',
+        amount: 100,
+        paidBy: '1',
+        payments: [], // Empty array
+        splitAmong: ['1', '2'],
+      },
+    ];
+
+    const { balances } = calculateBalancesAndSettlements(members, expenses);
+
+    expect(balances['1']).toBe(50);
+    expect(balances['2']).toBe(-50);
+  });
 });

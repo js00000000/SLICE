@@ -100,7 +100,12 @@
     "no_matching_hint": "Try clearing the filter",
     "no_expenses_recorded": "No expenses recorded",
     "no_expenses_hint": "Click the button below to add your first expense",
-    "paid_action": "paid"
+    "paid_action": "paid",
+    "single_payer": "Single Payer",
+    "multiple_payers": "Multiple Payers",
+    "add_payer": "Add Payer",
+    "remove_payer": "Remove",
+    "total_amount_mismatch": "Total payment must equal total amount (Diff: {{diff}})"
   },
   "profile": {
     "title": "Profile Settings",

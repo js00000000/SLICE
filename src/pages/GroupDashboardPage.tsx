@@ -40,7 +40,10 @@ export function GroupDashboardPage() {
 
   const filteredExpenses = useMemo(() => {
     if (!filterPaidBy) return expenses;
-    return expenses.filter(exp => exp.paidBy === filterPaidBy);
+    return expenses.filter(exp => 
+      exp.paidBy === filterPaidBy || 
+      (exp.payments && exp.payments.some(p => p.memberId === filterPaidBy))
+    );
   }, [expenses, filterPaidBy]);
 
   const openAddModal = () => {

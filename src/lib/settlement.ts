@@ -4,11 +4,17 @@ export interface Member {
   isHost?: boolean;
 }
 
+export interface Payment {
+  memberId: string;
+  amount: number;
+}
+
 export interface Expense {
   id: string;
   description: string;
   amount: number;
   paidBy: string;
+  payments?: Payment[];
   splitAmong: string[];
 }
 
@@ -25,10 +31,18 @@ export function calculateBalancesAndSettlements(members: Member[], expenses: Exp
 
   expenses.forEach(exp => {
     const amount = parseFloat(exp.amount.toString());
-    // Payer gets the full amount added to their balance
-    if (balances[exp.paidBy] !== undefined) {
+    // Handle multiple payers if available, otherwise fallback to single payer
+    if (exp.payments && exp.payments.length > 0) {
+      exp.payments.forEach(p => {
+        if (balances[p.memberId] !== undefined) {
+          balances[p.memberId] += parseFloat(p.amount.toString());
+        }
+      });
+    } else if (balances[exp.paidBy] !== undefined) {
+      // Payer gets the full amount added to their balance (Legacy)
       balances[exp.paidBy] += amount;
     }
+
     // Splitters subtract their share
     if (exp.splitAmong && exp.splitAmong.length > 0) {
       const splitAmt = amount / exp.splitAmong.length;
