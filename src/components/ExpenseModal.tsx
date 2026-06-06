@@ -3,6 +3,7 @@ import { X, CheckCircle2, Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Member, Expense, Payment } from '../types';
 import { calculateEvenSplit, isCustomSplit as detectCustomSplit } from '../utils/split';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 interface ExpenseModalProps {
   members: Member[];
@@ -13,6 +14,7 @@ interface ExpenseModalProps {
 }
 
 export function ExpenseModal({ members, currentMemberId, initialData, onClose, onSave }: ExpenseModalProps) {
+  useScrollLock();
   const { t, i18n } = useTranslation();
   const [description, setDescription] = useState(initialData ? initialData.description : '');
   const [amount, setAmount] = useState(initialData ? initialData.amount.toString() : '');

@@ -1,5 +1,6 @@
 import { X, AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 interface AbandonGuestConfirmationModalProps {
   onClose: () => void;
@@ -7,6 +8,7 @@ interface AbandonGuestConfirmationModalProps {
 }
 
 export function AbandonGuestConfirmationModal({ onClose, onConfirm }: AbandonGuestConfirmationModalProps) {
+  useScrollLock();
   const { t, i18n } = useTranslation();
 
   return (

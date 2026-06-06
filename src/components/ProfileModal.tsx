@@ -3,6 +3,7 @@ import { X, User as LucideUser, Shield, LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Member } from '../types';
 import { useDialog } from '../contexts/DialogContext';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 interface ProfileModalProps {
   currentMember: Member;
@@ -19,6 +20,7 @@ export function ProfileModal({
   onLogout,
   onDeleteAccount
 }: ProfileModalProps) {
+  useScrollLock();
   const { t } = useTranslation();
   const { confirm } = useDialog();
   const [name, setName] = useState(currentMember.name || '');

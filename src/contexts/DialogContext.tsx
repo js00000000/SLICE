@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { AlertCircle, HelpCircle } from 'lucide-react';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 interface DialogOptions {
   title?: string;
@@ -17,6 +18,7 @@ const DialogContext = createContext<DialogContextType | undefined>(undefined);
 
 export function DialogProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
+  useScrollLock(isOpen);
   const [type, setType] = useState<'alert' | 'confirm'>('alert');
   const [message, setMessage] = useState('');
   const [title, setTitle] = useState('');
