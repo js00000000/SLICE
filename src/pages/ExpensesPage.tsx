@@ -36,6 +36,14 @@ export function ExpensesPage() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [filterPaidBy, setFilterPaidBy] = useState<string | null>(null);
 
+  // Manual title fallback
+  useEffect(() => {
+    const title = currentGroup?.name 
+      ? `${currentGroup.name} - ${APP_NAME}` 
+      : `${t('expenses.title')} - ${APP_NAME}`;
+    document.title = title;
+  }, [currentGroup?.name, t]);
+
   useEffect(() => {
     if (location.state?.openAddModal) {
       setIsExpenseModalOpen(true);
@@ -68,9 +76,9 @@ export function ExpensesPage() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 pb-24">
       <Helmet>
-        <title>{currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `Expenses - ${APP_NAME}`}</title>
-        <meta property="og:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `Expenses - ${APP_NAME}`} />
-        <meta property="twitter:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `Expenses - ${APP_NAME}`} />
+        <title>{currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `${t('expenses.title')} - ${APP_NAME}`}</title>
+        <meta property="og:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `${t('expenses.title')} - ${APP_NAME}`} />
+        <meta property="twitter:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `${t('expenses.title')} - ${APP_NAME}`} />
       </Helmet>
       
       <AppHeader

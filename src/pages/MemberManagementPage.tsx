@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
@@ -30,6 +30,14 @@ export function MemberManagementPage() {
   const [newName, setNewName] = useState(currentGroup?.name || '');
   const [newMemberName, setNewMemberName] = useState('');
   const { balances } = useMemo(() => calculateBalancesAndSettlements(members, expenses), [members, expenses]);
+
+  // Manual title fallback
+  useEffect(() => {
+    const title = currentGroup?.name 
+      ? `${currentGroup.name} - ${APP_NAME}` 
+      : `${t('members.title')} - ${APP_NAME}`;
+    document.title = title;
+  }, [currentGroup?.name, t]);
 
   const handleSaveGroupName = async () => {
     if (newName.trim() && newName !== currentGroup?.name) {

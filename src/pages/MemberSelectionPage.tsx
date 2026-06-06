@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useGroup } from '../contexts/GroupContext';
 import { AppHeader } from '../components/AppHeader';
+import { APP_NAME } from '../constants';
 
 export function MemberSelectionPage() {
   const navigate = useNavigate();
@@ -13,8 +15,17 @@ export function MemberSelectionPage() {
   const { members, handleSelectMember, handleCreateMember } = useGroup();
   const [newName, setNewName] = useState('');
 
+  // Manual title fallback
+  useEffect(() => {
+    document.title = `${t('members.select_identity')} - ${APP_NAME}`;
+  }, [t]);
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
+      <Helmet>
+        <title>{t('members.select_identity')} - {APP_NAME}</title>
+      </Helmet>
+
       <AppHeader
         showBack
         onBack={() => navigate('/')}

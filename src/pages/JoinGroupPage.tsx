@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { useGroup } from '../contexts/GroupContext';
 import { LoadingView } from '../components/LoadingView';
+import { APP_NAME } from '../constants';
 
 export function JoinGroupPage() {
   const { groupId } = useParams<{ groupId: string }>();
@@ -14,6 +16,15 @@ export function JoinGroupPage() {
   const { handleJoinGroup } = useGroup();
   const [error, setError] = useState<string | null>(null);
   const [isJoining, setIsJoining] = useState(false);
+
+  // Manual title fallback
+  useEffect(() => {
+    if (error) {
+      document.title = `${t('common.error')} - ${APP_NAME}`;
+    } else {
+      document.title = `${t('groups.join')} - ${APP_NAME}`;
+    }
+  }, [error, t]);
 
   useEffect(() => {
     // Wait for auth to initialize (handled by App's authLoading check, but safe here too)
@@ -39,6 +50,9 @@ export function JoinGroupPage() {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <Helmet>
+          <title>{t('common.error')} - {APP_NAME}</title>
+        </Helmet>
         <div className="bg-white p-8 rounded-2xl shadow-sm border text-center space-y-4 max-w-sm w-full">
           <h2 className="text-xl font-bold text-red-600">{t('common.error')}</h2>
           <p className="text-gray-600">{error}</p>
@@ -53,5 +67,12 @@ export function JoinGroupPage() {
     );
   }
 
-  return <LoadingView message={t('common.loading')} />;
+  return (
+    <>
+      <Helmet>
+        <title>{t('groups.join')} - {APP_NAME}</title>
+      </Helmet>
+      <LoadingView message={t('common.loading')} />
+    </>
+  );
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
@@ -20,6 +20,11 @@ export function GroupSelectionPage() {
   const [groupIdToJoin, setGroupIdToJoin] = useState('');
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
+  // Manual title fallback
+  useEffect(() => {
+    document.title = `${t('groups.my_groups')} - ${APP_NAME}`;
+  }, [t]);
+
   const isAnonymous = user?.isAnonymous;
   const displayName = isAnonymous
     ? (i18n.language.startsWith('zh') ? '訪客' : 'Guest')
@@ -28,7 +33,7 @@ export function GroupSelectionPage() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
       <Helmet>
-        <title>{t('groups.my_groups')} - {APP_NAME}</title>
+        <title>{t('groups.my_groups') ? `${t('groups.my_groups')} - ${APP_NAME}` : APP_NAME}</title>
       </Helmet>
 
       <AppHeader

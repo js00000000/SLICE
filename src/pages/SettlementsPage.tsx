@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Share2 } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
@@ -28,14 +28,22 @@ export function SettlementsPage() {
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
+  // Manual title fallback
+  useEffect(() => {
+    const title = currentGroup?.name 
+      ? `${currentGroup.name} - ${APP_NAME}` 
+      : `${t('balances.title')} - ${APP_NAME}`;
+    document.title = title;
+  }, [currentGroup?.name, t]);
+
   if (!currentMember || !groupId) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 pb-24">
       <Helmet>
-        <title>{currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `Settlements - ${APP_NAME}`}</title>
-        <meta property="og:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `Settlements - ${APP_NAME}`} />
-        <meta property="twitter:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `Settlements - ${APP_NAME}`} />
+        <title>{currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `${t('balances.title')} - ${APP_NAME}`}</title>
+        <meta property="og:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `${t('balances.title')} - ${APP_NAME}`} />
+        <meta property="twitter:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `${t('balances.title')} - ${APP_NAME}`} />
       </Helmet>
       
       <AppHeader

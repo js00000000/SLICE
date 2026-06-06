@@ -1,9 +1,11 @@
+import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { LoadingView } from './components/LoadingView';
 import { LoginView } from './components/LoginView';
 import { AuthGuard } from './components/ProtectedRoute';
+import { APP_NAME } from './constants';
 
 // Import Pages
 import { GroupSelectionPage } from './pages/GroupSelectionPage';
@@ -25,8 +27,20 @@ export default function App() {
   } = useAuth();
   const { currentMemberId, currentMember, isLoading } = useGroup();
 
+  // Manual title fallback for login and loading states
+  useEffect(() => {
+    if (authLoading) {
+      document.title = APP_NAME;
+    } else if (!user || isSoftLoggedOut) {
+      document.title = t('common.seo_title') || APP_NAME;
+    }
+  }, [user, isSoftLoggedOut, authLoading, t]);
+
   if (authLoading) return (
     <div className="mobile-container">
+      <Helmet>
+        <title>{APP_NAME}</title>
+      </Helmet>
       <LoadingView />
     </div>
   );
@@ -34,7 +48,7 @@ export default function App() {
   if (!user || isSoftLoggedOut) return (
     <div className="mobile-container">
       <Helmet>
-        <html lang={i18n.language} />
+        <html lang={i18n.language || 'en'} />
         <title>{t('common.seo_title')}</title>
       </Helmet>
       <LoginView
@@ -49,12 +63,12 @@ export default function App() {
   return (
     <div className="mobile-container">
       <Helmet>
-        <html lang={i18n.language} />
-        <title>{t('common.seo_title')}</title>
+        <html lang={i18n.language || 'en'} />
+        <title>{APP_NAME}</title>
         <meta name="description" content={t('common.seo_description')} />
-        <meta property="og:title" content={t('common.seo_title')} />
+        <meta property="og:title" content={t('common.seo_title') || APP_NAME} />
         <meta property="og:description" content={t('common.seo_description')} />
-        <meta property="twitter:title" content={t('common.seo_title')} />
+        <meta property="twitter:title" content={t('common.seo_title') || APP_NAME} />
         <meta property="twitter:description" content={t('common.seo_description')} />
       </Helmet>
       
