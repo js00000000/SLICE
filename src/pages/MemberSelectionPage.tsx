@@ -10,7 +10,7 @@ export function MemberSelectionPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { members, currentGroup, handleSelectMember, handleCreateMember } = useGroup();
+  const { members, handleSelectMember, handleCreateMember } = useGroup();
   const [newName, setNewName] = useState('');
 
   return (
@@ -18,7 +18,6 @@ export function MemberSelectionPage() {
       <AppHeader
         showBack
         onBack={() => navigate('/')}
-        title={currentGroup?.name}
       />
 
       <div className="w-full max-w-md mx-auto p-4 py-8 space-y-8">

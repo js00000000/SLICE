@@ -2,45 +2,28 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
-import { LogOut, Clock, ArrowRight, X } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { AppHeader } from '../components/AppHeader';
+import { ProfileModal } from '../components/ProfileModal';
 import { useAuth } from '../contexts/AuthContext';
 import { useGroup } from '../contexts/GroupContext';
-import { useDialog } from '../contexts/DialogContext';
 import { APP_NAME } from '../constants';
+import type { Member } from '../types';
 
 export function GroupSelectionPage() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
-  const { confirm } = useDialog();
-  const { user, handleGoogleLogin, handleLogout, handleDeleteAccount } = useAuth();
+  const { user, handleLogout, handleDeleteAccount } = useAuth();
   const { myGroups, handleCreateGroup, handleJoinGroup } = useGroup();
 
   const [groupName, setGroupName] = useState('');
   const [groupIdToJoin, setGroupIdToJoin] = useState('');
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
   const isAnonymous = user?.isAnonymous;
-
-  const onLogout = async () => {
-    const isConfirmed = await confirm(t('auth.logout_msg'), {
-      title: t('auth.logout'),
-      confirmLabel: t('auth.logout'),
-      cancelLabel: t('common.cancel')
-    });
-    if (isConfirmed) {
-      await handleLogout();
-    }
-  };
-
-  const onDeleteAccount = async () => {
-    const isConfirmed = await confirm(t('auth.delete_account_msg'), {
-      title: t('auth.delete_account'),
-      confirmLabel: t('auth.delete_account_confirm'),
-      cancelLabel: t('common.cancel')
-    });
-    if (isConfirmed) {
-      await handleDeleteAccount();
-    }
-  };
+  const displayName = isAnonymous
+    ? (i18n.language.startsWith('zh') ? '訪客' : 'Guest')
+    : (user?.displayName || user?.email || t('common.loading'));
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
@@ -48,43 +31,20 @@ export function GroupSelectionPage() {
         <title>{t('groups.my_groups')} - {APP_NAME}</title>
       </Helmet>
 
-      <AppHeader title={t('groups.my_groups')} />
+      <AppHeader
+        showProfile
+        onProfileClick={() => setIsProfileModalOpen(true)}
+        currentMemberName={displayName}
+      />
 
       <main className="w-full max-w-md mx-auto p-4 py-8 space-y-8">
         <div className="bg-white rounded-2xl shadow-sm border p-6 space-y-8">
           <div className="space-y-6">
-            {/* Auth Status */}
-            <div className="p-3 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-between">
-              <div className="flex items-center gap-3 overflow-hidden">
-                {user?.photoURL ? (
-                  <img src={user.photoURL} alt="Avatar" className="w-8 h-8 rounded-full border border-indigo-200" />
-                ) : (
-                  <div className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-bold text-xs">
-                    {user?.displayName?.[0] || user?.email?.[0] || '?'}
-                  </div>
-                )}
-                <div className="flex flex-col min-w-0">
-                  <span className="text-xs font-medium text-gray-900 truncate">
-                    {isAnonymous ? (i18n.language.startsWith('zh') ? '訪客' : 'Guest') : (user?.displayName || user?.email || t('common.loading'))}
-                  </span>
-                  {isAnonymous && <button onClick={handleGoogleLogin} className="text-[10px] text-indigo-600 text-left hover:underline">{t('auth.google_login')}</button>}
-                </div>
-              </div>
-              <div className="flex items-center gap-1">
-                <button onClick={onLogout} className="p-2 text-gray-400 hover:text-indigo-600 transition-colors" title={t('auth.logout')}>
-                  <LogOut className="w-4 h-4" />
-                </button>
-                <button onClick={onDeleteAccount} className="p-2 text-gray-400 hover:text-red-500 transition-colors" title={t('auth.delete_account')}>
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
             <div className="space-y-4">
               {myGroups.length > 0 && (
                 <div className="space-y-3">
                   <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-indigo-600" /> {t('groups.my_groups')}
+                    {t('groups.my_groups')}
                   </h2>
                   <div className="space-y-2">
                     {myGroups.map(g => (
@@ -157,6 +117,16 @@ export function GroupSelectionPage() {
           </div>
         </div>
       </main>
+
+      {isProfileModalOpen && (
+        <ProfileModal
+          currentMember={{ name: displayName, isHost: false } as Member}
+          onClose={() => setIsProfileModalOpen(false)}
+          onSave={() => setIsProfileModalOpen(false)}
+          onLogout={handleLogout}
+          onDeleteAccount={handleDeleteAccount}
+        />
+      )}
     </div>
   );
 }

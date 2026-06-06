@@ -6,7 +6,6 @@ import { APP_NAME } from '../constants';
 interface AppHeaderProps {
   showBack?: boolean;
   onBack?: () => void;
-  title?: string;
   showProfile?: boolean;
   onProfileClick?: () => void;
   currentMemberName?: string;
@@ -15,7 +14,6 @@ interface AppHeaderProps {
 export function AppHeader({
   showBack,
   onBack,
-  title,
   showProfile,
   onProfileClick,
   currentMemberName
@@ -52,11 +50,6 @@ export function AppHeader({
             <span className="text-xs font-black tracking-tighter uppercase text-indigo-400 leading-none">
               {APP_NAME}
             </span>
-            {title && (
-              <h1 className="font-semibold text-sm leading-tight text-gray-900 truncate max-w-[150px]">
-                {title}
-              </h1>
-            )}
           </div>
         </div>
 
