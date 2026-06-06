@@ -28,6 +28,7 @@ export interface Expense {
   paidBy: string; // Keep for backward compatibility/primary payer
   payments?: Payment[]; // Support for multiple payers
   splitAmong: string[];
+  splits?: Payment[]; // Support for custom split amounts
   createdBy: string;
   createdAt?: Timestamp;
   updatedAt?: Timestamp;

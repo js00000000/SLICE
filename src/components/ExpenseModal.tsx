@@ -25,6 +25,13 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
       : [{ memberId: initialData?.paidBy || currentMemberId, amount: initialData ? initialData.amount : 0 }]
   );
 
+  const [isCustomSplit, setIsCustomSplit] = useState(!!initialData?.splits && initialData.splits.length > 0);
+  const [splits, setSplits] = useState<Payment[]>(
+    initialData?.splits && initialData.splits.length > 0
+      ? initialData.splits
+      : []
+  );
+
   const isEditing = !!initialData;
   const isAllSelected = members.length > 0 && splitAmong.length === members.length;
 
@@ -34,20 +41,43 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
     }
   }, [paidBy, amount, isMultiplePayers]);
 
+  useEffect(() => {
+    if (isCustomSplit) {
+      setSplits(prev => {
+        const newSplits = splitAmong.map(id => {
+          const existing = prev.find(p => p.memberId === id);
+          return existing || { memberId: id, amount: 0 };
+        });
+        return newSplits;
+      });
+    } else {
+      setSplits([]);
+    }
+  }, [splitAmong, isCustomSplit]);
+
   const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
   const amountDiff = Math.abs(totalPaid - parseFloat(amount || '0'));
   const isAmountValid = !isMultiplePayers || amountDiff < 0.01;
 
+  const totalSplit = splits.reduce((sum, s) => sum + s.amount, 0);
+  const splitDiff = Math.abs(totalSplit - parseFloat(amount || '0'));
+  const isSplitValid = !isCustomSplit || splitDiff < 0.01;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!description || !amount || splitAmong.length === 0 || !isAmountValid) return;
+    if (!description || !amount || (isCustomSplit ? splits.filter(s => s.amount > 0).length === 0 : splitAmong.length === 0) || !isAmountValid || !isSplitValid) return;
+
+    const finalSplitAmong = isCustomSplit 
+      ? splits.filter(s => s.amount > 0).map(s => s.memberId)
+      : splitAmong;
 
     onSave({
       description: description.trim(),
       amount: parseFloat(amount),
       paidBy: isMultiplePayers ? payments[0].memberId : paidBy,
       payments: isMultiplePayers ? payments : [{ memberId: paidBy, amount: parseFloat(amount) }],
-      splitAmong
+      splitAmong: finalSplitAmong,
+      splits: isCustomSplit ? splits.filter(s => s.amount > 0) : undefined
     }, initialData?.id);
   };
 
@@ -55,6 +85,27 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
     setSplitAmong(prev =>
       prev.includes(id) ? prev.filter(m => m !== id) : [...prev, id]
     );
+  };
+
+  const toggleCustomSplit = () => {
+    if (!isCustomSplit) {
+      setSplits(members.map(m => ({ 
+        memberId: m.id, 
+        amount: 0 
+      })));
+    }
+    setIsCustomSplit(!isCustomSplit);
+  };
+
+  const updateSplitAmount = (memberId: string, amount: number) => {
+    setSplits(prev => {
+      const existing = prev.find(s => s.memberId === memberId);
+      if (existing) {
+        return prev.map(s => s.memberId === memberId ? { ...s, amount } : s);
+      } else {
+        return [...prev, { memberId, amount }];
+      }
+    });
   };
 
   const addPayer = () => {
@@ -203,35 +254,79 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-sm font-medium text-gray-700">{t('expenses.split_among')}</label>
-                <button type="button" onClick={() => setSplitAmong(isAllSelected ? [] : members.map(m =>
-                  m.id))}
-                  className="text-xs text-indigo-600 font-medium hover:text-indigo-800"
-                >
-                  {isAllSelected ? (i18n.language.startsWith('zh') ? '全不選' : 'Unselect All') : t('expenses.select_all')}
-                </button>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {members.map(m => {
-                  const isSelected = splitAmong.includes(m.id);
-                  return (
-                    <button key={m.id} type="button" onClick={() => toggleSplitMember(m.id)}
-                      className={`flex items-center gap-2 p-2.5 rounded-xl border text-sm
-                      transition-colors text-left ${
-                      isSelected
-                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                      }`}
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={toggleCustomSplit}
+                    className="text-xs text-indigo-600 font-medium hover:text-indigo-800"
+                  >
+                    {isCustomSplit ? t('expenses.equal_split') : t('expenses.custom_split')}
+                  </button>
+                  {!isCustomSplit && (
+                    <button type="button" onClick={() => setSplitAmong(isAllSelected ? [] : members.map(m =>
+                      m.id))}
+                      className="text-xs text-indigo-600 font-medium hover:text-indigo-800"
                     >
-                      <div className={`w-4 h-4 rounded border flex items-center justify-center ${
-                        isSelected ? 'bg-indigo-600 border-indigo-600' : 'border-gray-300'}`}>
-                        {isSelected &&
-                          <CheckCircle2 className="w-3 h-3 text-white" />}
-                      </div>
-                      <span className="truncate">{m.name}</span>
+                      {isAllSelected ? (i18n.language.startsWith('zh') ? '全不選' : 'Unselect All') : t('expenses.select_all')}
                     </button>
-                  );
-                })}
+                  )}
+                </div>
               </div>
+
+              {isCustomSplit ? (
+                <div className="space-y-2 mb-4">
+                  {members.map((m) => {
+                    const split = splits.find(s => s.memberId === m.id) || { memberId: m.id, amount: 0 };
+                    return (
+                      <div key={m.id} className="flex items-center gap-2">
+                        <div className="flex-1 text-sm text-gray-700 truncate">{m.name}</div>
+                        <div className="relative w-32">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">$</span>
+                          <input
+                            type="number"
+                            step="any"
+                            value={split.amount || ''}
+                            onChange={(e) => updateSplitAmount(m.id, parseFloat(e.target.value) || 0)}
+                            className="w-full pl-6 pr-3 py-2 border rounded-xl text-sm outline-none font-mono"
+                            placeholder="0.00"
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {!isSplitValid && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {t('expenses.split_amount_mismatch', { 
+                        diff: (parseFloat(amount || '0') - totalSplit).toFixed(2) 
+                      })}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  {members.map(m => {
+                    const isSelected = splitAmong.includes(m.id);
+                    return (
+                      <button key={m.id} type="button" onClick={() => toggleSplitMember(m.id)}
+                        className={`flex items-center gap-2 p-2.5 rounded-xl border text-sm
+                        transition-colors text-left ${
+                        isSelected
+                          ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+                          : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className={`w-4 h-4 rounded border flex items-center justify-center ${
+                          isSelected ? 'bg-indigo-600 border-indigo-600' : 'border-gray-300'}`}>
+                          {isSelected &&
+                            <CheckCircle2 className="w-3 h-3 text-white" />}
+                        </div>
+                        <span className="truncate">{m.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              
               {splitAmong.length === 0 && (
                 <p className="text-red-500 text-xs mt-1">{i18n.language.startsWith('zh') ? '請至少選擇一位分帳成員' : 'Please select at least one member'}</p>
               )}
@@ -239,7 +334,7 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
           </div>
 
           <div className="pt-4 mt-2 border-t">
-            <button type="submit" disabled={!description || !amount || splitAmong.length === 0 || !isAmountValid}
+            <button type="submit" disabled={!description || !amount || splitAmong.length === 0 || !isAmountValid || !isSplitValid}
               className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium disabled:opacity-50 hover:bg-indigo-700 transition-colors">
               {isEditing ? t('common.save') : t('common.confirm')}
             </button>

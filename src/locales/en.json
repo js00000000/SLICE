@@ -105,7 +105,10 @@
     "multiple_payers": "Multiple Payers",
     "add_payer": "Add Payer",
     "remove_payer": "Remove",
-    "total_amount_mismatch": "Total payment must equal total amount (Diff: {{diff}})"
+    "total_amount_mismatch": "Total payment must equal total amount (Diff: {{diff}})",
+    "equal_split": "Equal Split",
+    "custom_split": "Custom Split",
+    "split_amount_mismatch": "Total split must equal total amount (Diff: {{diff}})"
   },
   "profile": {
     "title": "Profile Settings",

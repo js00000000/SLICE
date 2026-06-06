@@ -16,6 +16,7 @@ export interface Expense {
   paidBy: string;
   payments?: Payment[];
   splitAmong: string[];
+  splits?: Payment[];
 }
 
 export interface Settlement {
@@ -44,7 +45,13 @@ export function calculateBalancesAndSettlements(members: Member[], expenses: Exp
     }
 
     // Splitters subtract their share
-    if (exp.splitAmong && exp.splitAmong.length > 0) {
+    if (exp.splits && exp.splits.length > 0) {
+      exp.splits.forEach(s => {
+        if (balances[s.memberId] !== undefined) {
+          balances[s.memberId] -= parseFloat(s.amount.toString());
+        }
+      });
+    } else if (exp.splitAmong && exp.splitAmong.length > 0) {
       const splitAmt = amount / exp.splitAmong.length;
       exp.splitAmong.forEach(mId => {
         if (balances[mId] !== undefined) {

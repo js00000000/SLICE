@@ -312,4 +312,119 @@ describe('Settlement Logic', () => {
     expect(balances['1']).toBe(50);
     expect(balances['2']).toBe(-50);
   });
+
+  it('should calculate correct balances for custom split amounts', () => {
+    const members: Member[] = [
+      { id: '1', name: 'Alice' },
+      { id: '2', name: 'Bob' },
+      { id: '3', name: 'Charlie' },
+    ];
+    const expenses: Expense[] = [
+      {
+        id: 'e1',
+        description: 'Custom Split',
+        amount: 100,
+        paidBy: '1',
+        splitAmong: ['1', '2', '3'],
+        splits: [
+          { memberId: '1', amount: 20 },
+          { memberId: '2', amount: 50 },
+          { memberId: '3', amount: 30 },
+        ],
+      },
+    ];
+
+    const { balances } = calculateBalancesAndSettlements(members, expenses);
+
+    // Alice: +100 (paid) - 20 (share) = +80
+    // Bob: -50 (share) = -50
+    // Charlie: -30 (share) = -30
+    expect(balances['1']).toBe(80);
+    expect(balances['2']).toBe(-50);
+    expect(balances['3']).toBe(-30);
+  });
+
+  it('should handle custom splits where the payer is not a participant', () => {
+    const members: Member[] = [
+      { id: '1', name: 'Alice' },
+      { id: '2', name: 'Bob' },
+    ];
+    const expenses: Expense[] = [
+      {
+        id: 'e1',
+        description: 'Alice treats Bob',
+        amount: 100,
+        paidBy: '1',
+        splitAmong: ['2'],
+        splits: [
+          { memberId: '2', amount: 100 },
+        ],
+      },
+    ];
+
+    const { balances } = calculateBalancesAndSettlements(members, expenses);
+
+    expect(balances['1']).toBe(100);
+    expect(balances['2']).toBe(-100);
+  });
+
+  it('should handle multiple payers with custom split amounts', () => {
+    const members: Member[] = [
+      { id: '1', name: 'Alice' },
+      { id: '2', name: 'Bob' },
+      { id: '3', name: 'Charlie' },
+    ];
+    const expenses: Expense[] = [
+      {
+        id: 'e1',
+        description: 'Dinner',
+        amount: 200,
+        paidBy: '1',
+        payments: [
+          { memberId: '1', amount: 150 },
+          { memberId: '2', amount: 50 },
+        ],
+        splitAmong: ['1', '2', '3'],
+        splits: [
+          { memberId: '1', amount: 40 },
+          { memberId: '2', amount: 100 },
+          { memberId: '3', amount: 60 },
+        ],
+      },
+    ];
+
+    const { balances } = calculateBalancesAndSettlements(members, expenses);
+
+    // Alice: +150 (paid) - 40 (share) = +110
+    // Bob: +50 (paid) - 100 (share) = -50
+    // Charlie: -60 (share) = -60
+    expect(balances['1']).toBe(110);
+    expect(balances['2']).toBe(-50);
+    expect(balances['3']).toBe(-60);
+  });
+
+  it('should handle partial custom splits (using splits property only)', () => {
+    const members: Member[] = [
+      { id: '1', name: 'Alice' },
+      { id: '2', name: 'Bob' },
+    ];
+    const expenses: Expense[] = [
+      {
+        id: 'e1',
+        description: 'Partial Split',
+        amount: 100,
+        paidBy: '1',
+        splitAmong: ['1', '2'], // Should be ignored in favor of splits
+        splits: [
+          { memberId: '2', amount: 100 },
+          // Alice share is 0 implicitly because she's not in splits
+        ],
+      },
+    ];
+
+    const { balances } = calculateBalancesAndSettlements(members, expenses);
+
+    expect(balances['1']).toBe(100);
+    expect(balances['2']).toBe(-100);
+  });
 });

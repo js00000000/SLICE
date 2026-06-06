@@ -105,7 +105,10 @@
     "multiple_payers": "多人支付",
     "add_payer": "新增付款人",
     "remove_payer": "移除",
-    "total_amount_mismatch": "付款總額必須等於支出總額 (差異: {{diff}})"
+    "total_amount_mismatch": "付款總額必須等於支出總額 (差異: {{diff}})",
+    "equal_split": "平分",
+    "custom_split": "自定義金額",
+    "split_amount_mismatch": "分攤總額必須等於支出總額 (差異: {{diff}})"
   },
   "profile": {
     "title": "個人設定",
