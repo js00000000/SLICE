@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
-  Receipt, User as LucideUser, LayoutGrid, Plus, Share2, Languages
+  Share2
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -12,12 +12,14 @@ import { BalancesView } from '../components/BalancesView';
 import { ExpensesList } from '../components/ExpensesList';
 import { ExpenseModal } from '../components/ExpenseModal';
 import { ProfileModal } from '../components/ProfileModal';
+import { BottomNav } from '../components/BottomNav';
+import { AppHeader } from '../components/AppHeader';
 import { useGroup } from '../contexts/GroupContext';
 import { useAuth } from '../contexts/AuthContext';
 
 export function GroupDashboardPage() {
-  const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
+  const location = useLocation();
+  const { t } = useTranslation();
   const { handleLogout, handleDeleteAccount } = useAuth();
   const {
     groupId,
@@ -33,10 +35,18 @@ export function GroupDashboardPage() {
   } = useGroup();
 
   // Internal UI State
+  const [activeTab, setActiveTab] = useState<'expenses' | 'settlements'>('expenses');
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [filterPaidBy, setFilterPaidBy] = useState<string | null>(null);
+
+  // Sync activeTab from location state
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location.state]);
 
   const filteredExpenses = useMemo(() => {
     if (!filterPaidBy) return expenses;
@@ -56,58 +66,22 @@ export function GroupDashboardPage() {
     setIsExpenseModalOpen(true);
   };
 
-  const toggleLanguage = () => {
-    const newLang = i18n.language.startsWith('zh') ? 'en' : 'zh-TW';
-    i18n.changeLanguage(newLang);
-  };
-
   if (!currentMember || !groupId) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 pb-20">
+    <div className="min-h-screen bg-gray-50 text-gray-900 pb-24">
       <Helmet>
         <title>{currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `Group Dashboard - ${APP_NAME}`}</title>
         <meta property="og:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `Group Dashboard - ${APP_NAME}`} />
         <meta property="twitter:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `Group Dashboard - ${APP_NAME}`} />
       </Helmet>
-      {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-10">
-        <div className="w-full mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-indigo-600">
-            <button
-              onClick={() => navigate('/')}
-              className="flex items-center gap-1.5 hover:opacity-80 transition-opacity cursor-pointer"
-            >
-              <Receipt className="w-5 h-5" />
-              <span className="text-xs font-black tracking-tighter uppercase text-indigo-400">{APP_NAME}</span>
-            </button>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsProfileModalOpen(true)}
-              className="flex items-center gap-2 text-sm text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
-              title={t('profile.title')}
-            >
-              <LucideUser className="w-4 h-4" />
-              <span className="max-w-[80px] truncate">{currentMember.name}</span>
-            </button>
-            <button
-              onClick={toggleLanguage}
-              className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors"
-              title={t('common.switch_lang')}
-            >
-              <Languages className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => navigate('/')}
-              className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors"
-              title={t('groups.my_groups')}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </header>
+      
+      <AppHeader
+        showProfile
+        onProfileClick={() => setIsProfileModalOpen(true)}
+        currentMemberName={currentMember.name}
+      />
+
       <main className="w-full mx-auto px-4 py-6 space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div className="flex-1 min-w-0">
@@ -115,7 +89,10 @@ export function GroupDashboardPage() {
               {currentGroup?.name || 'Group Dashboard'}
             </h1>
             <p className="text-sm text-gray-500">
-              {expenses.length} {t('expenses.title')}
+              {activeTab === 'expenses' 
+                ? `${expenses.length} ${t('expenses.title')}`
+                : t('balances.title')
+              }
             </p>
           </div>
           <button
@@ -132,28 +109,29 @@ export function GroupDashboardPage() {
           </button>
         </div>
 
-        <BalancesView members={members} expenses={expenses} currentMemberId={currentMemberId!} />
-
-        <ExpensesList
-          expenses={filteredExpenses}
-          members={members}
-          onEdit={openEditModal}
-          onDelete={async (expense) => {
-            await handleDeleteExpense(expense);
-          }}
-          filterPaidBy={filterPaidBy}
-          onFilterChange={setFilterPaidBy}
-        />
+        {activeTab === 'settlements' ? (
+          <BalancesView members={members} expenses={expenses} currentMemberId={currentMemberId!} />
+        ) : (
+          <ExpensesList
+            expenses={filteredExpenses}
+            members={members}
+            onEdit={openEditModal}
+            onDelete={async (expense) => {
+              await handleDeleteExpense(expense);
+            }}
+            filterPaidBy={filterPaidBy}
+            onFilterChange={setFilterPaidBy}
+          />
+        )}
       </main>
 
-      {/* Floating Action Button (Mobile) & Fixed Button (Desktop) */}
-      <div className="fixed-in-container bottom-6 z-20 flex justify-end px-6">
-        <button onClick={openAddModal}
-          className="bg-indigo-600 text-white p-4 rounded-full shadow-lg hover:bg-indigo-700 hover:scale-105 transition-all flex items-center gap-2">
-          <Plus className="w-6 h-6" />
-          <span className="hidden font-medium pr-2">{t('expenses.add_new')}</span>
-        </button>
-      </div>
+      <BottomNav
+        activeTab={activeTab}
+        groupId={groupId}
+        onTabChange={setActiveTab}
+        onAddClick={openAddModal}
+      />
+
 
       {isExpenseModalOpen && (
         <ExpenseModal
@@ -186,10 +164,6 @@ export function GroupDashboardPage() {
             await handleUpdateProfile(data);
             setIsProfileModalOpen(false);
           }}
-          onManageMembers={() => {
-            setIsProfileModalOpen(false);
-            navigate(`/group/${groupId}/members`);
-          }}
           onLogout={handleLogout}
           onDeleteAccount={handleDeleteAccount}
         />
@@ -197,3 +171,4 @@ export function GroupDashboardPage() {
     </div>
   );
 }
+

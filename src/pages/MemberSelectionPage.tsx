@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Receipt, CheckCircle2 } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { APP_NAME } from '../constants';
 import { useAuth } from '../contexts/AuthContext';
 import { useGroup } from '../contexts/GroupContext';
+import { AppHeader } from '../components/AppHeader';
 
 export function MemberSelectionPage() {
   const navigate = useNavigate();
@@ -14,23 +14,18 @@ export function MemberSelectionPage() {
   const [newName, setNewName] = useState('');
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border p-6 space-y-8">
-        <div className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <button onClick={() => navigate('/')} className="text-gray-400 hover:text-indigo-600 transition-colors">
-              <ArrowLeft className="w-4 h-4" />
-            </button>
-            <div className="flex flex-col items-center">
-              <span className="text-[10px] font-black tracking-tighter uppercase text-indigo-400 leading-none mb-1">{APP_NAME}</span>
-              <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center">
-                <Receipt className="w-5 h-5" />
-              </div>
-            </div>
+    <div className="min-h-screen bg-gray-50 text-gray-900">
+      <AppHeader
+        showBack
+        onBack={() => navigate('/')}
+        title={currentGroup?.name}
+      />
+
+      <div className="w-full max-w-md mx-auto p-4 py-8 space-y-8">
+        <div className="bg-white rounded-2xl shadow-sm border p-6 space-y-8">
+          <div className="text-center space-y-2">
+            <p className="text-gray-500 text-sm">{t('members.select_identity')}</p>
           </div>
-          <h1 className="text-xl font-bold text-gray-900">{currentGroup?.name}</h1>
-          <p className="text-gray-500 text-sm">{t('members.select_identity')}</p>
-        </div>
 
         <div className="space-y-6">
           {members.length > 0 && (
@@ -104,5 +99,6 @@ export function MemberSelectionPage() {
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 }

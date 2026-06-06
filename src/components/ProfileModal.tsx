@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, User as LucideUser, Users, Shield, LogOut } from 'lucide-react';
+import { X, User as LucideUser, Shield, LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Member } from '../types';
 import { useDialog } from '../contexts/DialogContext';
@@ -8,7 +8,6 @@ interface ProfileModalProps {
   currentMember: Member;
   onClose: () => void;
   onSave: (data: Partial<Member>) => void;
-  onManageMembers: () => void;
   onLogout: () => void;
   onDeleteAccount: () => void;
 }
@@ -17,7 +16,6 @@ export function ProfileModal({
   currentMember,
   onClose,
   onSave,
-  onManageMembers,
   onLogout,
   onDeleteAccount
 }: ProfileModalProps) {
@@ -95,14 +93,6 @@ export function ProfileModal({
           </div>
 
           <div className="space-y-3 pt-4 border-t">
-            <button
-              type="button"
-              onClick={onManageMembers}
-              className="w-full py-3 bg-white text-indigo-600 border border-indigo-200 rounded-xl font-medium hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2"
-            >
-              <Users className="w-4 h-4" />
-              {currentMember.isHost ? t('members.manage') : t('members.view_all')}
-            </button>
             <button
               type="button"
               onClick={handleLogoutClick}

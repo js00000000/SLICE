@@ -21,7 +21,8 @@
   }
 }
 
-/* Fix for Toaster and other portal elements if needed */
-.go2072401032 { /* react-hot-toast default container class */
-  @apply !max-w-[480px] !mx-auto !left-0 !right-0;
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
