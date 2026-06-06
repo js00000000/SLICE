@@ -67,7 +67,9 @@ export function MemberManagementPage() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 pb-24">
       <Helmet>
-        <title>{t('members.title')} - {APP_NAME}</title>
+        <title>{currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `${t('members.title')} - ${APP_NAME}`}</title>
+        <meta property="og:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `${t('members.title')} - ${APP_NAME}`} />
+        <meta property="twitter:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `${t('members.title')} - ${APP_NAME}`} />
       </Helmet>
 
       <AppHeader

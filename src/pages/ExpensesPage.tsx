@@ -1,14 +1,11 @@
 import { useState, useMemo, useEffect } from 'react';
-import {
-  Share2
-} from 'lucide-react';
+import { Share2 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { APP_NAME } from '../constants';
 import type { Expense } from '../types';
-import { BalancesView } from '../components/BalancesView';
 import { ExpensesList } from '../components/ExpensesList';
 import { ExpenseModal } from '../components/ExpenseModal';
 import { ProfileModal } from '../components/ProfileModal';
@@ -17,7 +14,7 @@ import { AppHeader } from '../components/AppHeader';
 import { useGroup } from '../contexts/GroupContext';
 import { useAuth } from '../contexts/AuthContext';
 
-export function GroupDashboardPage() {
+export function ExpensesPage() {
   const location = useLocation();
   const { t } = useTranslation();
   const { handleLogout, handleDeleteAccount } = useAuth();
@@ -34,17 +31,17 @@ export function GroupDashboardPage() {
     handleDeleteExpense,
   } = useGroup();
 
-  // Internal UI State
-  const [activeTab, setActiveTab] = useState<'expenses' | 'settlements'>('expenses');
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [filterPaidBy, setFilterPaidBy] = useState<string | null>(null);
 
-  // Sync activeTab from location state
   useEffect(() => {
-    if (location.state?.activeTab) {
-      setActiveTab(location.state.activeTab);
+    if (location.state?.openAddModal) {
+      setIsExpenseModalOpen(true);
+      setExpenseToEdit(null);
+      // Clear the state so it doesn't reopen on reload
+      window.history.replaceState({}, document.title);
     }
   }, [location.state]);
 
@@ -71,9 +68,9 @@ export function GroupDashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 pb-24">
       <Helmet>
-        <title>{currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `Group Dashboard - ${APP_NAME}`}</title>
-        <meta property="og:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `Group Dashboard - ${APP_NAME}`} />
-        <meta property="twitter:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `Group Dashboard - ${APP_NAME}`} />
+        <title>{currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `Expenses - ${APP_NAME}`}</title>
+        <meta property="og:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `Expenses - ${APP_NAME}`} />
+        <meta property="twitter:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `Expenses - ${APP_NAME}`} />
       </Helmet>
       
       <AppHeader
@@ -89,10 +86,7 @@ export function GroupDashboardPage() {
               {currentGroup?.name || 'Group Dashboard'}
             </h1>
             <p className="text-sm text-gray-500">
-              {activeTab === 'expenses' 
-                ? `${expenses.length} ${t('expenses.title')}`
-                : t('balances.title')
-              }
+              {expenses.length} {t('expenses.title')}
             </p>
           </div>
           <button
@@ -109,29 +103,23 @@ export function GroupDashboardPage() {
           </button>
         </div>
 
-        {activeTab === 'settlements' ? (
-          <BalancesView members={members} expenses={expenses} currentMemberId={currentMemberId!} />
-        ) : (
-          <ExpensesList
-            expenses={filteredExpenses}
-            members={members}
-            onEdit={openEditModal}
-            onDelete={async (expense) => {
-              await handleDeleteExpense(expense);
-            }}
-            filterPaidBy={filterPaidBy}
-            onFilterChange={setFilterPaidBy}
-          />
-        )}
+        <ExpensesList
+          expenses={filteredExpenses}
+          members={members}
+          onEdit={openEditModal}
+          onDelete={async (expense) => {
+            await handleDeleteExpense(expense);
+          }}
+          filterPaidBy={filterPaidBy}
+          onFilterChange={setFilterPaidBy}
+        />
       </main>
 
       <BottomNav
-        activeTab={activeTab}
+        activeTab="expenses"
         groupId={groupId}
-        onTabChange={setActiveTab}
         onAddClick={openAddModal}
       />
-
 
       {isExpenseModalOpen && (
         <ExpenseModal
@@ -171,4 +159,3 @@ export function GroupDashboardPage() {
     </div>
   );
 }
-

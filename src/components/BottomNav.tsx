@@ -1,6 +1,7 @@
 import { LayoutGrid, DollarSign, Plus, Receipt, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { useGroup } from '../contexts/GroupContext';
 
 export type TabType = 'expenses' | 'settlements' | 'members' | 'groups';
 
@@ -11,9 +12,12 @@ interface BottomNavProps {
   onAddClick?: () => void;
 }
 
-export function BottomNav({ activeTab, groupId, onTabChange, onAddClick }: BottomNavProps) {
+export function BottomNav({ activeTab, groupId: propGroupId, onTabChange, onAddClick }: BottomNavProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { groupId: contextGroupId } = useGroup();
+  
+  const groupId = propGroupId || contextGroupId;
 
   const handleTabClick = (tab: TabType) => {
     if (tab === 'groups') {
@@ -28,12 +32,22 @@ export function BottomNav({ activeTab, groupId, onTabChange, onAddClick }: Botto
       return;
     }
 
-    if (tab === 'expenses' || tab === 'settlements') {
+    if (tab === 'expenses') {
       if (onTabChange) {
         onTabChange(tab);
       } else {
-        navigate(`/group/${groupId}`, { state: { activeTab: tab } });
+        navigate(`/group/${groupId}`);
       }
+      return;
+    }
+
+    if (tab === 'settlements') {
+      if (onTabChange) {
+        onTabChange(tab);
+      } else {
+        navigate(`/group/${groupId}/settlements`);
+      }
+      return;
     }
   };
 

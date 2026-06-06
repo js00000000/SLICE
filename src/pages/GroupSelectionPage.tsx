@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
 import { LogOut, Clock, ArrowRight, X } from 'lucide-react';
-import { BottomNav } from '../components/BottomNav';
 import { AppHeader } from '../components/AppHeader';
 import { useAuth } from '../contexts/AuthContext';
 import { useGroup } from '../contexts/GroupContext';
@@ -44,7 +43,7 @@ export function GroupSelectionPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 pb-24">
+    <div className="min-h-screen bg-gray-50 text-gray-900">
       <Helmet>
         <title>{t('groups.my_groups')} - {APP_NAME}</title>
       </Helmet>
@@ -158,11 +157,10 @@ export function GroupSelectionPage() {
           </div>
         </div>
       </main>
-
-      <BottomNav activeTab="groups" />
     </div>
   );
 }
+
 
 
 

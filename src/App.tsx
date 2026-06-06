@@ -8,7 +8,8 @@ import { AuthGuard } from './components/ProtectedRoute';
 // Import Pages
 import { GroupSelectionPage } from './pages/GroupSelectionPage';
 import { MemberSelectionPage } from './pages/MemberSelectionPage';
-import { GroupDashboardPage } from './pages/GroupDashboardPage';
+import { ExpensesPage } from './pages/ExpensesPage';
+import { SettlementsPage } from './pages/SettlementsPage';
 import { MemberManagementPage } from './pages/MemberManagementPage';
 import { JoinGroupPage } from './pages/JoinGroupPage';
 
@@ -68,7 +69,14 @@ export default function App() {
               !currentMemberId || !currentMember ? (
                 <MemberSelectionPage />
               ) : (
-                <GroupDashboardPage />
+                <ExpensesPage />
+              )
+            } />
+            <Route path="/group/:groupId/settlements" element={
+              !currentMemberId || !currentMember ? (
+                <MemberSelectionPage />
+              ) : (
+                <SettlementsPage />
               )
             } />
 
