@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, CheckCircle2, Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Member, Expense, Payment } from '../types';
+import { calculateEvenSplit, isCustomSplit as detectCustomSplit } from '../utils/split';
 
 interface ExpenseModalProps {
   members: Member[];
@@ -25,7 +26,9 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
       : [{ memberId: initialData?.paidBy || currentMemberId, amount: initialData ? initialData.amount : 0 }]
   );
 
-  const [isCustomSplit, setIsCustomSplit] = useState(!!initialData?.splits && initialData.splits.length > 0);
+  const wasOriginalCustomSplit = detectCustomSplit(initialData?.splits);
+
+  const [isCustomSplit, setIsCustomSplit] = useState(wasOriginalCustomSplit);
   const [splits, setSplits] = useState<Payment[]>(
     initialData?.splits && initialData.splits.length > 0
       ? initialData.splits
@@ -71,13 +74,17 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
       ? splits.filter(s => s.amount > 0).map(s => s.memberId)
       : splitAmong;
 
+    const finalSplits = isCustomSplit 
+      ? splits.filter(s => s.amount > 0)
+      : calculateEvenSplit(parseFloat(amount) || 0, splitAmong);
+
     onSave({
       description: description.trim(),
       amount: parseFloat(amount),
       paidBy: isMultiplePayers ? payments[0].memberId : paidBy,
       payments: isMultiplePayers ? payments : [{ memberId: paidBy, amount: parseFloat(amount) }],
       splitAmong: finalSplitAmong,
-      splits: isCustomSplit ? splits.filter(s => s.amount > 0) : undefined
+      splits: finalSplits
     }, initialData?.id);
   };
 
@@ -89,10 +96,15 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
 
   const toggleCustomSplit = () => {
     if (!isCustomSplit) {
-      setSplits(members.map(m => ({ 
-        memberId: m.id, 
-        amount: 0 
-      })));
+      setSplits(members.map(m => {
+        const originalSplit = wasOriginalCustomSplit
+          ? initialData?.splits?.find(s => s.memberId === m.id)
+          : undefined;
+        return { 
+          memberId: m.id, 
+          amount: originalSplit ? originalSplit.amount : 0 
+        };
+      }));
     }
     setIsCustomSplit(!isCustomSplit);
   };

@@ -10,6 +10,7 @@ import {
   arrayUnion,
   arrayRemove,
   writeBatch,
+  deleteField,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Member, Expense } from '../types';
@@ -152,18 +153,42 @@ export const firebaseService = {
   },
 
   async addExpense(groupId: string, memberId: string, expenseData: ExpenseInput) {
-    return await addDoc(collection(db, 'groups', groupId, 'expenses'), {
+    const data: any = {
       ...expenseData,
       createdBy: memberId,
       createdAt: serverTimestamp(),
+    };
+
+    // Clean up any undefined values to avoid Firestore errors
+    Object.keys(data).forEach(key => {
+      if (data[key] === undefined) {
+        delete data[key];
+      }
     });
+
+    return await addDoc(collection(db, 'groups', groupId, 'expenses'), data);
   },
 
   async updateExpense(groupId: string, expenseId: string, expenseData: Partial<ExpenseInput>) {
-    await updateDoc(doc(db, 'groups', groupId, 'expenses', expenseId), {
+    const data: any = {
       ...expenseData,
       updatedAt: serverTimestamp(),
+    };
+
+    // If 'splits' key is explicitly passed as undefined (e.g. disabled custom split),
+    // we want to use deleteField() to remove it from the document in Firestore.
+    if ('splits' in expenseData && expenseData.splits === undefined) {
+      data.splits = deleteField();
+    }
+
+    // Clean up any other undefined values to avoid Firestore errors
+    Object.keys(data).forEach(key => {
+      if (data[key] === undefined) {
+        delete data[key];
+      }
     });
+
+    await updateDoc(doc(db, 'groups', groupId, 'expenses', expenseId), data);
   },
 
   async deleteExpense(groupId: string, expenseId: string) {
