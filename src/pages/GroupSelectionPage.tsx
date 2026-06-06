@@ -86,7 +86,7 @@ export function GroupSelectionPage() {
                     value={groupName}
                     onChange={(e) => setGroupName(e.target.value)}
                     placeholder={t('groups.enter_name')}
-                    className="flex-1 px-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none text-sm"
+                    className="flex-1 px-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none text-base"
                     maxLength={50}
                   />
                   <button
@@ -107,7 +107,7 @@ export function GroupSelectionPage() {
                     value={groupIdToJoin}
                     onChange={(e) => setGroupIdToJoin(e.target.value)}
                     placeholder={t('groups.enter_id')}
-                    className="flex-1 px-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none text-sm font-mono"
+                    className="flex-1 px-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none text-base font-mono"
                   />
                   <button
                     onClick={() => handleJoinGroup(groupIdToJoin)}

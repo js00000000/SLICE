@@ -97,7 +97,7 @@ export function MemberSelectionPage() {
               <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)}
                 placeholder={t('profile.display_name')}
                 className="flex-1 px-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600
-                focus:border-transparent outline-none text-sm"
+                focus:border-transparent outline-none text-base"
                 required
               />
               <button type="submit" disabled={!newName.trim()}

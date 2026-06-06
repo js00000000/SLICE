@@ -194,7 +194,7 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
                         <select 
                           value={p.memberId} 
                           onChange={(e) => updatePayer(index, { memberId: e.target.value })}
-                          className="flex-1 px-3 py-2 border rounded-xl text-sm outline-none bg-white"
+                          className="flex-1 px-3 py-2 border rounded-xl text-base outline-none bg-white"
                         >
                           {members.map(m => (
                             <option 
@@ -213,7 +213,7 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
                             step="any"
                             value={p.amount || ''}
                             onChange={(e) => updatePayer(index, { amount: parseFloat(e.target.value) || 0 })}
-                            className="w-full pl-6 pr-3 py-2 border rounded-xl text-sm outline-none font-mono"
+                            className="w-full pl-6 pr-3 py-2 border rounded-xl text-base outline-none font-mono"
                             placeholder="0.00"
                           />
                         </div>
@@ -287,7 +287,7 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
                             step="any"
                             value={split.amount || ''}
                             onChange={(e) => updateSplitAmount(m.id, parseFloat(e.target.value) || 0)}
-                            className="w-full pl-6 pr-3 py-2 border rounded-xl text-sm outline-none font-mono"
+                            className="w-full pl-6 pr-3 py-2 border rounded-xl text-base outline-none font-mono"
                             placeholder="0.00"
                           />
                         </div>

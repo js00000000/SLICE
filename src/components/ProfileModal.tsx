@@ -79,7 +79,7 @@ export function ProfileModal({
                 <input type="text" value={name} onChange={(e) => setName(e.target.value)}
                   placeholder={t('members.enter_name')}
                   className="w-full pl-9 pr-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600
-                  focus:border-transparent outline-none text-sm"
+                  focus:border-transparent outline-none text-base"
                   required
                   maxLength={30}
                 />

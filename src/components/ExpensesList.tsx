@@ -30,7 +30,7 @@ export function ExpensesList({ expenses, members, onEdit, onDelete, filterPaidBy
             id="payer-filter"
             value={filterPaidBy || ''}
             onChange={(e) => onFilterChange(e.target.value || null)}
-            className="text-xs bg-white border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-indigo-600 outline-none"
+            className="text-base bg-white border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-indigo-600 outline-none"
           >
             <option value="">{t('expenses.filter_all')}</option>
             {members.map(member => (

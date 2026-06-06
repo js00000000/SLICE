@@ -164,7 +164,7 @@ export function MemberManagementPage() {
                   value={newMemberName}
                   onChange={(e) => setNewMemberName(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleAddMember()}
-                  className="flex-1 px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none text-sm"
+                  className="flex-1 px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none text-base"
                 />
                 <button
                   onClick={handleAddMember}
@@ -192,7 +192,7 @@ export function MemberManagementPage() {
                     type="text"
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
-                    className="flex-1 px-3 py-1.5 border rounded-lg focus:ring-2 focus:ring-indigo-600 outline-none text-sm"
+                    className="flex-1 px-3 py-1.5 border rounded-lg focus:ring-2 focus:ring-indigo-600 outline-none text-base"
                   />
                   <button
                     onClick={handleSaveGroupName}
