@@ -31,7 +31,7 @@ export function BalancesView({ members, expenses, currentMemberId }: BalancesVie
   return (
     <div className="space-y-6">
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         <div className="bg-white p-5 rounded-2xl border shadow-sm flex items-center justify-between">
           <div>
             <p className="text-sm text-gray-500 mb-1">{t('balances.net_balance')}</p>

@@ -77,12 +77,12 @@ export function MemberManagementView({
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
       <header className="bg-white border-b sticky top-0 z-10">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        <div className="w-full mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button onClick={onBack} className="p-2 -ml-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors">
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
+            <div className="flex flex-col">
               <span className="text-[10px] font-black tracking-tighter uppercase text-indigo-400 leading-none">{APP_NAME}</span>
               <h1 className="font-semibold text-lg leading-tight">{t('members.title')}</h1>
             </div>
@@ -97,7 +97,7 @@ export function MemberManagementView({
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-8">
+      <main className="w-full mx-auto px-4 py-6 space-y-8">
         <section className="space-y-4">
           <div className="flex items-center justify-between px-1">
             <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">

@@ -1,1 +1,27 @@
 @import "tailwindcss";
+
+@layer base {
+  body {
+    @apply bg-slate-100 antialiased;
+  }
+}
+
+@layer components {
+  .mobile-container {
+    @apply w-full max-w-[480px] mx-auto min-h-screen bg-white shadow-2xl relative flex flex-col;
+  }
+
+  /* Utility to make fixed elements stay within the mobile container bounds */
+  .fixed-in-container {
+    @apply fixed left-0 right-0 mx-auto w-full max-w-[480px] pointer-events-none;
+  }
+
+  .fixed-in-container > * {
+    pointer-events: auto;
+  }
+}
+
+/* Fix for Toaster and other portal elements if needed */
+.go2072401032 { /* react-hot-toast default container class */
+  @apply !max-w-[480px] !mx-auto !left-0 !right-0;
+}

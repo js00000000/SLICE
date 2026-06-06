@@ -64,7 +64,7 @@ export function GroupDashboardPage() {
   if (!currentMember || !groupId) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 pb-20 md:pb-8">
+    <div className="min-h-screen bg-gray-50 text-gray-900 pb-20">
       <Helmet>
         <title>{currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `Group Dashboard - ${APP_NAME}`}</title>
         <meta property="og:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `Group Dashboard - ${APP_NAME}`} />
@@ -72,7 +72,7 @@ export function GroupDashboardPage() {
       </Helmet>
       {/* Header */}
       <header className="bg-white border-b sticky top-0 z-10">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        <div className="w-full mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2 text-indigo-600">
             <button
               onClick={() => navigate('/')}
@@ -108,7 +108,7 @@ export function GroupDashboardPage() {
           </div>
         </div>
       </header>
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      <main className="w-full mx-auto px-4 py-6 space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl font-bold text-gray-900 truncate">
@@ -128,7 +128,7 @@ export function GroupDashboardPage() {
             title={t('common.share')}
           >
             <Share2 className="w-4 h-4" />
-            <span className="hidden sm:inline text-sm font-medium">{t('common.share')}</span>
+            <span className="hidden text-sm font-medium">{t('common.share')}</span>
           </button>
         </div>
 
@@ -147,11 +147,11 @@ export function GroupDashboardPage() {
       </main>
 
       {/* Floating Action Button (Mobile) & Fixed Button (Desktop) */}
-      <div className="fixed bottom-6 right-6 z-20">
+      <div className="fixed-in-container bottom-6 z-20 flex justify-end px-6">
         <button onClick={openAddModal}
           className="bg-indigo-600 text-white p-4 rounded-full shadow-lg hover:bg-indigo-700 hover:scale-105 transition-all flex items-center gap-2">
           <Plus className="w-6 h-6" />
-          <span className="hidden md:inline font-medium pr-2">{t('expenses.add_new')}</span>
+          <span className="hidden font-medium pr-2">{t('expenses.add_new')}</span>
         </button>
       </div>
 

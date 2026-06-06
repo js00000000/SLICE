@@ -19,6 +19,10 @@ createRoot(document.getElementById('root')!).render(
           reverseOrder={false} 
           containerStyle={{
             top: 70,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '100%',
+            maxWidth: '480px',
           }}
         />
         <DialogProvider>

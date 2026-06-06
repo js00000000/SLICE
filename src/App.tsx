@@ -24,10 +24,14 @@ export default function App() {
   } = useAuth();
   const { currentMemberId, currentMember, isLoading } = useGroup();
 
-  if (authLoading) return <LoadingView />;
+  if (authLoading) return (
+    <div className="mobile-container">
+      <LoadingView />
+    </div>
+  );
   
   if (!user || isSoftLoggedOut) return (
-    <>
+    <div className="mobile-container">
       <Helmet>
         <html lang={i18n.language} />
         <title>{t('common.seo_title')}</title>
@@ -38,11 +42,11 @@ export default function App() {
         isGoogleLoading={googleLoading}
         isGuestLoading={guestLoading}
       />
-    </>
+    </div>
   );
 
   return (
-    <>
+    <div className="mobile-container">
       <Helmet>
         <html lang={i18n.language} />
         <title>{t('common.seo_title')}</title>
@@ -75,6 +79,6 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       )}
-    </>
+    </div>
   );
 }
