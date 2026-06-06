@@ -51,6 +51,15 @@ export function BottomNav({ activeTab, groupId: propGroupId, onTabChange, onAddC
     }
   };
 
+  const handleAddClick = () => {
+    if (!groupId) return;
+    if (onAddClick) {
+      onAddClick();
+    } else {
+      navigate(`/group/${groupId}`, { state: { openAddModal: true } });
+    }
+  };
+
   return (
     <div className="fixed-in-container bottom-0 z-20 pb-safe">
       <div className="bg-white border-t shadow-[0_-4px_12px_rgba(0,0,0,0.05)] px-2 py-2 grid grid-cols-5 items-center">
@@ -79,7 +88,7 @@ export function BottomNav({ activeTab, groupId: propGroupId, onTabChange, onAddC
         {/* Add Action */}
         <div className="flex justify-center">
           <button
-            onClick={onAddClick}
+            onClick={handleAddClick}
             disabled={!groupId}
             className={`flex flex-col items-center -mt-8 bg-indigo-600 text-white p-3 rounded-2xl shadow-lg hover:bg-indigo-700 hover:scale-105 transition-all ${
               !groupId ? 'opacity-50 cursor-not-allowed grayscale' : ''

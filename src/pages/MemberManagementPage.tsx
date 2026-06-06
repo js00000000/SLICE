@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { Users, Shield, X, Plus, Copy, Trash2, Share2 } from 'lucide-react';
@@ -15,7 +15,6 @@ import { calculateBalancesAndSettlements } from '../lib/settlement';
 import type { Member } from '../types';
 
 export function MemberManagementPage() {
-  const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { groupId } = useParams();
   const { confirm } = useDialog();
@@ -277,7 +276,6 @@ export function MemberManagementPage() {
       <BottomNav
         activeTab="members"
         groupId={groupId}
-        onAddClick={() => navigate(`/group/${groupId}`)}
       />
 
       {isProfileModalOpen && (

@@ -10,11 +10,9 @@ import { BottomNav } from '../components/BottomNav';
 import { AppHeader } from '../components/AppHeader';
 import { useGroup } from '../contexts/GroupContext';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
 
 export function SettlementsPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { handleLogout, handleDeleteAccount } = useAuth();
   const {
     groupId,
@@ -82,7 +80,6 @@ export function SettlementsPage() {
       <BottomNav
         activeTab="settlements"
         groupId={groupId}
-        onAddClick={() => navigate(`/group/${groupId}/expenses`, { state: { openAddModal: true } })}
       />
 
       {isProfileModalOpen && (
