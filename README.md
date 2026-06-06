@@ -9,6 +9,9 @@ A modern, mobile-friendly group expense splitting application built with React, 
 ## Key Features
 
 - 🚀 **Multi-Group Architecture**: Create, join, and manage multiple splitting groups simultaneously.
+- 💸 **Flexible Splitting**: 
+  - **Multiple Payers**: Support for expenses paid by more than one person.
+  - **Custom Split Mode**: Specify exact amounts for each member instead of just equal distribution.
 - 🔐 **Authentication & Data Integrity**: 
   - Support for **Anonymous Guest sign-in** and **Google Authentication**.
   - Safe migration path for guest users to Google accounts, with built-in protection against accidental data overwrites.
