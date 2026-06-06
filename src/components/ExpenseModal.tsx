@@ -139,15 +139,15 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
   return (
     <div
       className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end justify-center p-0 animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-md rounded-t-2xl shadow-xl flex flex-col max-h-[90vh]">
-        <div className="flex items-center justify-between px-5 py-4 border-b">
+      <form onSubmit={handleSubmit} className="bg-white w-full max-w-md rounded-t-2xl shadow-xl flex flex-col max-h-[90vh]">
+        <div className="flex items-center justify-between px-5 py-4 border-b shrink-0">
           <h2 className="text-lg font-semibold text-gray-900">{isEditing ? t('expenses.edit') : t('expenses.add_new')}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">
+          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 overflow-y-auto space-y-5">
+        <div className="p-5 overflow-y-auto flex-1 space-y-5">
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">{t('expenses.description')}</label>
@@ -344,15 +344,15 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
               )}
             </div>
           </div>
+        </div>
 
-          <div className="pt-4 mt-2 border-t">
-            <button type="submit" disabled={!description || !amount || (isCustomSplit ? splits.filter(s => s.amount > 0).length === 0 : splitAmong.length === 0) || !isAmountValid || !isSplitValid}
-              className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium disabled:opacity-50 hover:bg-indigo-700 transition-colors">
-              {isEditing ? t('common.save') : t('common.confirm')}
-            </button>
-          </div>
-        </form>
-      </div>
+        <div className="px-5 py-4 border-t bg-white shrink-0">
+          <button type="submit" disabled={!description || !amount || (isCustomSplit ? splits.filter(s => s.amount > 0).length === 0 : splitAmong.length === 0) || !isAmountValid || !isSplitValid}
+            className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium disabled:opacity-50 hover:bg-indigo-700 transition-colors">
+            {isEditing ? t('common.save') : t('common.confirm')}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
