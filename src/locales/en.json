@@ -38,7 +38,7 @@
   },
   "groups": {
     "title": "Group Dashboard",
-    "my_groups": "My Groups",
+    "my_groups": "Groups",
     "create_new": "Create New Group",
     "join_existing": "Join Existing Group",
     "enter_name": "Enter Group Name",
@@ -61,7 +61,7 @@
     "leave_group_success": "Left group successfully"
   },
   "members": {
-    "title": "Members & Management",
+    "title": "Members",
     "list": "Member List",
     "add_new": "Add New Member",
     "enter_name": "Enter member name",
@@ -82,7 +82,7 @@
     "count": "{{count}} members"
   },
   "expenses": {
-    "title": "Expenses List",
+    "title": "Expenses",
     "add_new": "Add Expense",
     "edit": "Edit Expense",
     "description": "Description",

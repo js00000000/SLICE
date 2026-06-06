@@ -38,7 +38,7 @@
   },
   "groups": {
     "title": "群組主頁",
-    "my_groups": "我的群組",
+    "my_groups": "群組",
     "create_new": "建立新群組",
     "join_existing": "加入既有群組",
     "enter_name": "輸入群組名稱",
@@ -61,7 +61,7 @@
     "leave_group_success": "已成功退出群組"
   },
   "members": {
-    "title": "成員與管理",
+    "title": "成員",
     "list": "成員名單",
     "add_new": "新增成員",
     "enter_name": "新增成員姓名",
@@ -82,7 +82,7 @@
     "count": "{{count}} 位成員"
   },
   "expenses": {
-    "title": "支出明細",
+    "title": "支出",
     "add_new": "新增支出",
     "edit": "編輯支出",
     "description": "說明",

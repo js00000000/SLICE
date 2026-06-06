@@ -53,7 +53,7 @@ export function BottomNav({ activeTab, groupId: propGroupId, onTabChange, onAddC
 
   return (
     <div className="fixed-in-container bottom-0 z-20 pb-safe">
-      <div className="bg-white border-t shadow-[0_-4px_12px_rgba(0,0,0,0.05)] px-2 py-2 flex items-center justify-around">
+      <div className="bg-white border-t shadow-[0_-4px_12px_rgba(0,0,0,0.05)] px-2 py-2 grid grid-cols-5 items-center">
         <button
           onClick={() => handleTabClick('groups')}
           className={`flex flex-col items-center gap-1 p-2 transition-colors ${
@@ -61,7 +61,7 @@ export function BottomNav({ activeTab, groupId: propGroupId, onTabChange, onAddC
           }`}
         >
           <LayoutGrid className="w-5 h-5" />
-          <span className="text-[10px] font-medium">{t('groups.my_groups')}</span>
+          <span className="text-[10px] font-medium truncate w-full px-1 text-center">{t('groups.my_groups')}</span>
         </button>
 
         <button
@@ -73,19 +73,21 @@ export function BottomNav({ activeTab, groupId: propGroupId, onTabChange, onAddC
           }`}
         >
           <DollarSign className="w-5 h-5" />
-          <span className="text-[10px] font-medium">{t('balances.title')}</span>
+          <span className="text-[10px] font-medium truncate w-full px-1 text-center">{t('balances.title')}</span>
         </button>
 
         {/* Add Action */}
-        <button
-          onClick={onAddClick}
-          disabled={!groupId}
-          className={`flex flex-col items-center -mt-8 bg-indigo-600 text-white p-3 rounded-2xl shadow-lg hover:bg-indigo-700 hover:scale-105 transition-all ${
-            !groupId ? 'opacity-50 cursor-not-allowed grayscale' : ''
-          }`}
-        >
-          <Plus className="w-7 h-7" />
-        </button>
+        <div className="flex justify-center">
+          <button
+            onClick={onAddClick}
+            disabled={!groupId}
+            className={`flex flex-col items-center -mt-8 bg-indigo-600 text-white p-3 rounded-2xl shadow-lg hover:bg-indigo-700 hover:scale-105 transition-all ${
+              !groupId ? 'opacity-50 cursor-not-allowed grayscale' : ''
+            }`}
+          >
+            <Plus className="w-7 h-7" />
+          </button>
+        </div>
 
         <button
           onClick={() => handleTabClick('expenses')}
@@ -96,7 +98,7 @@ export function BottomNav({ activeTab, groupId: propGroupId, onTabChange, onAddC
           }`}
         >
           <Receipt className="w-5 h-5" />
-          <span className="text-[10px] font-medium">{t('expenses.title')}</span>
+          <span className="text-[10px] font-medium truncate w-full px-1 text-center">{t('expenses.title')}</span>
         </button>
 
         <button
@@ -108,7 +110,7 @@ export function BottomNav({ activeTab, groupId: propGroupId, onTabChange, onAddC
           }`}
         >
           <Users className="w-5 h-5" />
-          <span className="text-[10px] font-medium">{t('members.title')}</span>
+          <span className="text-[10px] font-medium truncate w-full px-1 text-center">{t('members.title')}</span>
         </button>
       </div>
     </div>
