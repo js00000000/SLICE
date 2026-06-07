@@ -24,7 +24,7 @@ export function ProfileModal({
   useScrollLock();
   const { t } = useTranslation();
   const { confirm } = useDialog();
-  const { user, googleLoading, handleGoogleLogin } = useAuth();
+  const { user, googleLoading, deleteLoading, handleGoogleLogin } = useAuth();
   const [name, setName] = useState(currentMember.name || '');
 
   const isGoogleLinked = user?.providerData.some(p => p.providerId === 'google.com') || false;
@@ -75,7 +75,7 @@ export function ProfileModal({
               </span>
             )}
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">
+          <button onClick={onClose} disabled={deleteLoading} className="text-gray-400 hover:text-gray-600 p-1 disabled:opacity-50 disabled:cursor-not-allowed">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -88,8 +88,9 @@ export function ProfileModal({
                 <LucideUser className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input type="text" value={name} onChange={(e) => setName(e.target.value)}
                   placeholder={t('members.enter_name')}
+                  disabled={deleteLoading}
                   className="w-full pl-9 pr-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600
-                  focus:border-transparent outline-none text-base"
+                  focus:border-transparent outline-none text-base disabled:bg-gray-50 disabled:text-gray-400"
                   required
                   maxLength={30}
                 />
@@ -97,7 +98,8 @@ export function ProfileModal({
             </div>
 
             <button type="submit"
-              className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors">
+              disabled={deleteLoading}
+              className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed">
               {t('common.save')}
             </button>
           </div>
@@ -121,7 +123,7 @@ export function ProfileModal({
               <button
                 type="button"
                 onClick={handleLinkGoogleClick}
-                disabled={googleLoading}
+                disabled={googleLoading || deleteLoading}
                 className="px-3 py-1.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {googleLoading ? (
@@ -138,7 +140,8 @@ export function ProfileModal({
             <button
               type="button"
               onClick={handleLogoutClick}
-              className="w-full py-3 bg-white text-gray-600 border border-gray-200 rounded-xl font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+              disabled={deleteLoading}
+              className="w-full py-3 bg-white text-gray-600 border border-gray-200 rounded-xl font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               <LogOut className="w-4 h-4" />
               {t('auth.logout')}
@@ -146,9 +149,14 @@ export function ProfileModal({
             <button
               type="button"
               onClick={handleDeleteAccountClick}
-              className="w-full py-3 bg-red-50 text-red-600 border border-red-100 rounded-xl font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+              disabled={deleteLoading}
+              className="w-full py-3 bg-red-50 text-red-600 border border-red-100 rounded-xl font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              <X className="w-4 h-4" />
+              {deleteLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <X className="w-4 h-4" />
+              )}
               {t('auth.delete_account')}
             </button>
           </div>

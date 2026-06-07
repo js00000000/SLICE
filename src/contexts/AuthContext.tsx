@@ -10,15 +10,12 @@ import {
   signInWithRedirect,
   linkWithPopup,
   linkWithRedirect,
-  unlink,
   getRedirectResult,
-  reauthenticateWithPopup,
-  reauthenticateWithRedirect,
   signOut,
   deleteUser,
   GoogleAuthProvider,
 } from 'firebase/auth';
-import type { User, AuthError } from 'firebase/auth';
+import type { User, AuthError, UserCredential } from 'firebase/auth';
 import {
   doc,
   getDoc,
@@ -38,6 +35,7 @@ interface AuthContextType {
   authLoading: boolean;
   googleLoading: boolean;
   guestLoading: boolean;
+  deleteLoading: boolean;
   isSoftLoggedOut: boolean;
   handleGoogleLogin: () => Promise<void>;
   handleGuestLogin: () => Promise<void>;
@@ -54,10 +52,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authLoading, setAuthLoading] = useState(true);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [guestLoading, setGuestLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [showAbandonGuestConfirm, setShowAbandonGuestConfirm] = useState(false);
   const [isSoftLoggedOut, setIsSoftLoggedOut] = useState(false);
 
-  const saveGoogleToken = (result: any) => {
+  const saveGoogleToken = (result: UserCredential) => {
     try {
       const credential = GoogleAuthProvider.credentialFromResult(result);
       if (credential?.accessToken) {
@@ -310,32 +309,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!auth.currentUser) return;
     
     try {
-      setAuthLoading(true);
+      setDeleteLoading(true);
       const currentUser = auth.currentUser;
       const uid = currentUser.uid;
 
-      // 1. For Google users, re-authenticate first to avoid requires-recent-login
+      // For Google users, revoke the stored token if it exists without showing a popup
       if (currentUser.providerData.some(p => p.providerId === 'google.com')) {
         try {
-          const result = await reauthenticateWithPopup(currentUser, googleProvider);
-          saveGoogleToken(result);
-          // Explicitly unlink Google provider as requested by user
-          try {
-            await revokeGoogleToken();
-            await unlink(currentUser, 'google.com');
-          } catch (unlinkErr) {
-            console.warn("Unlink error (ignoring during deletion):", unlinkErr);
-          }
-        } catch (err: unknown) {
-          const error = err as AuthError;
-          if (error.code === 'auth/popup-blocked') {
-            await reauthenticateWithRedirect(currentUser, googleProvider);
-            return; // Redirect will happen, execution stops here
-          } else if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
-            setAuthLoading(false);
-            return;
-          }
-          throw error;
+          await revokeGoogleToken();
+        } catch (revokeErr) {
+          console.warn("Revoke token error (ignoring during deletion):", revokeErr);
         }
       }
 
@@ -357,7 +340,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         toast.error(t('common.error'));
       }
     } finally {
-      setAuthLoading(false);
+      setDeleteLoading(false);
     }
   };
 
@@ -367,6 +350,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       authLoading, 
       googleLoading, 
       guestLoading, 
+      deleteLoading,
       isSoftLoggedOut,
       handleGoogleLogin, 
       handleGuestLogin, 
