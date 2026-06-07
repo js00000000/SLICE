@@ -23,7 +23,7 @@ export default function App() {
   const { t, i18n } = useTranslation();
   const { 
     user, authLoading, googleLoading, guestLoading, isSoftLoggedOut, 
-    handleGoogleLogin, handleGuestLogin 
+    handleGoogleLogin, handleGuestLogin, handleQuickStart
   } = useAuth();
   const { currentMemberId, currentMember, isLoading } = useGroup();
 
@@ -54,6 +54,8 @@ export default function App() {
       <LoginView
         onGoogleLogin={handleGoogleLogin}
         onGuestLogin={handleGuestLogin}
+        onQuickStart={handleQuickStart}
+        showQuickStart={!isSoftLoggedOut && window.location.pathname === '/'}
         isGoogleLoading={googleLoading}
         isGuestLoading={guestLoading}
       />

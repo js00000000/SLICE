@@ -5,6 +5,8 @@ import { APP_NAME } from '../constants';
 interface LoginViewProps {
   onGoogleLogin: () => void;
   onGuestLogin: () => void;
+  onQuickStart: () => void;
+  showQuickStart?: boolean;
   isGoogleLoading?: boolean;
   isGuestLoading?: boolean;
 }
@@ -12,6 +14,8 @@ interface LoginViewProps {
 export function LoginView({ 
   onGoogleLogin, 
   onGuestLogin,
+  onQuickStart,
+  showQuickStart = false,
   isGoogleLoading = false,
   isGuestLoading = false
 }: LoginViewProps) {
@@ -62,7 +66,7 @@ export function LoginView({
           </div>
 
           <button
-            onClick={onGuestLogin}
+            onClick={showQuickStart ? onQuickStart : onGuestLogin}
             disabled={isAnyLoading}
             className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all duration-200 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100"
           >
@@ -71,7 +75,7 @@ export function LoginView({
             ) : (
               <UserCircle className="w-6 h-6" />
             )}
-            {t('auth.guest_login')}
+            {t(showQuickStart ? 'auth.quick_start' : 'auth.guest_login')}
           </button>
 
           <div className="pt-2 border-t border-gray-50 flex justify-center">

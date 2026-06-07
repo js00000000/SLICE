@@ -29,6 +29,7 @@ import {
   updateDoc
 } from 'firebase/firestore';
 import { auth, googleProvider, db } from '../lib/firebase';
+import { firebaseService } from '../lib/firebaseService';
 import { AbandonGuestConfirmationModal } from '../components/MergeConfirmationModal';
 import type { UserSettings } from '../types';
 
@@ -41,6 +42,7 @@ interface AuthContextType {
   isSoftLoggedOut: boolean;
   handleGoogleLogin: () => Promise<void>;
   handleGuestLogin: () => Promise<void>;
+  handleQuickStart: () => Promise<void>;
   handleLogout: () => Promise<void>;
   handleDeleteAccount: () => Promise<void>;
 }
@@ -236,6 +238,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const handleQuickStart = async () => {
+    try {
+      setGuestLoading(true);
+      if (!auth.currentUser) {
+        const result = await signInAnonymously(auth);
+        
+        const defaultGroupName = t('groups.default_group_name', { defaultValue: 'My Trip' });
+        const defaultHostName = t('groups.default_host_name', { defaultValue: 'Me' });
+        
+        try {
+          const groupId = await firebaseService.createGroup(
+            result.user.uid,
+            defaultGroupName,
+            defaultHostName
+          );
+          navigate(`/group/${groupId}`);
+        } catch (err) {
+          console.error("Auto-create group error:", err);
+        }
+      }
+      setIsSoftLoggedOut(false);
+    } catch (err: unknown) {
+      const error = err as AuthError;
+      console.error("Quick start error:", error);
+      toast.error(t('common.error'));
+    } finally {
+      setGuestLoading(false);
+    }
+  };
+
   const handleGuestLogin = async () => {
     try {
       setGuestLoading(true);
@@ -379,6 +411,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isSoftLoggedOut,
       handleGoogleLogin, 
       handleGuestLogin, 
+      handleQuickStart,
       handleLogout,
       handleDeleteAccount
     }}>
