@@ -124,14 +124,27 @@ export const firebaseService = {
       userId,
       updatedAt: serverTimestamp(),
     });
+    // Ensure the group appears in "My Groups"
+    await setDoc(doc(db, 'users', userId), {
+      lastGroupId: groupId,
+      joinedGroupIds: arrayUnion(groupId),
+    }, { merge: true });
   },
 
   async createMember(groupId: string, name: string, userId: string | null = null) {
-    return await addDoc(collection(db, 'groups', groupId, 'members'), {
+    const memberRef = await addDoc(collection(db, 'groups', groupId, 'members'), {
       name: name.trim(),
       userId,
       createdAt: serverTimestamp(),
     });
+    // Ensure the group appears in "My Groups" (only for real users, not host-created placeholders)
+    if (userId) {
+      await setDoc(doc(db, 'users', userId), {
+        lastGroupId: groupId,
+        joinedGroupIds: arrayUnion(groupId),
+      }, { merge: true });
+    }
+    return memberRef;
   },
 
   async deleteMember(groupId: string, memberId: string) {
