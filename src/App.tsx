@@ -12,7 +12,7 @@ import { GroupSelectionPage } from './pages/GroupSelectionPage';
 import { MemberSelectionPage } from './pages/MemberSelectionPage';
 import { ExpensesPage } from './pages/ExpensesPage';
 import { SettlementsPage } from './pages/SettlementsPage';
-import { MemberManagementPage } from './pages/MemberManagementPage';
+import { GroupManagementPage } from './pages/GroupManagementPage';
 import { JoinGroupPage } from './pages/JoinGroupPage';
 
 // Import Hooks
@@ -96,7 +96,7 @@ export default function App() {
               )
             } />
 
-            <Route path="/group/:groupId/members" element={<MemberManagementPage />} />
+            <Route path="/group/:groupId/members" element={<GroupManagementPage />} />
             <Route path="/join/:groupId" element={<JoinGroupPage />} />
           </Route>
 

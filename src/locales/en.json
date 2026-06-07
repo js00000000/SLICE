@@ -15,6 +15,7 @@
     "error_host_only": "Only host can perform this action",
     "success": "Success",
     "host": "Host",
+    "settings": "Settings",
     "switch_lang": "Switch Language",
     "seo_title": "SLICE - Quick & Simple Group Expense Sharing",
     "seo_description": "SLICE is a simple expense sharing tool designed for groups. Support anonymous and Google login, easily track expenses and calculate settlements. Perfect for dining, trips, and roommates."

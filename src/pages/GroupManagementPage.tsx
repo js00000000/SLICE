@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
-import { Users, Shield, X, Plus, Copy, Trash2, Share2 } from 'lucide-react';
+import { Users, Shield, X, Plus, Copy, Trash2, Share2, Settings } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { BottomNav } from '../components/BottomNav';
 import { AppHeader } from '../components/AppHeader';
@@ -14,7 +14,7 @@ import { APP_NAME } from '../constants';
 import { calculateBalancesAndSettlements } from '../lib/settlement';
 import type { Member } from '../types';
 
-export function MemberManagementPage() {
+export function GroupManagementPage() {
   const { t, i18n } = useTranslation();
   const { groupId } = useParams();
   const { confirm } = useDialog();
@@ -30,17 +30,24 @@ export function MemberManagementPage() {
   const [newMemberName, setNewMemberName] = useState('');
   const { balances } = useMemo(() => calculateBalancesAndSettlements(members, expenses), [members, expenses]);
 
+  // Sync newName state when currentGroup loads
+  const [prevGroupName, setPrevGroupName] = useState(currentGroup?.name);
+  if (currentGroup?.name !== prevGroupName) {
+    setPrevGroupName(currentGroup?.name);
+    setNewName(currentGroup?.name || '');
+  }
+
   // Manual title fallback
   useEffect(() => {
     const title = currentGroup?.name 
       ? `${currentGroup.name} - ${APP_NAME}` 
-      : `${t('members.title')} - ${APP_NAME}`;
+      : `${t('common.settings')} - ${APP_NAME}`;
     document.title = title;
   }, [currentGroup?.name, t]);
 
   const handleSaveGroupName = async () => {
     if (newName.trim() && newName !== currentGroup?.name) {
-      await handleUpdateGroupName(newName);
+      await handleUpdateGroupName(newName.trim());
       toast.success(t('common.success'));
     }
   };
@@ -74,9 +81,9 @@ export function MemberManagementPage() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 pb-24">
       <Helmet>
-        <title>{currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `${t('members.title')} - ${APP_NAME}`}</title>
-        <meta property="og:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `${t('members.title')} - ${APP_NAME}`} />
-        <meta property="twitter:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `${t('members.title')} - ${APP_NAME}`} />
+        <title>{currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `${t('common.settings')} - ${APP_NAME}`}</title>
+        <meta property="og:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `${t('common.settings')} - ${APP_NAME}`} />
+        <meta property="twitter:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `${t('common.settings')} - ${APP_NAME}`} />
       </Helmet>
 
       <AppHeader
@@ -89,7 +96,7 @@ export function MemberManagementPage() {
         <div className="flex items-center justify-between gap-4">
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl font-bold text-gray-900 truncate">
-              {t('members.title')}
+              {t('common.settings')}
             </h1>
             <p className="text-sm text-gray-500">
               {t('members.count', { count: members.length })}
@@ -97,7 +104,70 @@ export function MemberManagementPage() {
           </div>
         </div>
 
+        {/* Group Info Section */}
         <section className="space-y-4">
+          <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2 px-1">
+            <Settings className="w-4 h-4 text-indigo-600" /> {t('groups.group_info')}
+          </h2>
+          <div className="bg-white rounded-2xl border shadow-sm p-5 space-y-4">
+            <div className="flex flex-col gap-2">
+              <span className="text-sm text-gray-500">{t('groups.group_name')}</span>
+              {currentMember.isHost ? (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    className="flex-1 px-3 py-1.5 border rounded-lg focus:ring-2 focus:ring-indigo-600 outline-none text-base"
+                  />
+                  <button
+                    onClick={handleSaveGroupName}
+                    disabled={!newName.trim() || newName === currentGroup?.name}
+                    className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-medium disabled:opacity-50 hover:bg-indigo-700 transition-colors"
+                  >
+                    {t('common.save')}
+                  </button>
+                </div>
+              ) : (
+                <span className="text-sm font-medium">{currentGroup?.name}</span>
+              )}
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-500">{t('groups.group_id')}</span>
+              <div className="flex items-center gap-2">
+                <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">{currentGroup?.id}</code>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(currentGroup?.id || '');
+                    toast.success(t('groups.id_copied'));
+                  }}
+                  className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+                  title={t('common.copy')}
+                >
+                  <Copy className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <span className="text-sm text-gray-500">{t('common.share')}</span>
+              <button
+                onClick={() => {
+                  const url = `${window.location.origin}/join/${currentGroup?.id}`;
+                  navigator.clipboard.writeText(url);
+                  toast.success(t('groups.link_copied'));
+                }}
+                className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-medium hover:bg-indigo-100 transition-colors"
+              >
+                <Share2 className="w-4 h-4" />
+                {t('groups.share_link')}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* Members Section */}
+        <section className="space-y-4 pt-4 border-t">
           <div className="flex items-center justify-between px-1">
             <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
               <Users className="w-4 h-4 text-indigo-600" /> {t('members.list')}
@@ -178,69 +248,9 @@ export function MemberManagementPage() {
           )}
         </section>
 
+        {/* Danger Zone Section */}
         <section className="space-y-4 pt-4 border-t">
-          <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-            <Plus className="w-4 h-4 text-indigo-600" /> {t('groups.group_info')}
-          </h2>
-          <div className="bg-white rounded-2xl border shadow-sm p-5 space-y-4">
-            <div className="flex flex-col gap-2">
-              <span className="text-sm text-gray-500">{t('groups.group_name')}</span>
-              {currentMember.isHost ? (
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    className="flex-1 px-3 py-1.5 border rounded-lg focus:ring-2 focus:ring-indigo-600 outline-none text-base"
-                  />
-                  <button
-                    onClick={handleSaveGroupName}
-                    disabled={!newName.trim() || newName === currentGroup?.name}
-                    className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-medium disabled:opacity-50 hover:bg-indigo-700 transition-colors"
-                  >
-                    {t('common.save')}
-                  </button>
-                </div>
-              ) : (
-                <span className="text-sm font-medium">{currentGroup?.name}</span>
-              )}
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">{t('groups.group_id')}</span>
-              <div className="flex items-center gap-2">
-                <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">{currentGroup?.id}</code>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(currentGroup?.id || '');
-                    toast.success(t('groups.id_copied'));
-                  }}
-                  className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
-                  title={t('common.copy')}
-                >
-                  <Copy className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-2">
-              <span className="text-sm text-gray-500">{t('common.share')}</span>
-              <button
-                onClick={() => {
-                  const url = `${window.location.origin}/join/${currentGroup?.id}`;
-                  navigator.clipboard.writeText(url);
-                  toast.success(t('groups.link_copied'));
-                }}
-                className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-medium hover:bg-indigo-100 transition-colors"
-              >
-                <Share2 className="w-4 h-4" />
-                {t('groups.share_link')}
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <section className="space-y-4 pt-4 border-t">
-          <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+          <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2 px-1">
             <Shield className="w-4 h-4 text-amber-500" /> {t('groups.danger_zone')}
           </h2>
           <div className="bg-white rounded-2xl border border-red-100 p-6 space-y-4">
@@ -293,6 +303,3 @@ export function MemberManagementPage() {
     </div>
   );
 }
-
-
-

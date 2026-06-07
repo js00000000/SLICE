@@ -119,7 +119,7 @@ export function BottomNav({ activeTab, groupId: propGroupId, onTabChange, onAddC
           }`}
         >
           <Users className="w-5 h-5" />
-          <span className="text-[10px] font-medium truncate w-full px-1 text-center">{t('members.title')}</span>
+          <span className="text-[10px] font-medium truncate w-full px-1 text-center">{t('common.settings')}</span>
         </button>
       </div>
     </div>
