@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { X, User as LucideUser, Shield, LogOut } from 'lucide-react';
+import { X, User as LucideUser, Shield, LogOut, Link2, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Member } from '../types';
 import { useDialog } from '../contexts/DialogContext';
 import { useScrollLock } from '../hooks/useScrollLock';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ProfileModalProps {
   currentMember: Member;
@@ -23,7 +24,14 @@ export function ProfileModal({
   useScrollLock();
   const { t } = useTranslation();
   const { confirm } = useDialog();
+  const { user, googleLoading, handleGoogleLogin } = useAuth();
   const [name, setName] = useState(currentMember.name || '');
+
+  const isGoogleLinked = user?.providerData.some(p => p.providerId === 'google.com') || false;
+
+  const handleLinkGoogleClick = async () => {
+    await handleGoogleLogin();
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,6 +100,38 @@ export function ProfileModal({
               className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors">
               {t('common.save')}
             </button>
+          </div>
+
+          <div className="pt-4 border-t flex items-center justify-between gap-3">
+            <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
+              {t('profile.google_account')}
+            </h3>
+
+            {isGoogleLinked ? (
+              <button
+                type="button"
+                disabled
+                className="px-3 py-1.5 bg-gray-100 text-gray-400 border border-gray-200 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 cursor-not-allowed"
+              >
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                {t('profile.google_linked')}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleLinkGoogleClick}
+                disabled={googleLoading}
+                className="px-3 py-1.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {googleLoading ? (
+                  <Loader2 className="w-3 h-3 animate-spin text-indigo-600" />
+                ) : (
+                  <Link2 className="w-3 h-3 text-indigo-600" />
+                )}
+                {t('profile.link_google')}
+              </button>
+            )}
           </div>
 
           <div className="space-y-3 pt-4 border-t">

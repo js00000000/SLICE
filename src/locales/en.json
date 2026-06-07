@@ -114,7 +114,12 @@
   "profile": {
     "title": "Profile Settings",
     "display_name": "Display Name",
-    "settings_updated": "Profile settings updated"
+    "settings_updated": "Profile settings updated",
+    "google_account": "Google Account",
+    "google_linked": "Linked",
+    "google_not_linked": "Not Linked",
+    "link_google": "Link",
+    "google_link_success": "Google account linked successfully!"
   },
   "balances": {
     "title": "Balances",

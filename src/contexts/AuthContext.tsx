@@ -16,6 +16,7 @@ import {
   reauthenticateWithRedirect,
   signOut,
   deleteUser,
+  GoogleAuthProvider,
 } from 'firebase/auth';
 import type { User, AuthError } from 'firebase/auth';
 import {
@@ -56,19 +57,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [showAbandonGuestConfirm, setShowAbandonGuestConfirm] = useState(false);
   const [isSoftLoggedOut, setIsSoftLoggedOut] = useState(false);
 
+  const saveGoogleToken = (result: any) => {
+    try {
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      if (credential?.accessToken) {
+        localStorage.setItem('google_access_token', credential.accessToken);
+      }
+    } catch (err) {
+      console.error("Error saving Google token:", err);
+    }
+  };
+
+  const revokeGoogleToken = async () => {
+    const token = localStorage.getItem('google_access_token');
+    if (token) {
+      try {
+        await fetch(`https://oauth2.googleapis.com/revoke?token=${token}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          mode: 'no-cors'
+        });
+      } catch (err) {
+        console.error("Error revoking Google token:", err);
+      } finally {
+        localStorage.removeItem('google_access_token');
+      }
+    }
+  };
+
   useEffect(() => {
     // Handle redirect result (for cases where popup was blocked)
-    getRedirectResult(auth).catch((error: unknown) => {
-      console.error("Redirect error catch:", error);
-      const authErr = error as AuthError;
-      if (authErr.code === 'auth/credential-already-in-use') {
-        // If they tried to link a Google account that already exists via redirect, 
-        // we show the confirmation instead of auto-signing in
-        setShowAbandonGuestConfirm(true);
-      } else {
-        toast.error(t('common.error'));
-      }
-    });
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result) {
+          saveGoogleToken(result);
+        }
+      })
+      .catch((error: unknown) => {
+        console.error("Redirect error catch:", error);
+        const authErr = error as AuthError;
+        if (authErr.code === 'auth/credential-already-in-use') {
+          // If they tried to link a Google account that already exists via redirect, 
+          // we show the confirmation instead of auto-signing in
+          setShowAbandonGuestConfirm(true);
+        } else {
+          toast.error(t('common.error'));
+        }
+      });
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -151,7 +188,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (auth.currentUser && auth.currentUser.isAnonymous) {
         try {
-          await linkWithPopup(auth.currentUser, googleProvider);
+          const result = await linkWithPopup(auth.currentUser, googleProvider);
+          saveGoogleToken(result);
+          await auth.currentUser.reload();
+          setUser(Object.create(
+            Object.getPrototypeOf(auth.currentUser),
+            Object.getOwnPropertyDescriptors(auth.currentUser)
+          ));
+          toast.success(t('profile.google_link_success'));
         } catch (err: unknown) {
           const error = err as AuthError;
           if (error.code === 'auth/popup-blocked') {
@@ -168,7 +212,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } else {
         try {
-          await signInWithPopup(auth, googleProvider);
+          const result = await signInWithPopup(auth, googleProvider);
+          saveGoogleToken(result);
         } catch (err: unknown) {
           const error = err as AuthError;
           if (error.code === 'auth/popup-blocked') {
@@ -272,9 +317,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // 1. For Google users, re-authenticate first to avoid requires-recent-login
       if (currentUser.providerData.some(p => p.providerId === 'google.com')) {
         try {
-          await reauthenticateWithPopup(currentUser, googleProvider);
+          const result = await reauthenticateWithPopup(currentUser, googleProvider);
+          saveGoogleToken(result);
           // Explicitly unlink Google provider as requested by user
           try {
+            await revokeGoogleToken();
             await unlink(currentUser, 'google.com');
           } catch (unlinkErr) {
             console.warn("Unlink error (ignoring during deletion):", unlinkErr);

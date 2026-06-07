@@ -114,7 +114,12 @@
   "profile": {
     "title": "個人設定",
     "display_name": "顯示名稱",
-    "settings_updated": "個人設定已更新"
+    "settings_updated": "個人設定已更新",
+    "google_account": "Google 帳號",
+    "google_linked": "已連結",
+    "google_not_linked": "未連結",
+    "link_google": "連結",
+    "google_link_success": "Google 帳號連結成功！"
   },
   "balances": {
     "title": "結算金額",
