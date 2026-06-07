@@ -11,6 +11,8 @@ import {
   linkWithPopup,
   linkWithRedirect,
   getRedirectResult,
+  reauthenticateWithPopup,
+  reauthenticateWithRedirect,
   signOut,
   deleteUser,
   GoogleAuthProvider,
@@ -308,10 +310,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const handleDeleteAccount = async () => {
     if (!auth.currentUser) return;
     
+    const currentUser = auth.currentUser;
+    const uid = currentUser.uid;
+
     try {
       setDeleteLoading(true);
-      const currentUser = auth.currentUser;
-      const uid = currentUser.uid;
 
       // For Google users, revoke the stored token if it exists without showing a popup
       if (currentUser.providerData.some(p => p.providerId === 'google.com')) {
@@ -335,7 +338,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const error = err as AuthError;
       console.error("Delete account error:", error);
       if (error.code === 'auth/requires-recent-login') {
-        toast.error(t('auth.requires_recent_login_msg') || 'Please re-login before deleting your account for security reasons.');
+        if (currentUser.providerData.some(p => p.providerId === 'google.com')) {
+          try {
+            // Prompt Google popup login to re-authenticate only when required
+            const result = await reauthenticateWithPopup(currentUser, googleProvider);
+            saveGoogleToken(result);
+            // Retry deletion
+            await deleteUser(currentUser);
+            setUser(null);
+            toast.success(t('auth.delete_account_success'));
+            navigate('/');
+          } catch (reauthErr: unknown) {
+            const reauthError = reauthErr as AuthError;
+            if (reauthError.code === 'auth/popup-blocked') {
+              await reauthenticateWithRedirect(currentUser, googleProvider);
+            } else if (reauthError.code === 'auth/popup-closed-by-user' || reauthError.code === 'auth/cancelled-popup-request') {
+              console.log("Deletion re-authentication popup closed by user");
+            } else {
+              toast.error(t('common.error'));
+            }
+          }
+        } else {
+          toast.error(t('auth.requires_recent_login_msg') || 'Please re-login before deleting your account for security reasons.');
+        }
       } else {
         toast.error(t('common.error'));
       }
