@@ -98,9 +98,6 @@ export function GroupManagementPage() {
             <h1 className="text-2xl font-bold text-gray-900 truncate">
               {t('common.settings')}
             </h1>
-            <p className="text-sm text-gray-500">
-              {t('members.count', { count: members.length })}
-            </p>
           </div>
         </div>
 
@@ -172,6 +169,9 @@ export function GroupManagementPage() {
             <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
               <Users className="w-4 h-4 text-indigo-600" /> {t('members.list')}
             </h2>
+            <span className="text-xs text-gray-500">
+              {t('members.count', { count: members.length })}
+            </span>
           </div>
 
           <div className="bg-white rounded-2xl border shadow-sm overflow-hidden divide-y divide-gray-100">
