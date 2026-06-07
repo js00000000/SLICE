@@ -59,14 +59,12 @@ export function GroupProvider({ children }: { children: ReactNode }) {
   const [currentMemberId, setCurrentMemberId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Sync state with URL - Persist active group even when navigating away
+  // Sync state with URL
   useEffect(() => {
     const pathParts = location.pathname.split('/');
     const idFromUrl = (pathParts[1] === 'group' && pathParts[2]) ? pathParts[2] : null;
     
-    // Only update if we have a new ID from the URL. 
-    // If idFromUrl is null (e.g. on '/'), we keep the existing groupId in state.
-    if (idFromUrl && idFromUrl !== groupId) {
+    if (idFromUrl !== groupId) {
       setGroupId(idFromUrl);
     }
   }, [location.pathname, groupId]);
