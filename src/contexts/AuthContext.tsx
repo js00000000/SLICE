@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [guestLoading, setGuestLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [showAbandonGuestConfirm, setShowAbandonGuestConfirm] = useState(false);
-  const [isSoftLoggedOut, setIsSoftLoggedOut] = useState(false);
+  const [isSoftLoggedOut, setIsSoftLoggedOut] = useState(() => localStorage.getItem('is_soft_logged_out') === 'true');
 
   const saveGoogleToken = (result: UserCredential) => {
     try {
@@ -115,6 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // If a non-anonymous user signs in, clear soft logout state
       if (currentUser && !currentUser.isAnonymous) {
         setIsSoftLoggedOut(false);
+        localStorage.removeItem('is_soft_logged_out');
       }
       setAuthLoading(false);
     });
@@ -188,6 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       setIsSoftLoggedOut(false);
+      localStorage.removeItem('is_soft_logged_out');
       
       if (auth.currentUser && auth.currentUser.isAnonymous) {
         try {
@@ -259,6 +261,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
       setIsSoftLoggedOut(false);
+      localStorage.removeItem('is_soft_logged_out');
     } catch (err: unknown) {
       const error = err as AuthError;
       console.error("Quick start error:", error);
@@ -275,6 +278,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await signInAnonymously(auth);
       }
       setIsSoftLoggedOut(false);
+      localStorage.removeItem('is_soft_logged_out');
     } catch (err: unknown) {
       const error = err as AuthError;
       console.error("Guest login error:", error);
@@ -326,9 +330,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       if (user?.isAnonymous) {
         setIsSoftLoggedOut(true);
+        localStorage.setItem('is_soft_logged_out', 'true');
       } else {
         await signOut(auth);
         setUser(null);
+        localStorage.removeItem('is_soft_logged_out');
       }
       toast.success(t('auth.logout'));
       navigate('/');
