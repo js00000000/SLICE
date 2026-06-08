@@ -26,7 +26,9 @@ import {
   getDocs,
   query,
   where,
-  updateDoc
+  updateDoc,
+  setDoc,
+  serverTimestamp
 } from 'firebase/firestore';
 import { auth, googleProvider, db } from '../lib/firebase';
 import { firebaseService } from '../lib/firebaseService';
@@ -110,8 +112,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       });
 
+    const ensureUserDocumentExists = async (currentUser: User) => {
+      const userDocRef = doc(db, 'users', currentUser.uid);
+      try {
+        const userDocSnap = await getDoc(userDocRef);
+        const loginMethod = currentUser.isAnonymous ? 'anonymous' : 'google';
+        
+        if (!userDocSnap.exists()) {
+          await setDoc(userDocRef, {
+            lastGroupId: null,
+            joinedGroupIds: [],
+            createdOn: serverTimestamp(),
+            lastLoginOn: serverTimestamp(),
+            isAnonymous: currentUser.isAnonymous,
+            loginMethod: loginMethod,
+          });
+        } else {
+          const data = userDocSnap.data() as UserSettings;
+          await updateDoc(userDocRef, {
+            lastLoginOn: serverTimestamp(),
+            isAnonymous: currentUser.isAnonymous,
+            loginMethod: loginMethod,
+            ...(!data.createdOn ? { createdOn: serverTimestamp() } : {})
+          });
+        }
+      } catch (err) {
+        console.error("Error ensuring user document exists:", err);
+      }
+    };
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+      if (currentUser) {
+        ensureUserDocumentExists(currentUser);
+      }
       // If a non-anonymous user signs in, clear soft logout state
       if (currentUser && !currentUser.isAnonymous) {
         setIsSoftLoggedOut(false);

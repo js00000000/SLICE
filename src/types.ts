@@ -38,4 +38,8 @@ export interface UserSettings {
   lastGroupId: string | null;
   joinedGroupIds?: string[];
   currentMemberId?: string | null;
+  createdOn?: Timestamp;
+  lastLoginOn?: Timestamp;
+  isAnonymous?: boolean;
+  loginMethod?: 'anonymous' | 'google';
 }
