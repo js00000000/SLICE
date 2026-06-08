@@ -9,15 +9,18 @@
         fill: #FFFFFF;
       }
     </style>
+    <clipPath id="bounds">
+      <rect x="0" y="0" width="32" height="32"/>
+    </clipPath>
   </defs>
-  <g transform="rotate(-4 16 16)">
+  <g transform="rotate(-4 16 16)" clip-path="url(#bounds)">
     <!-- Tactile Shadow -->
-    <rect x="2" y="2" width="28" height="28" rx="6" fill="#1A1A2E" />
+    <rect x="2.0092" y="2.0092" width="29.9816" height="29.9816" rx="6.5" fill="#1A1A2E" />
     <!-- Orange Box with Border -->
-    <rect x="1" y="1" width="28" height="28" rx="6" fill="#FF6B35" stroke="#1A1A2E" stroke-width="2.5" />
+    <rect x="1.0092" y="1.0092" width="29.9816" height="29.9816" rx="6.5" fill="#FF6B35" stroke="#1A1A2E" stroke-width="2.5" />
     <!-- Diagonal Slice Highlight -->
-    <path d="M12 -1 L18 -1 L6 33 L0 33 Z" fill="#FFFFFF" opacity="0.2" />
+    <path d="M13 -2 L19 -2 L7 34 L1 34 Z" fill="#FFFFFF" opacity="0.2" />
     <!-- Logo Text -->
-    <text x="14.5" y="20" font-size="14.5" text-anchor="middle" class="logo-text">S/</text>
+    <text x="15.5" y="21" font-size="14.5" text-anchor="middle" class="logo-text">S/</text>
   </g>
 </svg>
