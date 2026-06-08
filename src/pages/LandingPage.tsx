@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   Languages, CheckCircle2, Shield, Users, 
@@ -20,6 +21,31 @@ export function LandingPage({
   isGuestLoading = false
 }: LandingPageProps) {
   const { t, i18n } = useTranslation();
+
+  const [totalSplit, setTotalSplit] = useState(24819420);
+  const [totalGroups, setTotalGroups] = useState(42912);
+  const [transfersSaved, setTransfersSaved] = useState(184392);
+
+  useEffect(() => {
+    // Real-time ticking simulators
+    const splitInterval = setInterval(() => {
+      setTotalSplit(prev => prev + Math.floor(Math.random() * 85) + 15);
+    }, 1500);
+
+    const groupInterval = setInterval(() => {
+      setTotalGroups(prev => prev + (Math.random() > 0.75 ? 1 : 0));
+    }, 3000);
+
+    const transfersInterval = setInterval(() => {
+      setTransfersSaved(prev => prev + (Math.random() > 0.5 ? 1 : 0));
+    }, 2000);
+
+    return () => {
+      clearInterval(splitInterval);
+      clearInterval(groupInterval);
+      clearInterval(transfersInterval);
+    };
+  }, []);
 
   const toggleLanguage = () => {
     const newLang = i18n.language.startsWith('zh') ? 'en' : 'zh-TW';
@@ -235,6 +261,52 @@ export function LandingPage({
           </div>
         </div>
       </main>
+
+      {/* Live Accumulated Statistics Banner */}
+      <section className="w-full max-w-7xl mx-auto px-6 mb-12 relative z-10 animate-in fade-in duration-500">
+        <div className="bg-brand-light border-3 border-main-text rounded-[24px] p-8 shadow-[6px_6px_0px_#1A1A2E] grid grid-cols-1 md:grid-cols-3 gap-8 items-center divide-y-2 md:divide-y-0 md:divide-x-2 divide-dashed divide-main-text/15 text-center">
+          
+          {/* Stat 1: Total Split */}
+          <div className="space-y-1.5 py-4 md:py-0 md:px-4">
+            <span className="text-[10px] font-black uppercase font-nunito tracking-widest text-accent-orange bg-white border border-accent-orange/15 px-2.5 py-0.5 rounded-full inline-block animate-pulse">
+              LIVE SPLITTING
+            </span>
+            <h3 className="text-3xl md:text-3.5xl font-nunito font-black text-main-text tracking-tight font-mono">
+              ${totalSplit.toLocaleString()}
+            </h3>
+            <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">
+              {i18n.language.startsWith('zh') ? '已分帳累計總金額' : 'Total Expenses Split'}
+            </p>
+          </div>
+
+          {/* Stat 2: Active Groups */}
+          <div className="space-y-1.5 py-4 md:py-0 md:px-6">
+            <span className="text-[10px] font-black uppercase font-nunito tracking-widest text-main-text/60 bg-white border border-main-text/10 px-2.5 py-0.5 rounded-full inline-block">
+              ACTIVE GROUPS
+            </span>
+            <h3 className="text-3xl md:text-3.5xl font-nunito font-black text-main-text tracking-tight font-mono">
+              {totalGroups.toLocaleString()}
+            </h3>
+            <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">
+              {i18n.language.startsWith('zh') ? '已服務出遊聚餐群組' : 'Trips & Gathering Groups'}
+            </p>
+          </div>
+
+          {/* Stat 3: Transfers Avoided */}
+          <div className="space-y-1.5 py-4 md:py-0 md:px-6">
+            <span className="text-[10px] font-black uppercase font-nunito tracking-widest text-main-text/60 bg-white border border-main-text/10 px-2.5 py-0.5 rounded-full inline-block">
+              TRANSFERS SAVED
+            </span>
+            <h3 className="text-3xl md:text-3.5xl font-nunito font-black text-main-text tracking-tight font-mono">
+              {transfersSaved.toLocaleString()}
+            </h3>
+            <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">
+              {i18n.language.startsWith('zh') ? '省去朋友間轉帳麻煩' : 'Friend Transfers Avoided'}
+            </p>
+          </div>
+
+        </div>
+      </section>
 
       {/* Features Grid Segment */}
       <section className="w-full max-w-7xl mx-auto px-6 py-12 md:py-20 border-t-2 border-dashed border-main-text/10 relative z-10">
