@@ -1,4 +1,4 @@
-import { ArrowLeft, Languages, User as LucideUser } from 'lucide-react';
+import { ArrowLeft, Languages, User as LucideUser, LayoutGrid } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { APP_NAME } from '../constants';
@@ -9,6 +9,7 @@ interface AppHeaderProps {
   showProfile?: boolean;
   onProfileClick?: () => void;
   currentMemberName?: string;
+  showGroups?: boolean;
 }
 
 export function AppHeader({
@@ -16,7 +17,8 @@ export function AppHeader({
   onBack,
   showProfile,
   onProfileClick,
-  currentMemberName
+  currentMemberName,
+  showGroups
 }: AppHeaderProps) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -72,6 +74,16 @@ export function AppHeader({
           >
             <Languages className="w-4 h-4 stroke-[2]" />
           </button>
+
+          {showGroups && (
+            <button
+              onClick={() => navigate('/')}
+              className="p-2 text-main-text hover:text-accent-orange hover:bg-brand-light border-2 border-transparent hover:border-main-text rounded-xl transition-all duration-150 cursor-pointer"
+              title={t('groups.my_groups')}
+            >
+              <LayoutGrid className="w-4 h-4 stroke-[2.5]" />
+            </button>
+          )}
         </div>
       </div>
     </header>

@@ -3,16 +3,15 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useGroup } from '../contexts/GroupContext';
 
-export type TabType = 'expenses' | 'settlements' | 'members' | 'groups';
+export type TabType = 'expenses' | 'settlements' | 'members' | 'dashboard';
 
 interface BottomNavProps {
   activeTab: TabType;
   groupId?: string;
-  onTabChange?: (tab: 'expenses' | 'settlements') => void;
   onAddClick?: () => void;
 }
 
-export function BottomNav({ activeTab, groupId: propGroupId, onTabChange, onAddClick }: BottomNavProps) {
+export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: BottomNavProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { groupId: contextGroupId } = useGroup();
@@ -20,12 +19,12 @@ export function BottomNav({ activeTab, groupId: propGroupId, onTabChange, onAddC
   const groupId = propGroupId || contextGroupId;
 
   const handleTabClick = (tab: TabType) => {
-    if (tab === 'groups') {
-      navigate('/');
+    if (!groupId) return;
+
+    if (tab === 'dashboard') {
+      navigate(`/group/${groupId}`);
       return;
     }
-
-    if (!groupId) return;
 
     if (tab === 'members') {
       navigate(`/group/${groupId}/members`);
@@ -33,20 +32,12 @@ export function BottomNav({ activeTab, groupId: propGroupId, onTabChange, onAddC
     }
 
     if (tab === 'expenses') {
-      if (onTabChange) {
-        onTabChange(tab);
-      } else {
-        navigate(`/group/${groupId}`);
-      }
+      navigate(`/group/${groupId}/expenses`);
       return;
     }
 
     if (tab === 'settlements') {
-      if (onTabChange) {
-        onTabChange(tab);
-      } else {
-        navigate(`/group/${groupId}/settlements`);
-      }
+      navigate(`/group/${groupId}/settlements`);
       return;
     }
   };
@@ -64,17 +55,19 @@ export function BottomNav({ activeTab, groupId: propGroupId, onTabChange, onAddC
     <div className="fixed-in-container bottom-0 z-20 pb-safe select-none">
       <div className="bg-white border-t-3 border-main-text shadow-[0_-8px_24px_rgba(26,26,46,0.06)] px-3 py-2 grid grid-cols-5 items-center rounded-t-[20px]">
         
-        {/* Groups */}
+        {/* Dashboard */}
         <button
-          onClick={() => handleTabClick('groups')}
+          onClick={() => handleTabClick('dashboard')}
+          disabled={!groupId}
           className={`flex flex-col items-center gap-1.5 p-2 transition-all duration-150 btn-bounce cursor-pointer ${
-            activeTab === 'groups' 
+            !groupId ? 'opacity-30 cursor-not-allowed' :
+            activeTab === 'dashboard' 
               ? 'text-accent-orange scale-105' 
               : 'text-gray-500 hover:text-main-text'
           }`}
         >
-          <LayoutGrid className={`w-5.5 h-5.5 stroke-[2.5]`} />
-          <span className="text-[10px] font-black tracking-tight truncate w-full text-center">{t('groups.my_groups')}</span>
+          <LayoutGrid className="w-5.5 h-5.5 stroke-[2.5]" />
+          <span className="text-[10px] font-black tracking-tight truncate w-full text-center">{t('common.dashboard')}</span>
         </button>
 
         {/* Settlements */}

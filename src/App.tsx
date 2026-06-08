@@ -10,6 +10,7 @@ import { APP_NAME } from './constants';
 // Import Pages
 import { GroupSelectionPage } from './pages/GroupSelectionPage';
 import { MemberSelectionPage } from './pages/MemberSelectionPage';
+import { DashboardPage } from './pages/DashboardPage';
 import { ExpensesPage } from './pages/ExpensesPage';
 import { SettlementsPage } from './pages/SettlementsPage';
 import { GroupManagementPage } from './pages/GroupManagementPage';
@@ -104,6 +105,13 @@ export default function App() {
             <Route path="/" element={<GroupSelectionPage />} />
 
             <Route path="/group/:groupId" element={
+              !currentMemberId || !currentMember ? (
+                <MemberSelectionPage />
+              ) : (
+                <DashboardPage />
+              )
+            } />
+            <Route path="/group/:groupId/expenses" element={
               !currentMemberId || !currentMember ? (
                 <MemberSelectionPage />
               ) : (

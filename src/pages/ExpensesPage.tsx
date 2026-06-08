@@ -38,8 +38,8 @@ export function ExpensesPage() {
 
   // Manual title fallback
   useEffect(() => {
-    const title = currentGroup?.name 
-      ? `${currentGroup.name} - ${APP_NAME}` 
+    const title = currentGroup?.name
+      ? `${currentGroup.name} - ${APP_NAME}`
       : `${t('expenses.title')} - ${APP_NAME}`;
     document.title = title;
   }, [currentGroup?.name, t]);
@@ -55,8 +55,8 @@ export function ExpensesPage() {
 
   const filteredExpenses = useMemo(() => {
     if (!filterPaidBy) return expenses;
-    return expenses.filter(exp => 
-      exp.paidBy === filterPaidBy || 
+    return expenses.filter(exp =>
+      exp.paidBy === filterPaidBy ||
       (exp.payments && exp.payments.some(p => p.memberId === filterPaidBy))
     );
   }, [expenses, filterPaidBy]);
@@ -80,15 +80,16 @@ export function ExpensesPage() {
         <meta property="og:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `${t('expenses.title')} - ${APP_NAME}`} />
         <meta property="twitter:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `${t('expenses.title')} - ${APP_NAME}`} />
       </Helmet>
-      
+
       <AppHeader
         showProfile
         onProfileClick={() => setIsProfileModalOpen(true)}
         currentMemberName={currentMember.name}
+        showGroups
       />
 
       <main className="w-full mx-auto px-5 py-6 space-y-6 flex-1">
-        
+
         {/* Header Dashboard section */}
         <div className="stagger-item flex items-center justify-between gap-4 p-5 bg-white border-3 border-main-text rounded-[24px] shadow-[4px_4px_0px_#1A1A2E]" style={{ animationDelay: '0ms' }}>
           <div className="min-w-0 flex-1">
@@ -102,7 +103,7 @@ export function ExpensesPage() {
               </span>
             </div>
           </div>
-          
+
           <button
             onClick={() => {
               const url = `${window.location.origin}/join/${groupId}`;

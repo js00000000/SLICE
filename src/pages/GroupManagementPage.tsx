@@ -90,6 +90,7 @@ export function GroupManagementPage() {
         showProfile
         onProfileClick={() => setIsProfileModalOpen(true)}
         currentMemberName={currentMember.name}
+        showGroups
       />
 
       <main className="w-full mx-auto px-5 py-6 space-y-6 flex-1">
