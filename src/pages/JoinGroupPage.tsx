@@ -49,16 +49,23 @@ export function JoinGroupPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-page-bg flex flex-col items-center justify-center p-6 font-plus-jakarta select-none">
         <Helmet>
           <title>{t('common.error')} - {APP_NAME}</title>
         </Helmet>
-        <div className="bg-white p-8 rounded-2xl shadow-sm border text-center space-y-4 max-w-sm w-full">
-          <h2 className="text-xl font-bold text-red-600">{t('common.error')}</h2>
-          <p className="text-gray-600">{error}</p>
+        
+        <div className="bg-white p-8 rounded-[24px] border-3 border-main-text text-center space-y-6 max-w-sm w-full shadow-[8px_8px_0px_#1A1A2E] animate-in zoom-in duration-200">
+          <div className="w-16 h-16 bg-red-50 border-2 border-red-500 rounded-2xl flex items-center justify-center mx-auto rotate-[-4deg] text-red-500 font-nunito font-black text-2xl shadow-[2px_2px_0px_#1A1A2E]">
+            !
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-xl font-nunito font-black text-red-600">{t('common.error')}</h2>
+            <p className="text-gray-500 font-medium text-sm">{error}</p>
+          </div>
+          
           <button
             onClick={() => navigate('/')}
-            className="w-full py-2 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors"
+            className="w-full py-3.5 bg-accent-orange text-white border-2 border-main-text rounded-xl font-nunito font-black text-sm shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] cursor-pointer"
           >
             {t('common.back')}
           </button>

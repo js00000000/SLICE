@@ -68,31 +68,44 @@ export function DialogProvider({ children }: { children: ReactNode }) {
     <DialogContext.Provider value={{ alert: showAlert, confirm: showConfirm }}>
       {children}
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={type === 'alert' ? handleConfirm : undefined} />
-          <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl z-10 overflow-hidden animate-in zoom-in-95 fade-in duration-200">
-            <div className="px-6 pt-6 pb-4">
-              <div className="flex items-start gap-4">
-                <div className={`p-2 rounded-full flex-shrink-0 ${type === 'confirm' ? 'bg-amber-100 text-amber-600' : 'bg-indigo-100 text-indigo-600'}`}>
-                  {type === 'confirm' ? <HelpCircle className="w-6 h-6" /> : <AlertCircle className="w-6 h-6" />}
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-5 select-none font-plus-jakarta">
+          <div className="fixed inset-0 bg-main-text/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={type === 'alert' ? handleConfirm : undefined} />
+          
+          <div className="bg-white w-full max-w-sm rounded-[24px] border-3 border-main-text shadow-[6px_6px_0px_#1A1A2E] z-10 overflow-hidden animate-in zoom-in-95 fade-in duration-200 flex flex-col">
+            <div className="p-6">
+              <div className="flex flex-col items-center text-center space-y-4">
+                
+                {/* Visual Accent Tilted Icon Badge */}
+                <div className={`w-14 h-14 border-2 border-main-text rounded-2xl flex items-center justify-center shadow-[2px_2px_0px_#1A1A2E] shrink-0 ${
+                  type === 'confirm' 
+                    ? 'bg-brand-light text-accent-orange rotate-[-6deg]' 
+                    : 'bg-amber-50 text-amber-500 rotate-[6deg]'
+                }`}>
+                  {type === 'confirm' 
+                    ? <HelpCircle className="w-7 h-7 stroke-[2.5]" /> 
+                    : <AlertCircle className="w-7 h-7 stroke-[2.5]" />
+                  }
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 leading-tight mb-1">{title}</h3>
-                  <p className="text-gray-600 text-sm whitespace-pre-wrap leading-relaxed">{message}</p>
+                
+                <div className="space-y-1.5 w-full">
+                  <h3 className="text-xl font-nunito font-black text-main-text leading-tight">{title}</h3>
+                  <p className="text-gray-500 font-medium text-sm whitespace-pre-wrap leading-relaxed">{message}</p>
                 </div>
               </div>
             </div>
-            <div className="px-6 py-4 bg-gray-50 flex flex-row-reverse gap-3">
+            
+            {/* Playful Interactive Footers */}
+            <div className="px-6 py-4 border-t-2 border-dashed border-main-text/10 bg-white flex flex-row-reverse gap-3 shrink-0">
               <button
                 onClick={handleConfirm}
-                className="flex-1 px-4 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 active:scale-[0.98] transition-all shadow-sm"
+                className="flex-1 py-3 bg-accent-orange text-white rounded-xl font-nunito font-black text-sm border-2 border-main-text shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] transition-all duration-150 cursor-pointer"
               >
                 {confirmLabel}
               </button>
               {type === 'confirm' && (
                 <button
                   onClick={handleCancel}
-                  className="flex-1 px-4 py-2.5 bg-white text-gray-700 text-sm font-semibold rounded-xl border border-gray-200 hover:bg-gray-100 active:scale-[0.98] transition-all"
+                  className="flex-1 py-3 bg-brand-light text-accent-orange rounded-xl font-nunito font-black text-sm border-2 border-main-text shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] transition-all duration-150 cursor-pointer"
                 >
                   {cancelLabel}
                 </button>

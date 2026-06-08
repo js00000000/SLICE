@@ -139,76 +139,100 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end justify-center p-0 animate-in fade-in duration-200">
-      <form onSubmit={handleSubmit} className="bg-white w-full max-w-md rounded-t-2xl shadow-xl flex flex-col max-h-[90vh]">
-        <div className="flex items-center justify-between px-5 py-4 border-b shrink-0">
-          <h2 className="text-lg font-semibold text-gray-900">{isEditing ? t('expenses.edit') : t('expenses.add_new')}</h2>
-          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">
-            <X className="w-5 h-5" />
+    <div className="fixed inset-0 bg-main-text/40 backdrop-blur-sm z-50 flex items-end justify-center p-0 animate-in fade-in duration-200 select-none">
+      <form onSubmit={handleSubmit} className="bg-white w-full max-w-md rounded-t-[24px] border-t-3 border-x-3 border-main-text shadow-[0_-12px_40px_rgba(26,26,46,0.15)] flex flex-col max-h-[90vh] overflow-hidden">
+        
+        {/* Modal Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b-3 border-main-text shrink-0 bg-brand-light">
+          <h2 className="text-xl font-nunito font-black text-main-text">
+            {isEditing ? t('expenses.edit') : t('expenses.add_new')}
+          </h2>
+          <button 
+            type="button" 
+            onClick={onClose} 
+            className="text-main-text hover:text-accent-orange p-1.5 rounded-lg border-2 border-transparent hover:border-main-text hover:bg-white transition-all cursor-pointer"
+          >
+            <X className="w-5 h-5 stroke-[2.5]" />
           </button>
         </div>
 
-        <div className="p-5 overflow-y-auto flex-1 space-y-5">
-          <div className="space-y-4">
+        {/* Modal Content */}
+        <div className="p-6 overflow-y-auto flex-1 space-y-5 font-plus-jakarta">
+          <div className="space-y-5">
+            
+            {/* Description Input (Font size 16px to prevent iOS zoom) */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t('expenses.description')}</label>
-              <input type="text" value={description} onChange={(e) => setDescription(e.target.value)}
+              <label className="block text-xs font-black uppercase font-nunito tracking-wider text-main-text/60 mb-1.5">
+                {t('expenses.description')}
+              </label>
+              <input 
+                type="text" 
+                value={description} 
+                onChange={(e) => setDescription(e.target.value)}
                 placeholder={i18n.language.startsWith('zh') ? "例如：晚餐、計程車" : "e.g. Dinner, Taxi"}
-                className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600
-                focus:border-transparent outline-none"
+                className="w-full text-base font-bold text-main-text px-4 py-3 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none placeholder-gray-400 bg-white transition-all"
                 required
               />
             </div>
 
+            {/* Amount Input (Font size 16px to prevent iOS zoom) */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t('expenses.amount')}</label>
+              <label className="block text-xs font-black uppercase font-nunito tracking-wider text-main-text/60 mb-1.5">
+                {t('expenses.amount')}
+              </label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                <input type="number" min="0" step="any" value={amount} onChange={(e) =>
-                  setAmount(e.target.value)}
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-main-text font-nunito font-black text-lg">$</span>
+                <input 
+                  type="number" 
+                  min="0" 
+                  step="any" 
+                  value={amount} 
+                  onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
-                  className="w-full pl-8 pr-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600
-                  focus:border-transparent outline-none font-mono"
+                  className="w-full text-base font-nunito font-black text-main-text pl-8 pr-4 py-3 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none placeholder-gray-400 bg-white transition-all"
                   required
                 />
               </div>
             </div>
 
+            {/* Paid By Control */}
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-sm font-medium text-gray-700">{t('expenses.paid_by')}</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-black uppercase font-nunito tracking-wider text-main-text/60">
+                  {t('expenses.paid_by')}
+                </label>
                 <button
                   type="button"
                   onClick={() => setIsMultiplePayers(!isMultiplePayers)}
-                  className="text-xs text-indigo-600 font-medium hover:text-indigo-800"
+                  className="text-xs font-black font-nunito text-accent-orange hover:underline cursor-pointer"
                 >
                   {isMultiplePayers ? t('expenses.single_payer') : t('expenses.multiple_payers')}
                 </button>
               </div>
 
               {!isMultiplePayers ? (
-                <select value={paidBy} onChange={(e) => setPaidBy(e.target.value)}
-                  className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600
-                  focus:border-transparent outline-none bg-white"
+                <select 
+                  value={paidBy} 
+                  onChange={(e) => setPaidBy(e.target.value)}
+                  className="w-full text-base font-bold text-main-text px-4 py-3 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none bg-white shadow-[2px_2px_0px_#1A1A2E] cursor-pointer"
                 >
                   {members.map(m => (
                     <option key={m.id} value={m.id}>{m.name}</option>
                   ))}
                 </select>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-3 bg-page-bg/50 p-3.5 rounded-xl border-2 border-dashed border-main-text/20">
                   {payments.map((p, index) => {
                     const otherPayerIds = payments
                       .filter((_, i) => i !== index)
                       .map(op => op.memberId);
                     
                     return (
-                      <div key={index} className="flex gap-2">
+                      <div key={index} className="flex gap-2 items-center">
                         <select 
                           value={p.memberId} 
                           onChange={(e) => updatePayer(index, { memberId: e.target.value })}
-                          className="flex-1 px-3 py-2 border rounded-xl text-base outline-none bg-white"
+                          className="flex-1 text-base font-bold text-main-text px-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none bg-white"
                         >
                           {members.map(m => (
                             <option 
@@ -220,42 +244,45 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
                             </option>
                           ))}
                         </select>
-                        <div className="relative w-32">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">$</span>
+                        
+                        <div className="relative w-32 shrink-0">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-main-text font-nunito font-black">$</span>
                           <input
                             type="number"
                             step="any"
                             value={p.amount || ''}
                             onChange={(e) => updatePayer(index, { amount: parseFloat(e.target.value) || 0 })}
-                            className="w-full pl-6 pr-3 py-2 border rounded-xl text-base outline-none font-mono"
+                            className="w-full text-base font-nunito font-black text-main-text pl-7 pr-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none"
                             placeholder="0.00"
                           />
                         </div>
+                        
                         {payments.length > 1 && (
                           <button
                             type="button"
                             onClick={() => removePayer(index)}
-                            className="p-2 text-gray-400 hover:text-red-500"
+                            className="p-2 text-main-text hover:text-red-500 rounded-lg hover:bg-red-50 cursor-pointer"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-4 h-4 stroke-[2.5]" />
                           </button>
                         )}
                       </div>
                     );
                   })}
+                  
                   {payments.length < members.length && (
                     <button
                       type="button"
                       onClick={addPayer}
-                      className="flex items-center gap-1 text-xs text-indigo-600 font-medium hover:text-indigo-800 py-1"
+                      className="flex items-center gap-1.5 text-xs font-black font-nunito text-accent-orange hover:bg-brand-light px-3 py-1.5 border border-dashed border-accent-orange/40 rounded-lg cursor-pointer transition-all"
                     >
-                      <Plus className="w-3 h-3" />
+                      <Plus className="w-3.5 h-3.5 stroke-[3]" />
                       {t('expenses.add_payer')}
                     </button>
                   )}
                   
                   {!isAmountValid && (
-                    <p className="text-red-500 text-xs mt-1">
+                    <p className="text-red-500 text-xs font-bold mt-1">
                       {t('expenses.total_amount_mismatch', { 
                         diff: (parseFloat(amount || '0') - totalPaid).toFixed(2) 
                       })}
@@ -265,21 +292,25 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
               )}
             </div>
 
+            {/* Split Among Control */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">{t('expenses.split_among')}</label>
+                <label className="block text-xs font-black uppercase font-nunito tracking-wider text-main-text/60">
+                  {t('expenses.split_among')}
+                </label>
                 <div className="flex gap-3">
                   <button
                     type="button"
                     onClick={toggleCustomSplit}
-                    className="text-xs text-indigo-600 font-medium hover:text-indigo-800"
+                    className="text-xs font-black font-nunito text-accent-orange hover:underline cursor-pointer"
                   >
                     {isCustomSplit ? t('expenses.equal_split') : t('expenses.custom_split')}
                   </button>
                   {!isCustomSplit && (
-                    <button type="button" onClick={() => setSplitAmong(isAllSelected ? [] : members.map(m =>
-                      m.id))}
-                      className="text-xs text-indigo-600 font-medium hover:text-indigo-800"
+                    <button 
+                      type="button" 
+                      onClick={() => setSplitAmong(isAllSelected ? [] : members.map(m => m.id))}
+                      className="text-xs font-black font-nunito text-accent-orange hover:underline cursor-pointer"
                     >
                       {isAllSelected ? (i18n.language.startsWith('zh') ? '全不選' : 'Unselect All') : t('expenses.select_all')}
                     </button>
@@ -288,20 +319,20 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
               </div>
 
               {isCustomSplit ? (
-                <div className="space-y-2 mb-4">
+                <div className="space-y-2.5 mb-4 bg-page-bg/50 p-3.5 rounded-xl border-2 border-dashed border-main-text/20">
                   {members.map((m) => {
                     const split = splits.find(s => s.memberId === m.id) || { memberId: m.id, amount: 0 };
                     return (
                       <div key={m.id} className="flex items-center gap-2">
-                        <div className="flex-1 text-sm text-gray-700 truncate">{m.name}</div>
-                        <div className="relative w-32">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">$</span>
+                        <div className="flex-1 text-sm font-bold text-main-text truncate">{m.name}</div>
+                        <div className="relative w-32 shrink-0">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-main-text font-nunito font-black">$</span>
                           <input
                             type="number"
                             step="any"
                             value={split.amount || ''}
                             onChange={(e) => updateSplitAmount(m.id, parseFloat(e.target.value) || 0)}
-                            className="w-full pl-6 pr-3 py-2 border rounded-xl text-base outline-none font-mono"
+                            className="w-full text-base font-nunito font-black text-main-text pl-7 pr-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none"
                             placeholder="0.00"
                           />
                         </div>
@@ -309,7 +340,7 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
                     );
                   })}
                   {!isSplitValid && (
-                    <p className="text-red-500 text-xs mt-1">
+                    <p className="text-red-500 text-xs font-bold mt-1">
                       {t('expenses.split_amount_mismatch', { 
                         diff: (parseFloat(amount || '0') - totalSplit).toFixed(2) 
                       })}
@@ -321,18 +352,20 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
                   {members.map(m => {
                     const isSelected = splitAmong.includes(m.id);
                     return (
-                      <button key={m.id} type="button" onClick={() => toggleSplitMember(m.id)}
-                        className={`flex items-center gap-2 p-2.5 rounded-xl border text-sm
-                        transition-colors text-left ${
-                        isSelected
-                          ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-                          : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                      <button 
+                        key={m.id} 
+                        type="button" 
+                        onClick={() => toggleSplitMember(m.id)}
+                        className={`flex items-center gap-2.5 p-3 rounded-xl border-2 text-sm font-bold transition-all duration-150 text-left cursor-pointer ${
+                          isSelected
+                            ? 'border-main-text bg-brand-light text-main-text shadow-[2px_2px_0px_#1A1A2E]'
+                            : 'border-gray-200 text-gray-500 hover:border-main-text hover:bg-gray-50'
                         }`}
                       >
-                        <div className={`w-4 h-4 rounded border flex items-center justify-center ${
-                          isSelected ? 'bg-indigo-600 border-indigo-600' : 'border-gray-300'}`}>
-                          {isSelected &&
-                            <CheckCircle2 className="w-3 h-3 text-white" />}
+                        <div className={`w-5 h-5 rounded-[6px] border-2 flex items-center justify-center shrink-0 transition-colors ${
+                          isSelected ? 'bg-accent-orange border-main-text' : 'border-gray-300'}`}
+                        >
+                          {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-white stroke-[3.5]" />}
                         </div>
                         <span className="truncate">{m.name}</span>
                       </button>
@@ -342,15 +375,21 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
               )}
               
               {!isCustomSplit && splitAmong.length === 0 && (
-                <p className="text-red-500 text-xs mt-1">{i18n.language.startsWith('zh') ? '請至少選擇一位分帳成員' : 'Please select at least one member'}</p>
+                <p className="text-red-500 text-xs font-bold mt-1.5">
+                  {i18n.language.startsWith('zh') ? '請至少選擇一位分帳成員' : 'Please select at least one member'}
+                </p>
               )}
             </div>
           </div>
         </div>
 
-        <div className="px-5 py-4 border-t bg-white shrink-0">
-          <button type="submit" disabled={!description || !amount || (isCustomSplit ? splits.filter(s => s.amount > 0).length === 0 : splitAmong.length === 0) || !isAmountValid || !isSplitValid}
-            className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium disabled:opacity-50 hover:bg-indigo-700 transition-colors">
+        {/* Modal Actions */}
+        <div className="px-6 py-4 border-t-3 border-main-text bg-white shrink-0">
+          <button 
+            type="submit" 
+            disabled={!description || !amount || (isCustomSplit ? splits.filter(s => s.amount > 0).length === 0 : splitAmong.length === 0) || !isAmountValid || !isSplitValid}
+            className="w-full py-4 bg-accent-orange text-white rounded-xl font-nunito font-black text-lg border-3 border-main-text shadow-[4px_4px_0px_#1A1A2E] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_#1A1A2E] transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none cursor-pointer"
+          >
             {isEditing ? t('common.save') : t('common.confirm')}
           </button>
         </div>

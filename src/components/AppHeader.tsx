@@ -1,4 +1,4 @@
-import { ArrowLeft, Languages, User as LucideUser, Receipt } from 'lucide-react';
+import { ArrowLeft, Languages, User as LucideUser } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { APP_NAME } from '../constants';
@@ -27,50 +27,50 @@ export function AppHeader({
   };
 
   return (
-    <header className="bg-white border-b sticky top-0 z-10">
-      <div className="w-full mx-auto px-4 h-16 flex items-center justify-between">
+    <header className="bg-white border-b-3 border-main-text sticky top-0 z-30 shrink-0 select-none">
+      <div className="w-full mx-auto px-5 h-16 flex items-center justify-between">
         <div className="flex items-center gap-3">
           {showBack ? (
             <button
               onClick={onBack || (() => navigate(-1))}
-              className="p-2 -ml-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 -ml-1.5 text-main-text hover:text-accent-orange hover:bg-brand-light border-2 border-transparent hover:border-main-text rounded-xl transition-all duration-150 cursor-pointer"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
             </button>
           ) : (
             <button
               onClick={() => navigate('/')}
-              className="flex items-center gap-1.5 hover:opacity-80 transition-opacity cursor-pointer text-indigo-600"
+              className="flex items-center gap-2 hover:opacity-90 transition-opacity cursor-pointer group"
             >
-              <Receipt className="w-5 h-5" />
+              {/* Mini Brand Sliced Logo */}
+              <div className="w-8 h-8 bg-accent-orange text-white rounded-[10px] border-2 border-main-text flex items-center justify-center font-nunito font-black text-sm relative rotate-[-4deg] group-hover:rotate-[4deg] transition-transform duration-200">
+                <span className="scale-95 italic">S/</span>
+              </div>
+              <span className="font-nunito font-black text-xl tracking-tight text-main-text">
+                {APP_NAME}
+              </span>
             </button>
           )}
-
-          <div className="flex flex-col min-w-0">
-            <span className="text-xs font-black tracking-tighter uppercase text-indigo-400 leading-none">
-              {APP_NAME}
-            </span>
-          </div>
         </div>
 
         <div className="flex items-center gap-2">
           {showProfile && currentMemberName && (
             <button
               onClick={onProfileClick}
-              className="flex items-center gap-2 text-sm text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 text-xs font-bold text-main-text bg-brand-light px-3 py-1.5 rounded-full border-2 border-main-text hover:bg-white transition-all hover:scale-105 active:scale-95 cursor-pointer"
               title={t('profile.title')}
             >
-              <LucideUser className="w-4 h-4" />
-              <span className="max-w-[80px] truncate hidden xs:inline">{currentMemberName}</span>
+              <LucideUser className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span className="max-w-[80px] truncate">{currentMemberName}</span>
             </button>
           )}
 
           <button
             onClick={toggleLanguage}
-            className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors"
+            className="p-2 text-main-text hover:text-accent-orange hover:bg-brand-light border-2 border-transparent hover:border-main-text rounded-xl transition-all duration-150 cursor-pointer"
             title={t('common.switch_lang')}
           >
-            <Languages className="w-4 h-4" />
+            <Languages className="w-4 h-4 stroke-[2]" />
           </button>
         </div>
       </div>

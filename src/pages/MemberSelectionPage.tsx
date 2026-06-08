@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, UserPlus, Users } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
@@ -21,7 +21,7 @@ export function MemberSelectionPage() {
   }, [t]);
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
+    <div className="min-h-screen bg-page-bg text-main-text selection:bg-brand-light font-plus-jakarta flex flex-col pb-10">
       <Helmet>
         <title>{t('members.select_identity')} - {APP_NAME}</title>
       </Helmet>
@@ -31,24 +31,31 @@ export function MemberSelectionPage() {
         onBack={() => navigate('/')}
       />
 
-      <div className="w-full max-w-md mx-auto p-4 py-8 space-y-8">
-        <div className="bg-white rounded-2xl shadow-sm border p-6 space-y-8">
-          <div className="text-center space-y-2">
-            <p className="text-gray-500 text-sm">{t('members.select_identity')}</p>
-          </div>
+      <div className="w-full max-w-md mx-auto p-5 py-6 space-y-6 flex-1 flex flex-col justify-start">
+        
+        {/* Page title */}
+        <div className="stagger-item text-center space-y-1 py-2" style={{ animationDelay: '0ms' }}>
+          <h1 className="text-3xl font-nunito font-black text-main-text leading-tight tracking-tight">
+            {t('members.select_identity') || 'Who are you?'}
+          </h1>
+          <p className="text-sm text-gray-500 font-medium">
+            {t('members.select_identity_subtitle') || 'Select your identity to continue splitting'}
+          </p>
+        </div>
 
-        <div className="space-y-6">
+        {/* Content Box */}
+        <div className="stagger-item bg-white rounded-[24px] border-3 border-main-text p-6 shadow-[4px_4px_0px_#1A1A2E] space-y-6" style={{ animationDelay: '60ms' }}>
+          
           {members.length > 0 && (
-            <div className="space-y-3">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-100"></div>
-                </div>
-                <div className="relative flex justify-center text-[10px] uppercase tracking-wider font-bold">
-                  <span className="px-2 bg-white text-gray-400">{t('members.select_existing')}</span>
-                </div>
+            <div className="space-y-4">
+              <div className="flex items-center gap-1.5 border-b-2 border-dashed border-main-text/10 pb-2">
+                <Users className="w-4.5 h-4.5 text-accent-orange stroke-[2.5]" />
+                <h2 className="font-nunito font-black text-sm text-main-text uppercase tracking-wider">
+                  {t('members.select_existing') || 'Choose Existing Member'}
+                </h2>
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              
+              <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto pr-1">
                 {members.map(m => {
                   const isClaimedByOthers = m.userId && m.userId !== user?.uid;
                   const isMe = m.userId === user?.uid;
@@ -58,19 +65,19 @@ export function MemberSelectionPage() {
                       key={m.id} 
                       onClick={() => !isClaimedByOthers && handleSelectMember(m.id)}
                       disabled={!!isClaimedByOthers}
-                      className={`p-3 border rounded-xl text-left transition-all ${
+                      className={`p-3.5 border-2 rounded-xl text-left transition-all duration-150 cursor-pointer flex flex-col justify-between h-20 ${
                         isMe 
-                          ? 'border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600' 
+                          ? 'border-main-text bg-brand-light text-main-text shadow-[2px_2px_0px_#1A1A2E]' 
                           : isClaimedByOthers 
-                            ? 'bg-gray-50 border-gray-100 opacity-60 cursor-not-allowed' 
-                            : 'hover:border-indigo-600 hover:bg-indigo-50 border-gray-200'
+                            ? 'bg-gray-50 border-gray-100 opacity-40 cursor-not-allowed' 
+                            : 'border-gray-200 text-gray-600 hover:border-main-text hover:bg-page-bg shadow-[2px_2px_0px_#f0f0f0] hover:shadow-[2px_2px_0px_#1A1A2E]'
                       }`}
                     >
-                      <div className="font-medium text-gray-900 truncate flex items-center gap-1">
-                        {m.name}
-                        {isMe && <CheckCircle2 className="w-3 h-3 text-indigo-600" />}
+                      <div className="font-nunito font-black text-base text-main-text truncate flex items-center gap-1.5 w-full">
+                        <span className="truncate">{m.name}</span>
+                        {isMe && <CheckCircle2 className="w-4 h-4 text-accent-orange stroke-[3] shrink-0" />}
                       </div>
-                      <div className="text-[10px] text-gray-400">
+                      <div className="text-[10px] font-black tracking-wider uppercase text-main-text/50">
                         {isMe ? t('members.you') : isClaimedByOthers ? t('members.claimed') : t('members.not_claimed')}
                       </div>
                     </button>
@@ -80,35 +87,43 @@ export function MemberSelectionPage() {
             </div>
           )}
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-100"></div>
-            </div>
-            <div className="relative flex justify-center text-[10px] uppercase tracking-wider font-bold">
-              <span className="px-2 bg-white text-gray-400">OR</span>
-            </div>
+          <div className="relative flex items-center justify-center py-1">
+            <div className="flex-grow border-t-2 border-dashed border-gray-100"></div>
+            <span className="flex-shrink mx-3 text-[10px] font-black text-gray-300 font-nunito uppercase tracking-widest">OR</span>
+            <div className="flex-grow border-t-2 border-dashed border-gray-100"></div>
           </div>
 
-          <form onSubmit={(e) => { e.preventDefault(); handleCreateMember(newName); }}
+          {/* Create Member Form */}
+          <form 
+            onSubmit={(e) => { e.preventDefault(); handleCreateMember(newName); }}
             className="space-y-3"
           >
-            <h2 className="text-sm font-medium text-gray-700">{t('members.or_create')}:</h2>
+            <div className="flex items-center gap-1.5">
+              <UserPlus className="w-4.5 h-4.5 text-accent-orange stroke-[2.5]" />
+              <h2 className="font-nunito font-black text-sm text-main-text uppercase tracking-wider">{t('members.or_create')}:</h2>
+            </div>
+            
             <div className="flex gap-2">
-              <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)}
+              <input 
+                type="text" 
+                value={newName} 
+                onChange={(e) => setNewName(e.target.value)}
                 placeholder={t('profile.display_name')}
-                className="flex-1 px-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600
-                focus:border-transparent outline-none text-base"
+                className="flex-1 px-4 py-2.5 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none text-base font-bold bg-white"
                 required
               />
-              <button type="submit" disabled={!newName.trim()}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-medium disabled:opacity-50 hover:bg-indigo-700 transition-colors text-sm">
+              <button 
+                type="submit" 
+                disabled={!newName.trim()}
+                className="px-5 py-2.5 bg-accent-orange text-white rounded-xl font-nunito font-black text-sm border-2 border-main-text shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] disabled:opacity-50 disabled:transform-none disabled:shadow-none cursor-pointer whitespace-nowrap"
+              >
                 {t('common.confirm')}
               </button>
             </div>
           </form>
+          
         </div>
       </div>
     </div>
-  </div>
-);
+  );
 }

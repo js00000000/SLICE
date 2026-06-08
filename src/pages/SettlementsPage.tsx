@@ -37,7 +37,7 @@ export function SettlementsPage() {
   if (!currentMember || !groupId) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 pb-24">
+    <div className="min-h-screen bg-page-bg text-main-text selection:bg-brand-light font-plus-jakarta pb-28 flex flex-col justify-start">
       <Helmet>
         <title>{currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `${t('balances.title')} - ${APP_NAME}`}</title>
         <meta property="og:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `${t('balances.title')} - ${APP_NAME}`} />
@@ -50,30 +50,37 @@ export function SettlementsPage() {
         currentMemberName={currentMember.name}
       />
 
-      <main className="w-full mx-auto px-4 py-6 space-y-6">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold text-gray-900 truncate">
+      <main className="w-full mx-auto px-5 py-6 space-y-6 flex-1">
+        
+        {/* Header Dashboard section */}
+        <div className="stagger-item flex items-center justify-between gap-4 p-5 bg-white border-3 border-main-text rounded-[24px] shadow-[4px_4px_0px_#1A1A2E]" style={{ animationDelay: '0ms' }}>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2.5xl font-nunito font-black text-main-text truncate leading-tight">
               {currentGroup?.name || 'Group Dashboard'}
             </h1>
-            <p className="text-sm text-gray-500">
-              {t('balances.title')}
-            </p>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="w-1.5 h-1.5 bg-accent-orange rounded-full" />
+              <span className="text-xs font-black font-nunito uppercase tracking-wider text-main-text/60">
+                {t('balances.title') || 'Settlements'}
+              </span>
+            </div>
           </div>
+          
           <button
             onClick={() => {
               const url = `${window.location.origin}/join/${groupId}`;
               navigator.clipboard.writeText(url);
               toast.success(t('groups.link_copied'));
             }}
-            className="flex items-center gap-2 px-3 py-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors shrink-0"
+            className="flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-brand-light text-accent-orange rounded-xl font-nunito font-black text-sm border-2 border-main-text shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] cursor-pointer hover:bg-white transition-all shrink-0"
             title={t('common.share')}
           >
-            <Share2 className="w-4 h-4" />
-            <span className="hidden text-sm font-medium">{t('common.share')}</span>
+            <Share2 className="w-4 h-4 stroke-[2.5]" />
+            <span className="hidden xs:inline">{t('common.share') || 'Share'}</span>
           </button>
         </div>
 
+        {/* Balances list */}
         <BalancesView members={members} expenses={expenses} currentMemberId={currentMemberId!} />
       </main>
 

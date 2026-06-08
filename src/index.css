@@ -1,14 +1,41 @@
 @import "tailwindcss";
 
+@theme {
+  --font-nunito: "Nunito", sans-serif;
+  --font-plus-jakarta: "Plus Jakarta Sans", sans-serif;
+  --color-accent-orange: #FF6B35;
+  --color-brand-light: #FFF0EA;
+  --color-page-bg: #F7F7F5;
+  --color-main-text: #1A1A2E;
+  --color-success-green: #0A7A4A;
+  --color-success-light: #EAFAF3;
+  --color-main-dark: #1A1A2E;
+  --breakpoint-xs: 375px;
+}
+
 @layer base {
   body {
-    @apply bg-slate-100 antialiased;
+    @apply bg-page-bg font-plus-jakarta text-main-text antialiased selection:bg-brand-light;
+  }
+  
+  h1, h2, h3, .font-display {
+    @apply font-nunito font-black text-main-text;
   }
 }
 
 @layer components {
+  /* Mobile container - crisp borders and friendly shadows */
   .mobile-container {
-    @apply w-full max-w-[480px] mx-auto min-h-screen bg-white shadow-2xl relative flex flex-col;
+    @apply w-full max-w-[480px] mx-auto min-h-screen bg-white shadow-[0_12px_40px_rgba(26,26,46,0.08)] relative flex flex-col border-x border-gray-100;
+  }
+
+  /* Triangle cutting line/logo detail */
+  .slice-logo-clip {
+    clip-path: polygon(0% 0%, 100% 0%, 85% 100%, 0% 100%);
+  }
+  
+  .slice-triangle-right {
+    clip-path: polygon(0 0, 100% 50%, 0 100%);
   }
 
   /* Utility to make fixed elements stay within the mobile container bounds */
@@ -19,10 +46,52 @@
   .fixed-in-container > * {
     pointer-events: auto;
   }
+  
+  /* Stagger fade-up animation */
+  .stagger-item {
+    opacity: 0;
+    transform: translateY(16px);
+    animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
 }
 
 @layer utilities {
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);
   }
+}
+
+/* Animations */
+@keyframes fadeUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Button bounce interaction */
+.btn-bounce {
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.btn-bounce:active {
+  transform: scale(0.94);
+}
+
+/* Settle Button success bounce animation */
+@keyframes successBounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  75% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+.success-bounce-active {
+  animation: successBounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Long press trigger visual hint */
+.long-press-scale {
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.long-press-scale:active {
+  transform: scale(1.02);
 }

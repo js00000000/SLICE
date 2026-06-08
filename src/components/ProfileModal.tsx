@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, User as LucideUser, Shield, LogOut, Link2, Loader2 } from 'lucide-react';
+import { X, User as LucideUser, Shield, LogOut, Link2, Loader2, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Member } from '../types';
 import { useDialog } from '../contexts/DialogContext';
@@ -63,49 +63,65 @@ export function ProfileModal({
   };
 
   return (
-    <div 
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end justify-center p-0 animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-md rounded-t-2xl shadow-xl flex flex-col max-h-[90vh]">
-        <div className="flex items-center justify-between p-4 border-b">
+    <div className="fixed inset-0 bg-main-text/40 backdrop-blur-sm z-50 flex items-end justify-center p-0 animate-in fade-in duration-200 select-none font-plus-jakarta">
+      <div className="bg-white w-full max-w-md rounded-t-[24px] border-t-3 border-x-3 border-main-text shadow-[0_-12px_40px_rgba(26,26,46,0.15)] flex flex-col max-h-[90vh] overflow-hidden">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b-3 border-main-text shrink-0 bg-brand-light">
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold text-gray-900">{t('profile.title')}</h2>
+            <h2 className="text-xl font-nunito font-black text-main-text">{t('profile.title')}</h2>
             {currentMember.isHost && (
-              <span className="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
-                <Shield className="w-2.5 h-2.5" /> {t('common.host')}
+              <span className="bg-[#FFF0EA] text-accent-orange text-[10px] px-2.5 py-0.5 rounded-full font-black border border-accent-orange/15 flex items-center gap-1 uppercase tracking-wider font-nunito">
+                <Shield className="w-2.5 h-2.5 fill-accent-orange/10" /> {t('common.host')}
               </span>
             )}
           </div>
-          <button onClick={onClose} disabled={deleteLoading} className="text-gray-400 hover:text-gray-600 p-1 disabled:opacity-50 disabled:cursor-not-allowed">
-            <X className="w-5 h-5" />
+          <button 
+            onClick={onClose} 
+            disabled={deleteLoading} 
+            className="text-main-text hover:text-accent-orange p-1.5 rounded-lg border-2 border-transparent hover:border-main-text hover:bg-white transition-all cursor-pointer disabled:opacity-50"
+          >
+            <X className="w-5 h-5 stroke-[2.5]" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 overflow-y-auto space-y-5">
+        {/* Content */}
+        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-6 flex-grow">
+          
+          {/* Display Name Input */}
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t('profile.display_name')}</label>
+              <label className="block text-xs font-black uppercase font-nunito tracking-wider text-main-text/60 mb-1.5">
+                {t('profile.display_name')}
+              </label>
+              
               <div className="relative">
-                <LucideUser className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input type="text" value={name} onChange={(e) => setName(e.target.value)}
+                <LucideUser className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-main-text/50 stroke-[2.5]" />
+                <input 
+                  type="text" 
+                  value={name} 
+                  onChange={(e) => setName(e.target.value)}
                   placeholder={t('members.enter_name')}
                   disabled={deleteLoading}
-                  className="w-full pl-9 pr-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-600
-                  focus:border-transparent outline-none text-base disabled:bg-gray-50 disabled:text-gray-400"
+                  className="w-full text-base font-bold text-main-text pl-11 pr-4 py-3 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none placeholder-gray-400 bg-white disabled:bg-gray-50 disabled:text-gray-400 transition-all"
                   required
                   maxLength={30}
                 />
               </div>
             </div>
 
-            <button type="submit"
+            <button 
+              type="submit"
               disabled={deleteLoading}
-              className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed">
+              className="w-full py-3.5 bg-accent-orange text-white rounded-xl font-nunito font-black text-sm border-2 border-main-text shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
               {t('common.save')}
             </button>
           </div>
 
-          <div className="pt-4 border-t flex items-center justify-between gap-3">
-            <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+          {/* Google Linked Area */}
+          <div className="pt-5 border-t-2 border-dashed border-main-text/10 flex items-center justify-between gap-3 flex-wrap">
+            <h3 className="text-sm font-black font-nunito text-main-text flex items-center gap-2">
               <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
               {t('profile.google_account')}
             </h3>
@@ -114,9 +130,9 @@ export function ProfileModal({
               <button
                 type="button"
                 disabled
-                className="px-3 py-1.5 bg-gray-100 text-gray-400 border border-gray-200 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 cursor-not-allowed"
+                className="px-3 py-1.5 bg-[#EAFAF3] text-[#0A7A4A] border border-[#0A7A4A]/20 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 cursor-not-allowed"
               >
-                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                <span className="w-1.5 h-1.5 bg-[#0A7A4A] rounded-full animate-pulse" />
                 {t('profile.google_linked')}
               </button>
             ) : (
@@ -124,38 +140,40 @@ export function ProfileModal({
                 type="button"
                 onClick={handleLinkGoogleClick}
                 disabled={googleLoading || deleteLoading}
-                className="px-3 py-1.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 disabled:opacity-70 disabled:cursor-not-allowed"
+                className="px-3.5 py-2 bg-white hover:bg-brand-light text-main-text border-2 border-main-text rounded-xl text-xs font-black font-nunito transition-colors flex items-center justify-center gap-1.5 disabled:opacity-70 cursor-pointer shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E]"
               >
                 {googleLoading ? (
-                  <Loader2 className="w-3 h-3 animate-spin text-indigo-600" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-accent-orange" />
                 ) : (
-                  <Link2 className="w-3 h-3 text-indigo-600" />
+                  <Link2 className="w-3.5 h-3.5 text-accent-orange stroke-[2.5]" />
                 )}
                 {t('profile.link_google')}
               </button>
             )}
           </div>
 
-          <div className="space-y-3 pt-4 border-t">
+          {/* Logout & Delete Actions */}
+          <div className="space-y-3 pt-5 border-t-2 border-dashed border-main-text/10">
             <button
               type="button"
               onClick={handleLogoutClick}
               disabled={deleteLoading}
-              className="w-full py-3 bg-white text-gray-600 border border-gray-200 rounded-xl font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-white text-main-text border-2 border-main-text rounded-xl font-nunito font-black text-sm hover:bg-brand-light transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E]"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-4 h-4 text-accent-orange stroke-[2.5]" />
               {t('auth.logout')}
             </button>
+            
             <button
               type="button"
               onClick={handleDeleteAccountClick}
               disabled={deleteLoading}
-              className="w-full py-3 bg-red-50 text-red-600 border border-red-100 rounded-xl font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-red-50 text-red-600 border-2 border-red-500 rounded-xl font-nunito font-black text-sm hover:bg-red-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shadow-[2px_2px_0px_rgba(239,68,68,0.1)] active:translate-x-[1px] active:translate-y-[1px]"
             >
               {deleteLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin text-red-500" />
               ) : (
-                <X className="w-4 h-4" />
+                <Trash2 className="w-4 h-4 stroke-[2.5]" />
               )}
               {t('auth.delete_account')}
             </button>
@@ -165,4 +183,3 @@ export function ProfileModal({
     </div>
   );
 }
-
