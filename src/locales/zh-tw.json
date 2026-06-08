@@ -127,7 +127,11 @@
     "google_linked": "已連結",
     "google_not_linked": "未連結",
     "link_google": "連結",
-    "google_link_success": "Google 帳號連結成功！"
+    "google_link_success": "Google 帳號連結成功！",
+    "feedback_title": "提供意見與回饋",
+    "feedback_btn": "填寫表單",
+    "sponsor_title": "贊助支持開發者",
+    "sponsor_btn": "贊助支持"
   },
   "balances": {
     "title": "結算金額",
@@ -136,5 +140,17 @@
     "total_payable": "總計待支付",
     "settlements": "建議結清方式",
     "no_expenses": "目前尚無支出紀錄，新增支出後即可查看結算金額！"
+  },
+  "sponsor": {
+    "title": "支持 SLICE 繼續營運",
+    "desc_1": "SLICE 是免費朋友群組分帳與快速記帳平台，由一位獨立開發者維護，不收費、無廣告。",
+    "desc_2": "如果這個工具對你有幫助，歡迎請我喝杯咖啡 ☕",
+    "ecpay_title": "綠界贊助（台灣用戶）",
+    "ecpay_desc": "支援信用卡 / Apple Pay / LINE Pay / 超商 / ATM",
+    "ecpay_btn": "前往贊助 →",
+    "bmc_title": "Buy Me a Pizza（海外用戶）",
+    "bmc_desc": "支援信用卡與全球多種主流支付方式",
+    "contact": "📬 fusion.labs.tw@gmail.com",
+    "disclaimer": "本站為個人非營利專案，贊助為自願性質，不提供對價服務。"
   }
 }

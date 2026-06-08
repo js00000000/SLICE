@@ -5,6 +5,7 @@ import type { Member } from '../types';
 import { useDialog } from '../contexts/DialogContext';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useAuth } from '../contexts/AuthContext';
+import { SponsorModal } from './SponsorModal';
 
 interface ProfileModalProps {
   currentMember: Member;
@@ -26,6 +27,7 @@ export function ProfileModal({
   const { confirm } = useDialog();
   const { user, googleLoading, deleteLoading, handleGoogleLogin } = useAuth();
   const [name, setName] = useState(currentMember.name || '');
+  const [isSponsorOpen, setIsSponsorOpen] = useState(false);
 
   const isGoogleLinked = user?.providerData.some(p => p.providerId === 'google.com') || false;
 
@@ -152,6 +154,37 @@ export function ProfileModal({
             )}
           </div>
 
+          {/* Feedback Form Row */}
+          <div className="pt-5 border-t-2 border-dashed border-main-text/10 flex items-center justify-between gap-3 flex-wrap">
+            <h3 className="text-sm font-black font-nunito text-main-text flex items-center gap-2">
+              <span className="text-base">💬</span>
+              {t('profile.feedback_title')}
+            </h3>
+            <a
+              href="https://forms.gle/CWqJBPzSQ2TbTfgy7"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3.5 py-2 bg-brand-light hover:bg-white text-accent-orange border-2 border-main-text rounded-xl text-xs font-black font-nunito transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E]"
+            >
+              {t('profile.feedback_btn')}
+            </a>
+          </div>
+
+          {/* Sponsor Row */}
+          <div className="pt-5 border-t-2 border-dashed border-main-text/10 flex items-center justify-between gap-3 flex-wrap">
+            <h3 className="text-sm font-black font-nunito text-main-text flex items-center gap-2">
+              <span className="text-base animate-pulse">💖</span>
+              {t('profile.sponsor_title')}
+            </h3>
+            <button
+              type="button"
+              onClick={() => setIsSponsorOpen(true)}
+              className="px-3.5 py-2 bg-accent-orange hover:bg-[#ff7b4b] text-white border-2 border-main-text rounded-xl text-xs font-black font-nunito transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E]"
+            >
+              {t('profile.sponsor_btn')}
+            </button>
+          </div>
+
           {/* Logout & Delete Actions */}
           <div className="space-y-3 pt-5 border-t-2 border-dashed border-main-text/10">
             <button
@@ -180,6 +213,7 @@ export function ProfileModal({
           </div>
         </form>
       </div>
+      {isSponsorOpen && <SponsorModal onClose={() => setIsSponsorOpen(false)} />}
     </div>
   );
 }

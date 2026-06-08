@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   Languages, CheckCircle2, Shield, Users, 
@@ -5,6 +6,7 @@ import {
 } from 'lucide-react';
 import { APP_NAME } from '../constants';
 import { CountUp } from '../components/CountUp';
+import { SponsorModal } from '../components/SponsorModal';
 
 interface LandingPageProps {
   onGoogleLogin: () => void;
@@ -20,6 +22,7 @@ export function LandingPage({
   isGuestLoading = false
 }: LandingPageProps) {
   const { t, i18n } = useTranslation();
+  const [isSponsorOpen, setIsSponsorOpen] = useState(false);
 
   const toggleLanguage = () => {
     const newLang = i18n.language.startsWith('zh') ? 'en' : 'zh-TW';
@@ -71,16 +74,6 @@ export function LandingPage({
         </div>
 
         <div className="flex items-center gap-3">
-          <a
-            href="https://forms.gle/CWqJBPzSQ2TbTfgy7"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs sm:text-sm font-black text-main-text bg-white px-3.5 py-2 rounded-full border-2 border-main-text hover:bg-brand-light transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px]"
-          >
-            <span>💬</span>
-            <span className="hidden xs:inline">{i18n.language.startsWith('zh') ? '意見回饋' : 'Feedback'}</span>
-          </a>
-
           <button
             onClick={toggleLanguage}
             className="flex items-center gap-2 text-xs sm:text-sm font-black text-accent-orange bg-brand-light px-3.5 py-2 rounded-full border-2 border-main-text hover:bg-white transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px]"
@@ -283,18 +276,30 @@ export function LandingPage({
       <footer className="w-full max-w-7xl mx-auto px-6 pt-10 border-t border-dashed border-main-text/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-black text-main-text/40 font-nunito tracking-wide shrink-0">
         <span>© {new Date().getFullYear()} {APP_NAME}. ALL RIGHTS RESERVED.</span>
         
-        {/* Playful Feedback Link inside Footer */}
-        <a 
-          href="https://forms.gle/CWqJBPzSQ2TbTfgy7" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="text-accent-orange bg-brand-light px-4 py-2 border-2 border-main-text rounded-full hover:bg-white transition-all duration-150 hover:scale-105 active:scale-95 shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] inline-flex items-center gap-1.5 font-bold"
-        >
-          <span>💬 {i18n.language.startsWith('zh') ? '意見回饋' : 'Give Feedback'}</span>
-        </a>
+        <div className="flex items-center gap-3 flex-wrap justify-center">
+          {/* Playful Sponsor Link inside Footer */}
+          <button 
+            onClick={() => setIsSponsorOpen(true)}
+            className="text-white bg-accent-orange px-4 py-2 border-2 border-main-text rounded-full hover:bg-[#ff7b4b] hover:text-white transition-all duration-150 hover:scale-105 active:scale-95 shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] inline-flex items-center gap-1.5 font-bold cursor-pointer"
+          >
+            <span className="animate-pulse">💖</span>
+            <span>{t('profile.sponsor_btn')}</span>
+          </button>
+
+          {/* Playful Feedback Link inside Footer */}
+          <a 
+            href="https://forms.gle/CWqJBPzSQ2TbTfgy7" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-accent-orange bg-brand-light px-4 py-2 border-2 border-main-text rounded-full hover:bg-white transition-all duration-150 hover:scale-105 active:scale-95 shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] inline-flex items-center gap-1.5 font-bold no-underline"
+          >
+            <span>💬 {t('profile.feedback_btn')}</span>
+          </a>
+        </div>
 
         <span>MADE WITH ❤️ FOR AWESOME TRAVELS</span>
       </footer>
+      {isSponsorOpen && <SponsorModal onClose={() => setIsSponsorOpen(false)} />}
     </div>
   );
 }

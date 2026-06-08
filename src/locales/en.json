@@ -127,7 +127,11 @@
     "google_linked": "Linked",
     "google_not_linked": "Not Linked",
     "link_google": "Link",
-    "google_link_success": "Google account linked successfully!"
+    "google_link_success": "Google account linked successfully!",
+    "feedback_title": "Share Your Feedback",
+    "feedback_btn": "Give Feedback",
+    "sponsor_title": "Sponsor Our Project",
+    "sponsor_btn": "Sponsor"
   },
   "balances": {
     "title": "Balances",
@@ -136,5 +140,17 @@
     "total_payable": "Total to Pay",
     "settlements": "Suggested Settlements",
     "no_expenses": "No expenses recorded yet. Add one to see balances!"
+  },
+  "sponsor": {
+    "title": "Support SLICE's Continued Operation",
+    "desc_1": "SLICE is a free group split-billing and expense tracking platform maintained by an independent developer, free of charge and completely ad-free.",
+    "desc_2": "If this tool helps you, feel free to buy me a coffee ☕",
+    "ecpay_title": "ECPay Sponsor (Taiwan Users)",
+    "ecpay_desc": "Supports Credit Card / Apple Pay / LINE Pay / Convenience Store / ATM",
+    "ecpay_btn": "Go to ECPay Sponsor →",
+    "bmc_title": "Buy Me a Pizza (Global Users)",
+    "bmc_desc": "Supports credit cards and global payment options.",
+    "contact": "📬 fusion.labs.tw@gmail.com",
+    "disclaimer": "This site is a personal non-profit project. Sponsorship is voluntary and does not provide any consideration/service."
   }
 }
