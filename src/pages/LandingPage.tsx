@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { 
-  Languages, CheckCircle2, Shield, Users, 
+import {
+  Languages, CheckCircle2, Shield, Users,
   Receipt, DollarSign, Loader2, Sparkles, Smartphone, UserCircle
 } from 'lucide-react';
 import { APP_NAME } from '../constants';
@@ -59,7 +59,7 @@ export function LandingPage({
       {/* Premium Backdrop Ornament Details */}
       <div className="absolute top-12 left-12 w-64 h-64 bg-brand-light rounded-full blur-3xl opacity-60 pointer-events-none" />
       <div className="absolute bottom-32 right-12 w-96 h-96 bg-orange-100 rounded-full blur-3xl opacity-60 pointer-events-none" />
-      
+
       {/* Floating Decorative Grid lines for a precise visual blueprint feel */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#1A1A2E05_1px,transparent_1px),linear-gradient(to_bottom,#1A1A2E05_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
 
@@ -86,10 +86,10 @@ export function LandingPage({
 
       {/* Main Container */}
       <main className="w-full max-w-7xl mx-auto px-6 py-12 md:py-20 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center relative z-10">
-        
+
         {/* Left Column: Bold Copywriting & Pure-CSS App Preview Mockup */}
         <div className="lg:col-span-7 space-y-12">
-          
+
           {/* Slogan details */}
           <div className="space-y-6">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-brand-light border-2 border-main-text rounded-full shadow-[2px_2px_0px_#1A1A2E] rotate-[-1.5deg]">
@@ -98,7 +98,7 @@ export function LandingPage({
                 {i18n.language.startsWith('zh') ? '朋友出遊 ‧ 聚餐分帳神器' : 'Smarter Split Billing'}
               </span>
             </div>
-            
+
             <h1 className="text-4xl md:text-5.5xl lg:text-6xl font-nunito font-black text-main-text leading-[1.08] tracking-tight">
               {i18n.language.startsWith('zh') ? (
                 <>
@@ -112,10 +112,10 @@ export function LandingPage({
                 </>
               )}
             </h1>
-            
+
             <p className="text-gray-500 font-medium text-base md:text-lg max-w-xl">
-              {i18n.language.startsWith('zh') 
-                ? 'SLICE 主打「快速、簡單、趣味」的朋友分帳情境。無需複雜註冊，一秒建立群組、紀錄帳目、智慧結算，讓歡樂時光不因算帳而掃興！' 
+              {i18n.language.startsWith('zh')
+                ? 'SLICE 主打「快速、簡單、趣味」的朋友分帳情境。無需複雜註冊，一秒建立群組、紀錄帳目、智慧結算，讓歡樂時光不因算帳而掃興！'
                 : 'SLICE is a playful, bold split-billing web application designed for friends, dining, and traveling. No tedious registration required—get started in seconds.'}
             </p>
           </div>
@@ -124,7 +124,7 @@ export function LandingPage({
           <div className="hidden sm:block relative max-w-md bg-white border-3 border-main-text rounded-[28px] shadow-[8px_8px_0px_#1A1A2E] p-5 rotate-[1.5deg] overflow-hidden">
             {/* Wavy diagonal stripe background pattern inside preview for high quality */}
             <div className="absolute top-0 right-0 w-24 h-24 bg-brand-light rounded-bl-full pointer-events-none opacity-40 border-l border-b border-dashed border-main-text/10" />
-            
+
             <div className="flex items-center justify-between border-b-2 border-dashed border-main-text/10 pb-3 mb-4">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 bg-accent-orange rounded-full animate-ping" />
@@ -155,7 +155,7 @@ export function LandingPage({
               <div className="flex justify-between items-center p-3 border-2 border-main-text rounded-xl bg-page-bg/40 shadow-[2px_2px_0px_#1A1A2E]">
                 <div>
                   <div className="font-bold text-sm text-main-text">{i18n.language.startsWith('zh') ? '新幹線票根 🚄' : 'Shinkansen Ticket 🚄'}</div>
-                  <div className="text-[10px] text-gray-400 font-bold font-nunito mt-0.5">{i18n.language.startsWith('zh') ? 'Sherry 先付了' : 'Sherry paid'} $4,800</div>
+                  <div className="text-[10px] text-gray-400 font-bold font-nunito mt-0.5">{i18n.language.startsWith('zh') ? 'Zayn 先付了' : 'Zayn paid'} $4,800</div>
                 </div>
                 <div className="text-right">
                   <span className="font-nunito font-black text-xs text-accent-orange bg-brand-light border border-accent-orange/15 px-2 py-0.5 rounded-md">
@@ -171,7 +171,7 @@ export function LandingPage({
                   {i18n.language.startsWith('zh') ? '最佳建議結帳關係：' : 'Optimal Settlement Link:'}
                 </span>
                 <span className="text-xs font-bold text-main-text bg-white border border-main-text/10 px-2 py-0.5 rounded-md font-nunito">
-                  Jason ➔ Sherry $400
+                  Jason ➔ Zayn $400
                 </span>
               </div>
             </div>
@@ -181,7 +181,7 @@ export function LandingPage({
         {/* Right Column: Styled Tactile 3D Login Widget Card */}
         <div className="lg:col-span-5 flex justify-center">
           <div className="w-full max-w-md bg-white rounded-[24px] border-3 border-main-text p-8 space-y-6 relative shadow-[8px_8px_0px_#1A1A2E] transform transition-transform duration-300">
-            
+
             {/* Login widget header */}
             <div className="text-center space-y-3 border-b-2 border-dashed border-main-text/10 pb-4">
               <h2 className="text-2.5xl font-nunito font-black text-main-text leading-tight">
@@ -194,7 +194,7 @@ export function LandingPage({
 
             {/* Login buttons with 3D tactile borders */}
             <div className="space-y-4">
-              
+
               {/* Google Login */}
               <button
                 onClick={onGoogleLogin}
@@ -231,7 +231,7 @@ export function LandingPage({
                 <span className="text-base font-black">{t('auth.quick_start')}</span>
               </button>
             </div>
-            
+
             {/* Secure warning badge footer */}
             <div className="pt-4 border-t border-gray-100 flex items-center justify-center gap-2 text-xs font-bold text-main-text/60">
               <Shield className="w-4 h-4 text-accent-orange stroke-[2.5]" />
@@ -254,7 +254,7 @@ export function LandingPage({
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((feat, idx) => (
-            <div 
+            <div
               key={idx}
               className="bg-white p-6 rounded-[20px] border-3 border-main-text shadow-[4px_4px_0px_#1A1A2E] space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300"
               style={{ animationDelay: `${idx * 80}ms` }}
@@ -275,10 +275,10 @@ export function LandingPage({
       {/* Footer Info */}
       <footer className="w-full max-w-7xl mx-auto px-6 pt-10 border-t border-dashed border-main-text/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-black text-main-text/40 font-nunito tracking-wide shrink-0">
         <span>© {new Date().getFullYear()} {APP_NAME}. ALL RIGHTS RESERVED.</span>
-        
+
         <div className="flex items-center gap-3 flex-wrap justify-center">
           {/* Playful Sponsor Link inside Footer */}
-          <button 
+          <button
             onClick={() => setIsSponsorOpen(true)}
             className="text-white bg-accent-orange px-4 py-2 border-2 border-main-text rounded-full hover:bg-[#ff7b4b] hover:text-white transition-all duration-150 hover:scale-105 active:scale-95 shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] inline-flex items-center gap-1.5 font-bold cursor-pointer"
           >
@@ -287,9 +287,9 @@ export function LandingPage({
           </button>
 
           {/* Playful Feedback Link inside Footer */}
-          <a 
-            href="https://forms.gle/CWqJBPzSQ2TbTfgy7" 
-            target="_blank" 
+          <a
+            href="https://forms.gle/CWqJBPzSQ2TbTfgy7"
+            target="_blank"
             rel="noopener noreferrer"
             className="text-accent-orange bg-brand-light px-4 py-2 border-2 border-main-text rounded-full hover:bg-white transition-all duration-150 hover:scale-105 active:scale-95 shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] inline-flex items-center gap-1.5 font-bold no-underline"
           >
