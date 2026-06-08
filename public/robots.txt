@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
-Disallow: /group/*/members
+Disallow: /group/
+Disallow: /join/
 
 Sitemap: https://slice.fusion-labs.cc/sitemap.xml
