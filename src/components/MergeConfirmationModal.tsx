@@ -12,39 +12,48 @@ export function AbandonGuestConfirmationModal({ onClose, onConfirm }: AbandonGue
   const { t, i18n } = useTranslation();
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-sm rounded-2xl shadow-xl flex flex-col overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b">
-          <h2 className="text-lg font-semibold text-gray-900">{t('auth.account_exists')}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">
-            <X className="w-5 h-5" />
+    <div className="fixed inset-0 bg-main-text/40 backdrop-blur-sm z-[100] flex items-center justify-center p-5 select-none font-plus-jakarta animate-in fade-in duration-200">
+      <div className="bg-white w-full max-w-sm rounded-[24px] border-3 border-main-text shadow-[6px_6px_0px_#1A1A2E] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b-3 border-main-text shrink-0 bg-brand-light">
+          <h2 className="text-xl font-nunito font-black text-main-text">{t('auth.account_exists')}</h2>
+          <button 
+            onClick={onClose} 
+            className="text-main-text hover:text-accent-orange p-1.5 rounded-lg border-2 border-transparent hover:border-main-text hover:bg-white transition-all cursor-pointer"
+          >
+            <X className="w-5 h-5 stroke-[2.5]" />
           </button>
         </div>
 
-        <div className="p-6 space-y-4">
-          <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto">
-            <AlertTriangle className="w-6 h-6" />
+        {/* Content Body */}
+        <div className="p-6 space-y-5 text-center">
+          
+          {/* Tilted warning badge with nice borders & shadow */}
+          <div className="w-14 h-14 bg-amber-50 text-amber-500 border-2 border-main-text rounded-2xl flex items-center justify-center mx-auto rotate-[-6deg] shadow-[2px_2px_0px_#1A1A2E]">
+            <AlertTriangle className="w-7 h-7 stroke-[2.5]" />
           </div>
 
-          <div className="text-center space-y-2">
-            <p className="text-gray-900 font-medium">
+          <div className="space-y-2">
+            <h3 className="text-lg font-nunito font-black text-main-text leading-tight">
               {i18n.language.startsWith('zh') ? '此 Google 帳號已在其他裝置使用過' : 'This Google account is already in use'}
-            </p>
-            <p className="text-gray-500 text-sm">
+            </h3>
+            <p className="text-gray-500 font-medium text-sm leading-relaxed">
               {t('auth.abandon_guest_msg')}
             </p>
           </div>
 
-          <div className="space-y-3 pt-2">
+          {/* Action buttons with bouncy click states */}
+          <div className="space-y-3 pt-3 border-t-2 border-dashed border-main-text/10">
             <button
               onClick={onConfirm}
-              className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors"
+              className="w-full py-3.5 bg-accent-orange text-white rounded-xl font-nunito font-black text-sm border-2 border-main-text shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] cursor-pointer"
             >
               {t('auth.abandon_confirm')}
             </button>
             <button
               onClick={onClose}
-              className="w-full py-3 bg-white text-gray-700 border border-gray-200 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+              className="w-full py-3.5 bg-brand-light text-accent-orange rounded-xl font-nunito font-black text-sm border-2 border-main-text shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] cursor-pointer"
             >
               {t('common.cancel')}
             </button>
