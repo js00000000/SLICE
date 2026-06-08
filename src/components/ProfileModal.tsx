@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, User as LucideUser, Shield, LogOut, Link2, Loader2, Trash2 } from 'lucide-react';
+import { X, User as LucideUser, LogOut, Link2, Loader2, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Member } from '../types';
 import { useDialog } from '../contexts/DialogContext';
@@ -72,11 +72,6 @@ export function ProfileModal({
         <div className="flex items-center justify-between px-6 py-4 border-b-3 border-main-text shrink-0 bg-brand-light">
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-nunito font-black text-main-text">{t('profile.title')}</h2>
-            {currentMember.isHost && (
-              <span className="bg-[#FFF0EA] text-accent-orange text-[10px] px-2.5 py-0.5 rounded-full font-black border border-accent-orange/15 flex items-center gap-1 uppercase tracking-wider font-nunito">
-                <Shield className="w-2.5 h-2.5 fill-accent-orange/10" /> {t('common.host')}
-              </span>
-            )}
           </div>
           <button 
             onClick={onClose} 
