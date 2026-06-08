@@ -14,6 +14,7 @@ import { ExpensesPage } from './pages/ExpensesPage';
 import { SettlementsPage } from './pages/SettlementsPage';
 import { GroupManagementPage } from './pages/GroupManagementPage';
 import { JoinGroupPage } from './pages/JoinGroupPage';
+import { LandingPage } from './pages/LandingPage';
 
 // Import Hooks
 import { useAuth } from './contexts/AuthContext';
@@ -45,22 +46,43 @@ export default function App() {
     </div>
   );
   
-  if (!user || isSoftLoggedOut) return (
-    <div className="mobile-container">
-      <Helmet>
-        <html lang={i18n.language || 'en'} />
-        <title>{t('common.seo_title')}</title>
-      </Helmet>
-      <LoginView
-        onGoogleLogin={handleGoogleLogin}
-        onGuestLogin={handleGuestLogin}
-        onQuickStart={handleQuickStart}
-        showQuickStart={!isSoftLoggedOut && window.location.pathname === '/'}
-        isGoogleLoading={googleLoading}
-        isGuestLoading={guestLoading}
-      />
-    </div>
-  );
+  if (!user || isSoftLoggedOut) {
+    const isRootPath = window.location.pathname === '/';
+    
+    if (isRootPath) {
+      return (
+        <>
+          <Helmet>
+            <html lang={i18n.language || 'en'} />
+            <title>{t('common.seo_title')}</title>
+          </Helmet>
+          <LandingPage
+            onGoogleLogin={handleGoogleLogin}
+            onQuickStart={handleQuickStart}
+            isGoogleLoading={googleLoading}
+            isGuestLoading={guestLoading}
+          />
+        </>
+      );
+    }
+
+    return (
+      <div className="mobile-container">
+        <Helmet>
+          <html lang={i18n.language || 'en'} />
+          <title>{t('common.seo_title')}</title>
+        </Helmet>
+        <LoginView
+          onGoogleLogin={handleGoogleLogin}
+          onGuestLogin={handleGuestLogin}
+          onQuickStart={handleQuickStart}
+          showQuickStart={false}
+          isGoogleLoading={googleLoading}
+          isGuestLoading={guestLoading}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="mobile-container">
