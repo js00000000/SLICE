@@ -70,13 +70,25 @@ export function LandingPage({
           <span className="font-nunito font-black text-2xl tracking-tight text-main-text">{APP_NAME}</span>
         </div>
 
-        <button
-          onClick={toggleLanguage}
-          className="flex items-center gap-2 text-sm font-black text-accent-orange bg-brand-light px-4 py-2 rounded-full border-2 border-main-text hover:bg-white transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px]"
-        >
-          <Languages className="w-4 h-4 stroke-[2.5]" />
-          {i18n.language.startsWith('zh') ? 'English' : '繁體中文'}
-        </button>
+        <div className="flex items-center gap-3">
+          <a
+            href="https://forms.gle/CWqJBPzSQ2TbTfgy7"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-xs sm:text-sm font-black text-main-text bg-white px-3.5 py-2 rounded-full border-2 border-main-text hover:bg-brand-light transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px]"
+          >
+            <span>💬</span>
+            <span className="hidden xs:inline">{i18n.language.startsWith('zh') ? '意見回饋' : 'Feedback'}</span>
+          </a>
+
+          <button
+            onClick={toggleLanguage}
+            className="flex items-center gap-2 text-xs sm:text-sm font-black text-accent-orange bg-brand-light px-3.5 py-2 rounded-full border-2 border-main-text hover:bg-white transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px]"
+          >
+            <Languages className="w-4 h-4 stroke-[2.5]" />
+            {i18n.language.startsWith('zh') ? 'English' : '繁體中文'}
+          </button>
+        </div>
       </header>
 
       {/* Main Container */}
@@ -268,8 +280,19 @@ export function LandingPage({
       </section>
 
       {/* Footer Info */}
-      <footer className="w-full max-w-7xl mx-auto px-6 pt-10 border-t border-dashed border-main-text/10 flex items-center justify-between text-xs font-black text-main-text/40 font-nunito tracking-wide shrink-0">
+      <footer className="w-full max-w-7xl mx-auto px-6 pt-10 border-t border-dashed border-main-text/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-black text-main-text/40 font-nunito tracking-wide shrink-0">
         <span>© {new Date().getFullYear()} {APP_NAME}. ALL RIGHTS RESERVED.</span>
+        
+        {/* Playful Feedback Link inside Footer */}
+        <a 
+          href="https://forms.gle/CWqJBPzSQ2TbTfgy7" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-accent-orange bg-brand-light px-4 py-2 border-2 border-main-text rounded-full hover:bg-white transition-all duration-150 hover:scale-105 active:scale-95 shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] inline-flex items-center gap-1.5 font-bold"
+        >
+          <span>💬 {i18n.language.startsWith('zh') ? '意見回饋' : 'Give Feedback'}</span>
+        </a>
+
         <span>MADE WITH ❤️ FOR AWESOME TRAVELS</span>
       </footer>
     </div>
