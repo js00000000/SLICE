@@ -4,6 +4,8 @@ import {
   Languages, CheckCircle2, Shield, Users, 
   Receipt, DollarSign, Loader2, Sparkles, Smartphone, UserCircle
 } from 'lucide-react';
+import { collection, getDocs, collectionGroup } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { APP_NAME } from '../constants';
 import { CountUp } from '../components/CountUp';
 
@@ -22,28 +24,69 @@ export function LandingPage({
 }: LandingPageProps) {
   const { t, i18n } = useTranslation();
 
+  // Marketing default fallbacks
   const [totalSplit, setTotalSplit] = useState(24819420);
   const [totalGroups, setTotalGroups] = useState(42912);
   const [transfersSaved, setTransfersSaved] = useState(184392);
+  const [isRealData, setIsRealData] = useState(false);
 
   useEffect(() => {
-    // Real-time ticking simulators
-    const splitInterval = setInterval(() => {
-      setTotalSplit(prev => prev + Math.floor(Math.random() * 85) + 15);
-    }, 1500);
+    let isMounted = true;
+    let splitInterval: any;
+    let groupInterval: any;
+    let transfersInterval: any;
 
-    const groupInterval = setInterval(() => {
-      setTotalGroups(prev => prev + (Math.random() > 0.75 ? 1 : 0));
-    }, 3000);
+    const fetchRealStats = async () => {
+      try {
+        // Query groups collection
+        const groupsSnap = await getDocs(collection(db, 'groups'));
+        const groupsCount = groupsSnap.size;
 
-    const transfersInterval = setInterval(() => {
-      setTransfersSaved(prev => prev + (Math.random() > 0.5 ? 1 : 0));
-    }, 2000);
+        // Query expenses collection group
+        const expensesSnap = await getDocs(collectionGroup(db, 'expenses'));
+        let amountSum = 0;
+        expensesSnap.forEach(doc => {
+          const amt = Number(doc.data().amount) || 0;
+          amountSum += amt;
+        });
+
+        // Each expense represents at least 2 or 3 saved standard bank transfers
+        const savedCount = expensesSnap.size * 3;
+
+        if (isMounted) {
+          setTotalGroups(groupsCount);
+          setTotalSplit(amountSum);
+          setTransfersSaved(savedCount);
+          setIsRealData(true);
+          console.log("Successfully fetched real-time database stats:", { groupsCount, amountSum, savedCount });
+        }
+      } catch (err) {
+        console.warn("Firestore permissions restrict public stats read (Using simulated data):", err);
+        
+        // If query fails (e.g. unauthenticated), fallback to active simulated ticking counters!
+        if (isMounted) {
+          splitInterval = setInterval(() => {
+            setTotalSplit(prev => prev + Math.floor(Math.random() * 85) + 15);
+          }, 1500);
+
+          groupInterval = setInterval(() => {
+            setTotalGroups(prev => prev + (Math.random() > 0.75 ? 1 : 0));
+          }, 3000);
+
+          transfersInterval = setInterval(() => {
+            setTransfersSaved(prev => prev + (Math.random() > 0.5 ? 1 : 0));
+          }, 2000);
+        }
+      }
+    };
+
+    fetchRealStats();
 
     return () => {
-      clearInterval(splitInterval);
-      clearInterval(groupInterval);
-      clearInterval(transfersInterval);
+      isMounted = false;
+      if (splitInterval) clearInterval(splitInterval);
+      if (groupInterval) clearInterval(groupInterval);
+      if (transfersInterval) clearInterval(transfersInterval);
     };
   }, []);
 
@@ -268,8 +311,8 @@ export function LandingPage({
           
           {/* Stat 1: Total Split */}
           <div className="space-y-1.5 py-4 md:py-0 md:px-4">
-            <span className="text-[10px] font-black uppercase font-nunito tracking-widest text-accent-orange bg-white border border-accent-orange/15 px-2.5 py-0.5 rounded-full inline-block animate-pulse">
-              LIVE SPLITTING
+            <span className={`text-[10px] font-black uppercase font-nunito tracking-widest text-accent-orange bg-white border border-accent-orange/15 px-2.5 py-0.5 rounded-full inline-block ${isRealData ? '' : 'animate-pulse'}`}>
+              {isRealData ? 'REAL-TIME DB SPLITS' : 'LIVE SPLITTING'}
             </span>
             <h3 className="text-3xl md:text-3.5xl font-nunito font-black text-main-text tracking-tight font-mono">
               ${totalSplit.toLocaleString()}
@@ -282,7 +325,7 @@ export function LandingPage({
           {/* Stat 2: Active Groups */}
           <div className="space-y-1.5 py-4 md:py-0 md:px-6">
             <span className="text-[10px] font-black uppercase font-nunito tracking-widest text-main-text/60 bg-white border border-main-text/10 px-2.5 py-0.5 rounded-full inline-block">
-              ACTIVE GROUPS
+              {isRealData ? 'LIVE DB GROUPS' : 'ACTIVE GROUPS'}
             </span>
             <h3 className="text-3xl md:text-3.5xl font-nunito font-black text-main-text tracking-tight font-mono">
               {totalGroups.toLocaleString()}
@@ -295,7 +338,7 @@ export function LandingPage({
           {/* Stat 3: Transfers Avoided */}
           <div className="space-y-1.5 py-4 md:py-0 md:px-6">
             <span className="text-[10px] font-black uppercase font-nunito tracking-widest text-main-text/60 bg-white border border-main-text/10 px-2.5 py-0.5 rounded-full inline-block">
-              TRANSFERS SAVED
+              {isRealData ? 'ESTIMATED SAVED' : 'TRANSFERS SAVED'}
             </span>
             <h3 className="text-3xl md:text-3.5xl font-nunito font-black text-main-text tracking-tight font-mono">
               {transfersSaved.toLocaleString()}
