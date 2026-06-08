@@ -53,7 +53,7 @@ export default function App() {
       return (
         <>
           <Helmet>
-            <html lang={i18n.language || 'en'} />
+            <html lang={i18n.resolvedLanguage || i18n.language || 'en'} />
             <title>{t('common.seo_title')}</title>
           </Helmet>
           <LandingPage
@@ -69,7 +69,7 @@ export default function App() {
     return (
       <div className="mobile-container">
         <Helmet>
-          <html lang={i18n.language || 'en'} />
+          <html lang={i18n.resolvedLanguage || i18n.language || 'en'} />
           <title>{t('common.seo_title')}</title>
         </Helmet>
         <LoginView
@@ -87,7 +87,7 @@ export default function App() {
   return (
     <div className="mobile-container">
       <Helmet>
-        <html lang={i18n.language || 'en'} />
+        <html lang={i18n.resolvedLanguage || i18n.language || 'en'} />
         <title>{APP_NAME}</title>
         <meta name="description" content={t('common.seo_description')} />
         <meta property="og:title" content={t('common.seo_title') || APP_NAME} />

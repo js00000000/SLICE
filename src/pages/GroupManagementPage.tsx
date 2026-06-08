@@ -227,7 +227,7 @@ export function GroupManagementPage() {
                           ? 'border-main-text text-red-500 bg-white hover:bg-red-50 hover:scale-105 active:scale-95'
                           : 'border-gray-200 text-gray-300 cursor-not-allowed'
                         }`}
-                        title={!canDelete ? (i18n.language.startsWith('zh') ? "餘額未結清" : "Balance not settled") : t('members.delete_member')}
+                        title={!canDelete ? (i18n.resolvedLanguage?.startsWith('zh') ? "餘額未結清" : "Balance not settled") : t('members.delete_member')}
                       >
                         <X className="w-4.5 h-4.5 stroke-[2.5]" />
                       </button>

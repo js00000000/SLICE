@@ -27,7 +27,7 @@ export function GroupSelectionPage() {
 
   const isAnonymous = user?.isAnonymous;
   const displayName = isAnonymous
-    ? (i18n.language.startsWith('zh') ? '訪客' : 'Guest')
+    ? (i18n.resolvedLanguage?.startsWith('zh') ? '訪客' : 'Guest')
     : (user?.displayName || user?.email || t('common.loading'));
 
   return (
@@ -50,7 +50,7 @@ export function GroupSelectionPage() {
             {t('groups.my_groups') || 'My Groups'}
           </h1>
           <p className="text-sm text-gray-500 font-medium">
-            {i18n.language.startsWith('zh') ? '輕鬆、快速、朋友聚餐旅遊分帳首選！' : 'Split expenses easily with your friends!'}
+            {i18n.resolvedLanguage?.startsWith('zh') ? '輕鬆、快速、朋友聚餐旅遊分帳首選！' : 'Split expenses easily with your friends!'}
           </p>
         </div>
 

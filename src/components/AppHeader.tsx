@@ -22,7 +22,7 @@ export function AppHeader({
   const navigate = useNavigate();
 
   const toggleLanguage = () => {
-    const newLang = i18n.language.startsWith('zh') ? 'en' : 'zh-TW';
+    const newLang = i18n.resolvedLanguage?.startsWith('zh') ? 'en' : 'zh-TW';
     i18n.changeLanguage(newLang);
   };
 

@@ -23,9 +23,10 @@ export function LandingPage({
 }: LandingPageProps) {
   const { t, i18n } = useTranslation();
   const [isSponsorOpen, setIsSponsorOpen] = useState(false);
+  const isZh = i18n.resolvedLanguage?.startsWith('zh');
 
   const toggleLanguage = () => {
-    const newLang = i18n.language.startsWith('zh') ? 'en' : 'zh-TW';
+    const newLang = isZh ? 'en' : 'zh-TW';
     i18n.changeLanguage(newLang);
   };
 
@@ -34,23 +35,23 @@ export function LandingPage({
   const features = [
     {
       icon: <Receipt className="w-6 h-6 text-accent-orange stroke-[2.5]" />,
-      title: i18n.language.startsWith('zh') ? '快速記帳分帳' : 'Fast Split-Billing',
-      desc: i18n.language.startsWith('zh') ? '一秒登錄消費金額與品項，多重付款人也支援。' : 'Log amounts and items in one second. Multi-payer supported.'
+      title: isZh ? '快速記帳分帳' : 'Fast Split-Billing',
+      desc: isZh ? '一秒登錄消費金額與品項，多重付款人也支援。' : 'Log amounts and items in one second. Multi-payer supported.'
     },
     {
       icon: <DollarSign className="w-6 h-6 text-accent-orange stroke-[2.5]" />,
-      title: i18n.language.startsWith('zh') ? '最優化結清演算法' : 'Smart Settlements',
-      desc: i18n.language.startsWith('zh') ? '自動算出最佳的結算關係，減少朋友間多次轉帳。' : 'Minimize transfers with our optimized settlement engine.'
+      title: isZh ? '最優化結清演算法' : 'Smart Settlements',
+      desc: isZh ? '自動算出最佳的結算關係，減少朋友間多次轉帳。' : 'Minimize transfers with our optimized settlement engine.'
     },
     {
       icon: <Smartphone className="w-6 h-6 text-accent-orange stroke-[2.5]" />,
-      title: i18n.language.startsWith('zh') ? '完美行動優先體驗' : 'Responsive RWD',
-      desc: i18n.language.startsWith('zh') ? '精心雕琢的手機網頁介面，無 auto-zoom 困擾。' : 'Exquisite mobile UI with zero iOS auto-zoom issues.'
+      title: isZh ? '完美行動優先體驗' : 'Responsive RWD',
+      desc: isZh ? '精心雕琢的手機網頁介面，無 auto-zoom 困擾。' : 'Exquisite mobile UI with zero iOS auto-zoom issues.'
     },
     {
       icon: <Users className="w-6 h-6 text-accent-orange stroke-[2.5]" />,
-      title: i18n.language.startsWith('zh') ? '簡單好用的群組分享' : 'Instant Group Share',
-      desc: i18n.language.startsWith('zh') ? '一鍵複製專屬邀請連結，朋友點擊即刻加入群組。' : 'Copy invite link with one click, friends join instantly.'
+      title: isZh ? '簡單好用的群組分享' : 'Instant Group Share',
+      desc: isZh ? '一鍵複製專屬邀請連結，朋友點擊即刻加入群組。' : 'Copy invite link with one click, friends join instantly.'
     }
   ];
 
@@ -79,7 +80,7 @@ export function LandingPage({
             className="flex items-center gap-2 text-xs sm:text-sm font-black text-accent-orange bg-brand-light px-3.5 py-2 rounded-full border-2 border-main-text hover:bg-white transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px]"
           >
             <Languages className="w-4 h-4 stroke-[2.5]" />
-            {i18n.language.startsWith('zh') ? 'English' : '繁體中文'}
+            {isZh ? 'English' : '繁體中文'}
           </button>
         </div>
       </header>
@@ -95,12 +96,12 @@ export function LandingPage({
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-brand-light border-2 border-main-text rounded-full shadow-[2px_2px_0px_#1A1A2E] rotate-[-1.5deg]">
               <Sparkles className="w-4 h-4 text-accent-orange fill-accent-orange/10 animate-pulse" />
               <span className="text-xs font-black uppercase font-nunito tracking-wider text-accent-orange">
-                {i18n.language.startsWith('zh') ? '朋友出遊 ‧ 聚餐分帳神器' : 'Smarter Split Billing'}
+                {isZh ? '朋友出遊 ‧ 聚餐分帳神器' : 'Smarter Split Billing'}
               </span>
             </div>
 
             <h1 className="text-4xl md:text-5.5xl lg:text-6xl font-nunito font-black text-main-text leading-[1.08] tracking-tight">
-              {i18n.language.startsWith('zh') ? (
+              {isZh ? (
                 <>
                   輕鬆計算每一分錢，<br />
                   朋友出遊 <span className="text-accent-orange underline decoration-wavy decoration-3 underline-offset-8">不再尷尬</span>。
@@ -114,7 +115,7 @@ export function LandingPage({
             </h1>
 
             <p className="text-gray-500 font-medium text-base md:text-lg max-w-xl">
-              {i18n.language.startsWith('zh')
+              {isZh
                 ? 'SLICE 主打「快速、簡單、趣味」的朋友分帳情境。無需複雜註冊，一秒建立群組、紀錄帳目、智慧結算，讓歡樂時光不因算帳而掃興！'
                 : 'SLICE is a playful, bold split-billing web application designed for friends, dining, and traveling. No tedious registration required—get started in seconds.'}
             </p>
@@ -129,11 +130,11 @@ export function LandingPage({
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 bg-accent-orange rounded-full animate-ping" />
                 <span className="font-nunito font-black text-base text-main-text">
-                  {i18n.language.startsWith('zh') ? '日本東京之旅 🇯🇵' : 'Trip to Tokyo 🇯🇵'}
+                  {isZh ? '日本東京之旅 🇯🇵' : 'Trip to Tokyo 🇯🇵'}
                 </span>
               </div>
               <span className="text-[10px] font-black uppercase text-accent-orange bg-brand-light border border-accent-orange/15 px-2 py-0.5 rounded-full">
-                {i18n.language.startsWith('zh') ? '進行中' : 'Active'}
+                {isZh ? '進行中' : 'Active'}
               </span>
             </div>
 
@@ -141,12 +142,12 @@ export function LandingPage({
               {/* Mockup Expense 1 */}
               <div className="flex justify-between items-center p-3 border-2 border-main-text rounded-xl bg-page-bg/40 shadow-[2px_2px_0px_#1A1A2E]">
                 <div>
-                  <div className="font-bold text-sm text-main-text">{i18n.language.startsWith('zh') ? '築地市場海鮮 🍣' : 'Tsukiji Fish Market 🍣'}</div>
-                  <div className="text-[10px] text-gray-400 font-bold font-nunito mt-0.5">{i18n.language.startsWith('zh') ? 'Jason 先付了' : 'Jason paid'} $3,200</div>
+                  <div className="font-bold text-sm text-main-text">{isZh ? '築地市場海鮮 🍣' : 'Tsukiji Fish Market 🍣'}</div>
+                  <div className="text-[10px] text-gray-400 font-bold font-nunito mt-0.5">{isZh ? 'Jason 先付了' : 'Jason paid'} $3,200</div>
                 </div>
                 <div className="text-right">
                   <span className="font-nunito font-black text-xs text-accent-orange bg-brand-light border border-accent-orange/15 px-2 py-0.5 rounded-md">
-                    {i18n.language.startsWith('zh') ? '我的分攤: ' : 'My Share: '} <CountUp value={1600} formatter={(v) => `$${v.toFixed(0)}`} className="font-black" />
+                    {isZh ? '我的分攤: ' : 'My Share: '} <CountUp value={1600} formatter={(v) => `$${v.toFixed(0)}`} className="font-black" />
                   </span>
                 </div>
               </div>
@@ -154,12 +155,12 @@ export function LandingPage({
               {/* Mockup Expense 2 */}
               <div className="flex justify-between items-center p-3 border-2 border-main-text rounded-xl bg-page-bg/40 shadow-[2px_2px_0px_#1A1A2E]">
                 <div>
-                  <div className="font-bold text-sm text-main-text">{i18n.language.startsWith('zh') ? '新幹線票根 🚄' : 'Shinkansen Ticket 🚄'}</div>
-                  <div className="text-[10px] text-gray-400 font-bold font-nunito mt-0.5">{i18n.language.startsWith('zh') ? 'Zayn 先付了' : 'Zayn paid'} $4,800</div>
+                  <div className="font-bold text-sm text-main-text">{isZh ? '新幹線票根 🚄' : 'Shinkansen Ticket 🚄'}</div>
+                  <div className="text-[10px] text-gray-400 font-bold font-nunito mt-0.5">{isZh ? 'Zayn 先付了' : 'Zayn paid'} $4,800</div>
                 </div>
                 <div className="text-right">
                   <span className="font-nunito font-black text-xs text-accent-orange bg-brand-light border border-accent-orange/15 px-2 py-0.5 rounded-md">
-                    {i18n.language.startsWith('zh') ? '我的分攤: ' : 'My Share: '} <CountUp value={2400} formatter={(v) => `$${v.toFixed(0)}`} className="font-black" />
+                    {isZh ? '我的分攤: ' : 'My Share: '} <CountUp value={2400} formatter={(v) => `$${v.toFixed(0)}`} className="font-black" />
                   </span>
                 </div>
               </div>
@@ -168,7 +169,7 @@ export function LandingPage({
               <div className="p-3 border-2 border-dashed border-main-text/20 bg-success-light/40 rounded-xl flex items-center justify-between">
                 <span className="text-xs font-black text-success-green flex items-center gap-1.5 font-nunito">
                   <CheckCircle2 className="w-4 h-4 stroke-[3]" />
-                  {i18n.language.startsWith('zh') ? '最佳建議結帳關係：' : 'Optimal Settlement Link:'}
+                  {isZh ? '最佳建議結帳關係：' : 'Optimal Settlement Link:'}
                 </span>
                 <span className="text-xs font-bold text-main-text bg-white border border-main-text/10 px-2 py-0.5 rounded-md font-nunito">
                   Jason ➔ Zayn $400
@@ -235,7 +236,7 @@ export function LandingPage({
             {/* Secure warning badge footer */}
             <div className="pt-4 border-t border-gray-100 flex items-center justify-center gap-2 text-xs font-bold text-main-text/60">
               <Shield className="w-4 h-4 text-accent-orange stroke-[2.5]" />
-              <span>{i18n.language.startsWith('zh') ? 'Google 加密登入 ‧ 安全可靠' : 'Secure Encrypted Login'}</span>
+              <span>{isZh ? 'Google 加密登入 ‧ 安全可靠' : 'Secure Encrypted Login'}</span>
             </div>
           </div>
         </div>
@@ -245,10 +246,10 @@ export function LandingPage({
       <section className="w-full max-w-7xl mx-auto px-6 py-12 md:py-20 border-t-2 border-dashed border-main-text/10 relative z-10">
         <div className="text-center space-y-2 mb-12">
           <h2 className="text-3xl font-nunito font-black text-main-text">
-            {i18n.language.startsWith('zh') ? '簡單。強大。專為出遊打造。' : 'Simple. Mighty. Built for Traveling.'}
+            {isZh ? '簡單。強大。專為出遊打造。' : 'Simple. Mighty. Built for Traveling.'}
           </h2>
           <p className="text-sm text-gray-500 font-medium">
-            {i18n.language.startsWith('zh') ? '不再為了「誰該付多少錢」大傷腦筋，一切交給 SLICE 搞定！' : 'Let SLICE handle the hard math so you can focus on the memories.'}
+            {isZh ? '不再為了「誰該付多少錢」大傷腦筋，一切交給 SLICE 搞定！' : 'Let SLICE handle the hard math so you can focus on the memories.'}
           </p>
         </div>
 

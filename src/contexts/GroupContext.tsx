@@ -152,7 +152,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     if (!user || !name.trim()) return;
     setIsLoading(true);
     try {
-      const hostName = user.displayName || (i18n.language.startsWith('zh') ? '主持人' : 'Host');
+      const hostName = user.displayName || (i18n.resolvedLanguage?.startsWith('zh') ? '主持人' : 'Host');
       const gid = await firebaseService.createGroup(user.uid, name, hostName);
       navigate(`/group/${gid}`);
     } catch (error) { 

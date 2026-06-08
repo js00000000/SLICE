@@ -169,7 +169,7 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
                 type="text" 
                 value={description} 
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder={i18n.language.startsWith('zh') ? "例如：晚餐、計程車" : "e.g. Dinner, Taxi"}
+                placeholder={i18n.resolvedLanguage?.startsWith('zh') ? "例如：晚餐、計程車" : "e.g. Dinner, Taxi"}
                 className="w-full text-base font-bold text-main-text px-4 py-3 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none placeholder-gray-400 bg-white transition-all"
                 required
               />
@@ -312,7 +312,7 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
                       onClick={() => setSplitAmong(isAllSelected ? [] : members.map(m => m.id))}
                       className="text-xs font-black font-nunito text-accent-orange hover:underline cursor-pointer"
                     >
-                      {isAllSelected ? (i18n.language.startsWith('zh') ? '全不選' : 'Unselect All') : t('expenses.select_all')}
+                      {isAllSelected ? (i18n.resolvedLanguage?.startsWith('zh') ? '全不選' : 'Unselect All') : t('expenses.select_all')}
                     </button>
                   )}
                 </div>
@@ -376,7 +376,7 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
               
               {!isCustomSplit && splitAmong.length === 0 && (
                 <p className="text-red-500 text-xs font-bold mt-1.5">
-                  {i18n.language.startsWith('zh') ? '請至少選擇一位分帳成員' : 'Please select at least one member'}
+                  {i18n.resolvedLanguage?.startsWith('zh') ? '請至少選擇一位分帳成員' : 'Please select at least one member'}
                 </p>
               )}
             </div>

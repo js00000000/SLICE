@@ -36,7 +36,7 @@ export function AbandonGuestConfirmationModal({ onClose, onConfirm }: AbandonGue
 
           <div className="space-y-2">
             <h3 className="text-lg font-nunito font-black text-main-text leading-tight">
-              {i18n.language.startsWith('zh') ? '此 Google 帳號已在其他裝置使用過' : 'This Google account is already in use'}
+              {i18n.resolvedLanguage?.startsWith('zh') ? '此 Google 帳號已在其他裝置使用過' : 'This Google account is already in use'}
             </h3>
             <p className="text-gray-500 font-medium text-sm leading-relaxed">
               {t('auth.abandon_guest_msg')}

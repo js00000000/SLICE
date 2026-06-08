@@ -22,7 +22,7 @@ export function LoginView({
   const { t, i18n } = useTranslation();
 
   const toggleLanguage = () => {
-    const newLang = i18n.language.startsWith('zh') ? 'en' : 'zh-TW';
+    const newLang = i18n.resolvedLanguage?.startsWith('zh') ? 'en' : 'zh-TW';
     i18n.changeLanguage(newLang);
   };
 
@@ -115,7 +115,7 @@ export function LoginView({
               className="flex items-center gap-2 text-sm font-bold text-accent-orange bg-brand-light px-4 py-2 rounded-full border-2 border-main-text hover:bg-white transition-all hover:scale-105 active:scale-95 cursor-pointer"
             >
               <Languages className="w-4 h-4" />
-              {i18n.language.startsWith('zh') ? 'English' : '繁體中文'}
+              {i18n.resolvedLanguage?.startsWith('zh') ? 'English' : '繁體中文'}
             </button>
           </div>
         </div>
