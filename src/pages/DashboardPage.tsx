@@ -186,25 +186,33 @@ export function DashboardPage() {
               </h2>
             </div>
             <div className="space-y-3">
-              {members.map(member => {
-                const paid = memberPaidTotals[member.id] || 0;
-                return (
-                  <div key={member.id} className="flex items-center justify-between p-3.5 border-2 border-main-text rounded-xl hover:bg-page-bg/40 transition-colors">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="font-nunito font-black text-sm text-main-text truncate">{member.name}</span>
-                      {member.id === currentGroup?.createdBy && (
-                        <span className="text-[9px] bg-brand-light text-accent-orange border border-accent-orange/20 font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider font-nunito">{t('common.host')}</span>
-                      )}
-                      {member.id === currentMemberId && (
-                        <span className="text-[9px] bg-success-light text-success-green border border-success-green/20 font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider font-nunito">{t('common.me')}</span>
-                      )}
-                    </div>
-                    <span className="text-xs font-black font-nunito uppercase tracking-wider text-main-text/70 bg-brand-light border border-main-text/10 px-2.5 py-1 rounded-lg">
-                      {t('expenses.paid_action')} {formatCurrency(paid)}
-                    </span>
-                  </div>
-                );
-              })}
+              {members.filter(member => (memberPaidTotals[member.id] || 0) > 0).length === 0 ? (
+                <div className="p-4 text-center">
+                  <p className="text-sm text-gray-400 font-medium">{t('expenses.no_expenses_recorded')}</p>
+                </div>
+              ) : (
+                members
+                  .filter(member => (memberPaidTotals[member.id] || 0) > 0)
+                  .map(member => {
+                    const paid = memberPaidTotals[member.id] || 0;
+                    return (
+                      <div key={member.id} className="flex items-center justify-between p-3.5 border-2 border-main-text rounded-xl hover:bg-page-bg/40 transition-colors">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="font-nunito font-black text-sm text-main-text truncate">{member.name}</span>
+                          {member.id === currentGroup?.createdBy && (
+                            <span className="text-[9px] bg-brand-light text-accent-orange border border-accent-orange/20 font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider font-nunito">{t('common.host')}</span>
+                          )}
+                          {member.id === currentMemberId && (
+                            <span className="text-[9px] bg-success-light text-success-green border border-success-green/20 font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider font-nunito">{t('common.me')}</span>
+                          )}
+                        </div>
+                        <span className="text-xs font-black font-nunito uppercase tracking-wider text-main-text/70 bg-brand-light border border-main-text/10 px-2.5 py-1 rounded-lg">
+                          {t('expenses.paid_action')} {formatCurrency(paid)}
+                        </span>
+                      </div>
+                    );
+                  })
+              )}
             </div>
           </div>
 
