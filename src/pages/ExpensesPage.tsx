@@ -25,6 +25,7 @@ export function ExpensesPage() {
     expenses,
     currentMemberId,
     currentMember,
+    isSettled,
     handleUpdateProfile,
     handleAddExpense,
     handleUpdateExpense,
@@ -46,12 +47,14 @@ export function ExpensesPage() {
 
   useEffect(() => {
     if (location.state?.openAddModal) {
-      setIsExpenseModalOpen(true);
-      setExpenseToEdit(null);
+      if (!isSettled) {
+        setIsExpenseModalOpen(true);
+        setExpenseToEdit(null);
+      }
       // Clear the state so it doesn't reopen on reload
       window.history.replaceState({}, document.title);
     }
-  }, [location.state]);
+  }, [location.state, isSettled]);
 
   const filteredExpenses = useMemo(() => {
     if (!filterPaidBy) return expenses;
@@ -62,11 +65,19 @@ export function ExpensesPage() {
   }, [expenses, filterPaidBy]);
 
   const openAddModal = () => {
+    if (isSettled) {
+      toast.error(t('settle.locked_msg'));
+      return;
+    }
     setExpenseToEdit(null);
     setIsExpenseModalOpen(true);
   };
 
   const openEditModal = (expense: Expense) => {
+    if (isSettled) {
+      toast.error(t('settle.locked_msg'));
+      return;
+    }
     setExpenseToEdit(expense);
     setIsExpenseModalOpen(true);
   };

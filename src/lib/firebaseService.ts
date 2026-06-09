@@ -165,6 +165,22 @@ export const firebaseService = {
     });
   },
 
+  async settleGroup(groupId: string, userId: string) {
+    await updateDoc(doc(db, 'groups', groupId), {
+      settledAt: serverTimestamp(),
+      settledBy: userId,
+      updatedAt: serverTimestamp(),
+    });
+  },
+
+  async unsettleGroup(groupId: string) {
+    await updateDoc(doc(db, 'groups', groupId), {
+      settledAt: deleteField(),
+      settledBy: deleteField(),
+      updatedAt: serverTimestamp(),
+    });
+  },
+
   async addExpense(groupId: string, memberId: string, expenseData: ExpenseInput) {
     const data: any = {
       ...expenseData,

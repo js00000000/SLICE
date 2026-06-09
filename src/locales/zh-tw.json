@@ -152,6 +152,21 @@
     "settlements": "建議結清方式",
     "no_expenses": "目前尚無支出紀錄，新增支出後即可查看結算金額！"
   },
+  "settle": {
+    "action": "結算群組",
+    "confirm_title": "確定要結算群組？",
+    "confirm_msg": "結算後將鎖定所有支出，並固定目前的結清方式。之後仍可由你取消結算。",
+    "settled_toast": "群組已結算，支出已鎖定。",
+    "settled_title": "群組已結算",
+    "settled_subtitle": "支出已鎖定，結清方式已固定。",
+    "settled_on": "於 {{date}} 結算，支出已鎖定。",
+    "undo_action": "取消結算",
+    "undo_title": "確定要取消結算？",
+    "undo_msg": "取消結算後，支出將可重新編輯。",
+    "unsettled_toast": "已取消結算,支出可繼續編輯。",
+    "locked_msg": "群組已結算,無法新增或修改支出。",
+    "locked_short": "已鎖定"
+  },
   "sponsor": {
     "title": "支持 SLICE 繼續營運",
     "desc_1": "SLICE 是免費朋友群組分帳與快速記帳平台，由一位獨立開發者維護，不收費、無廣告。",

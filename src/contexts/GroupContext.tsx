@@ -27,6 +27,8 @@ interface GroupContextType {
   expenses: Expense[];
   currentMemberId: string | null;
   currentMember: Member | undefined;
+  isHost: boolean;
+  isSettled: boolean;
   isLoading: boolean;
   handleCreateGroup: (name: string) => Promise<void>;
   handleJoinGroup: (id: string) => Promise<void>;
@@ -41,6 +43,8 @@ interface GroupContextType {
   handleAddExpense: (expenseData: ExpenseInput) => Promise<void>;
   handleUpdateExpense: (expenseId: string, expenseData: Partial<ExpenseInput>) => Promise<void>;
   handleDeleteExpense: (expense: Expense) => Promise<void>;
+  handleSettleGroup: () => Promise<void>;
+  handleUnsettleGroup: () => Promise<void>;
 }
 
 const GroupContext = createContext<GroupContextType | undefined>(undefined);
@@ -293,18 +297,34 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     await firebaseService.updateGroupName(groupId, newName);
   };
 
+  const currentMember = members.find(m => m.id === currentMemberId);
+  const isHost = !!currentMember?.isHost;
+  const isSettled = !!currentGroup?.settledAt;
+
   const handleAddExpense = async (expenseData: ExpenseInput) => {
     if (!user || !groupId || !currentMemberId) return;
+    if (isSettled) {
+      toast.error(t('settle.locked_msg'));
+      return;
+    }
     await firebaseService.addExpense(groupId, currentMemberId, expenseData);
   };
 
   const handleUpdateExpense = async (expenseId: string, expenseData: Partial<ExpenseInput>) => {
     if (!user || !groupId) return;
+    if (isSettled) {
+      toast.error(t('settle.locked_msg'));
+      return;
+    }
     await firebaseService.updateExpense(groupId, expenseId, expenseData);
   };
 
   const handleDeleteExpense = async (expense: Expense) => {
     if (!user || !groupId) return;
+    if (isSettled) {
+      toast.error(t('settle.locked_msg'));
+      return;
+    }
     const isConfirmed = await confirm(t('expenses.delete_msg'));
     if (isConfirmed) {
       await firebaseService.deleteExpense(groupId, expense.id);
@@ -312,14 +332,58 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const currentMember = members.find(m => m.id === currentMemberId);
+  const handleSettleGroup = async () => {
+    if (!user || !groupId) return;
+    if (!isHost) {
+      toast.error(t('common.error_host_only'));
+      return;
+    }
+    if (isSettled) return;
+    const isConfirmed = await confirm(t('settle.confirm_msg'), {
+      title: t('settle.confirm_title'),
+      confirmLabel: t('settle.action'),
+      cancelLabel: t('common.cancel'),
+    });
+    if (!isConfirmed) return;
+    try {
+      await firebaseService.settleGroup(groupId, user.uid);
+      toast.success(t('settle.settled_toast'));
+    } catch (error) {
+      console.error('Settle group error:', error);
+      toast.error(t('common.error'));
+    }
+  };
+
+  const handleUnsettleGroup = async () => {
+    if (!user || !groupId) return;
+    if (!isHost) {
+      toast.error(t('common.error_host_only'));
+      return;
+    }
+    if (!isSettled) return;
+    const isConfirmed = await confirm(t('settle.undo_msg'), {
+      title: t('settle.undo_title'),
+      confirmLabel: t('settle.undo_action'),
+      cancelLabel: t('common.cancel'),
+    });
+    if (!isConfirmed) return;
+    try {
+      await firebaseService.unsettleGroup(groupId);
+      toast.success(t('settle.unsettled_toast'));
+    } catch (error) {
+      console.error('Unsettle group error:', error);
+      toast.error(t('common.error'));
+    }
+  };
 
   const value = {
     groupId, currentGroup, myGroups, members, expenses, currentMemberId, currentMember,
-    isLoading, 
+    isHost, isSettled,
+    isLoading,
     handleCreateGroup, handleJoinGroup, handleLeaveGroup, handleDeleteGroup,
     handleSelectMember, handleCreateMember, handleCreateMemberByHost, handleDeleteMember, handleUpdateProfile,
-    handleUpdateGroupName, handleAddExpense, handleUpdateExpense, handleDeleteExpense
+    handleUpdateGroupName, handleAddExpense, handleUpdateExpense, handleDeleteExpense,
+    handleSettleGroup, handleUnsettleGroup,
   };
 
   return (

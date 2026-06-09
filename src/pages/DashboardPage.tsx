@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Share2, Plus, DollarSign, Receipt, ArrowRight } from 'lucide-react';
+import { Share2, Plus, DollarSign, Receipt, ArrowRight, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
@@ -26,6 +26,7 @@ export function DashboardPage() {
     expenses,
     currentMemberId,
     currentMember,
+    isSettled,
     handleUpdateProfile,
     handleAddExpense,
     handleUpdateExpense,
@@ -71,6 +72,10 @@ export function DashboardPage() {
   }, [members, expenses]);
 
   const openAddModal = () => {
+    if (isSettled) {
+      toast.error(t('settle.locked_msg'));
+      return;
+    }
     setIsExpenseModalOpen(true);
   };
 
@@ -155,10 +160,12 @@ export function DashboardPage() {
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={openAddModal}
-                className="py-3 bg-accent-orange text-white border-2 border-main-text rounded-xl font-nunito font-black text-sm shadow-[3px_3px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] cursor-pointer hover:bg-[#ff7b4b] transition-all flex items-center justify-center gap-2"
+                disabled={isSettled}
+                title={isSettled ? t('settle.locked_msg') : undefined}
+                className="py-3 bg-accent-orange text-white border-2 border-main-text rounded-xl font-nunito font-black text-sm shadow-[3px_3px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] cursor-pointer hover:bg-[#ff7b4b] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-accent-orange"
               >
-                <Plus className="w-4 h-4 stroke-[3]" />
-                {t('expenses.add_new')}
+                {isSettled ? <Lock className="w-4 h-4 stroke-[3]" /> : <Plus className="w-4 h-4 stroke-[3]" />}
+                {isSettled ? t('settle.locked_short') : t('expenses.add_new')}
               </button>
               <button
                 onClick={() => navigate(`/group/${groupId}/settlements`)}

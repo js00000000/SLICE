@@ -152,6 +152,21 @@
     "settlements": "Suggested Settlements",
     "no_expenses": "No expenses recorded yet. Add one to see balances!"
   },
+  "settle": {
+    "action": "Settle Up",
+    "confirm_title": "Settle Up Group?",
+    "confirm_msg": "This locks all expenses and freezes the suggested settlements. You can undo this later.",
+    "settled_toast": "Group settled. Expenses are now locked.",
+    "settled_title": "Group Settled",
+    "settled_subtitle": "Expenses are locked. Settlements are final.",
+    "settled_on": "Settled on {{date}}. Expenses are locked.",
+    "undo_action": "Undo",
+    "undo_title": "Undo Settle Up?",
+    "undo_msg": "This unlocks expenses so they can be edited again.",
+    "unsettled_toast": "Group reopened. Expenses can be edited again.",
+    "locked_msg": "Group is settled. Expenses are locked.",
+    "locked_short": "Locked"
+  },
   "sponsor": {
     "title": "Support SLICE's Continued Operation",
     "desc_1": "SLICE is a free group split-billing and expense tracking platform maintained by an independent developer, free of charge and completely ad-free.",

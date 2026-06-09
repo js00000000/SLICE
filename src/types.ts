@@ -14,6 +14,8 @@ export interface Group {
   name: string;
   createdBy: string;
   createdAt: Timestamp;
+  settledAt?: Timestamp | null;
+  settledBy?: string | null;
 }
 
 export interface Payment {

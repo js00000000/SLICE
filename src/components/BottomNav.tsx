@@ -1,6 +1,7 @@
-import { LayoutGrid, DollarSign, Plus, Receipt, Users } from 'lucide-react';
+import { LayoutGrid, DollarSign, Plus, Receipt, Users, Lock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useGroup } from '../contexts/GroupContext';
 
 export type TabType = 'expenses' | 'settlements' | 'members' | 'dashboard';
@@ -14,9 +15,10 @@ interface BottomNavProps {
 export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: BottomNavProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { groupId: contextGroupId } = useGroup();
-  
+  const { groupId: contextGroupId, isSettled } = useGroup();
+
   const groupId = propGroupId || contextGroupId;
+  const addDisabled = !groupId || isSettled;
 
   const handleTabClick = (tab: TabType) => {
     if (!groupId) return;
@@ -44,6 +46,10 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
 
   const handleAddClick = () => {
     if (!groupId) return;
+    if (isSettled) {
+      toast.error(t('settle.locked_msg'));
+      return;
+    }
     if (onAddClick) {
       onAddClick();
     } else {
@@ -89,12 +95,13 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
         <div className="flex justify-center">
           <button
             onClick={handleAddClick}
-            disabled={!groupId}
+            disabled={addDisabled}
+            title={isSettled ? t('settle.locked_msg') : undefined}
             className={`flex flex-col items-center -mt-9 bg-accent-orange text-white p-3.5 rounded-[18px] border-3 border-main-text shadow-[4px_4px_0px_#1A1A2E] hover:bg-[#ff7b4b] hover:scale-105 active:scale-95 transition-all duration-150 cursor-pointer ${
-              !groupId ? 'opacity-50 cursor-not-allowed grayscale shadow-none hover:scale-100' : ''
+              addDisabled ? 'opacity-50 cursor-not-allowed grayscale shadow-none hover:scale-100' : ''
             }`}
           >
-            <Plus className="w-7 h-7 stroke-[3]" />
+            {isSettled ? <Lock className="w-7 h-7 stroke-[3]" /> : <Plus className="w-7 h-7 stroke-[3]" />}
           </button>
         </div>
 
