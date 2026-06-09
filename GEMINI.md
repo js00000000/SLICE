@@ -6,6 +6,12 @@ This file contains foundational instructions for Gemini CLI. These mandates take
 - **Pre-commit Build**: You MUST run `npm run build` and ensure it completes without errors before committing any code changes. This ensures that type safety and bundle optimizations are verified.
 - **Fix Failures**: If a build fails, you must resolve the issues and successfully complete a build before proceeding with the commit.
 
+## SLICE Core Product Guarantees
+All changes to the settlement calculation engine (`src/lib/settlement.ts`) and manual payment workflows MUST preserve and satisfy the following three product design guarantees:
+1. **Minimal Transactions**: Suggested settlements must always use the greedy matchmaker on the rounded whole-dollar balances to ensure the total number of suggest-to-pay transactions in a group of size $N$ is at most $N-1$ (the theoretical mathematical minimum).
+2. **Cents-Snapping on Settle**: When a user pays their displayed whole-dollar balance, any residual fractional cents (sub-dollar remainders within a $1.00 margin) MUST be snapped/eliminated to guarantee the user's running balance in both pennies and displayed dollars resolves to exactly `0`, avoiding ghost balance carryovers.
+3. **0-Balance Settled User Exclusion**: Any member whose rounded balance is `0` (or has been fully settled) MUST be completely excluded from the matching queue and suggested settlements. Adding, updating, or deleting unrelated expenses in the group MUST NOT drag a settled user back into settlements, unless they are directly part of the edited expense's participants or their balance changes.
+
 ## Mobile-First Design Standards
 - **Input & Select Font Sizes**: All interactive text inputs (`<input type="text">`, `<input type="number">`, etc.) and dropdown menus (`<select>`) MUST use a font size of at least `16px` (typically `text-base` in Tailwind CSS) on mobile viewports. This prevents mobile browsers (especially Safari on iOS) from triggering an undesirable automatic page zoom behavior on focus. Avoid using `text-sm` (14px) or `text-xs` (12px) directly on text entry inputs or dropdown controls.
 
