@@ -29,8 +29,16 @@ service cloud.firestore {
         && request.resource.data.name is string
         && request.resource.data.name.size() <= 50;
       
-      // Only host (creator) can update or delete the group
-      allow update, delete: if isAuthenticated() 
+      // Only host (creator) can update or delete the group.
+      // This includes renaming the group, settling up (setting settledAt/settledBy), and unsettling up (deleting settledAt/settledBy).
+      allow update: if isAuthenticated() 
+        && resource.data.createdBy == request.auth.uid
+        && (
+          // Defense-in-depth: If settling up, ensure settledBy matches the host/auth UID
+          (!request.resource.data.keys().hasAll(['settledAt', 'settledBy']) || request.resource.data.settledBy == request.auth.uid)
+        );
+      
+      allow delete: if isAuthenticated() 
         && resource.data.createdBy == request.auth.uid;
 
       // Members subcollection
