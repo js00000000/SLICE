@@ -97,8 +97,10 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
             onClick={handleAddClick}
             disabled={addDisabled}
             title={isSettled ? t('settle.locked_msg') : undefined}
-            className={`flex flex-col items-center -mt-9 bg-accent-orange text-white p-3.5 rounded-[18px] border-3 border-main-text shadow-[4px_4px_0px_#1A1A2E] hover:bg-[#ff7b4b] hover:scale-105 active:scale-95 transition-all duration-150 cursor-pointer ${
-              addDisabled ? 'opacity-50 cursor-not-allowed grayscale shadow-none hover:scale-100' : ''
+            className={`flex flex-col items-center -mt-9 p-3.5 rounded-[18px] border-3 border-main-text shadow-[4px_4px_0px_#1A1A2E] transition-all duration-150 cursor-pointer ${
+              addDisabled 
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed grayscale shadow-none' 
+                : 'bg-accent-orange text-white hover:bg-[#ff7b4b] hover:scale-105 active:scale-95'
             }`}
           >
             {isSettled ? <Lock className="w-7 h-7 stroke-[3]" /> : <Plus className="w-7 h-7 stroke-[3]" />}

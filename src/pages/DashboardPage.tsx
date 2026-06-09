@@ -162,7 +162,7 @@ export function DashboardPage() {
                 onClick={openAddModal}
                 disabled={isSettled}
                 title={isSettled ? t('settle.locked_msg') : undefined}
-                className="py-3 bg-accent-orange text-white border-2 border-main-text rounded-xl font-nunito font-black text-sm shadow-[3px_3px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] cursor-pointer hover:bg-[#ff7b4b] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-accent-orange"
+                className="py-3 bg-accent-orange text-white border-2 border-main-text rounded-xl font-nunito font-black text-sm shadow-[3px_3px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] cursor-pointer hover:bg-[#ff7b4b] transition-all flex items-center justify-center gap-2 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:hover:bg-gray-200"
               >
                 {isSettled ? <Lock className="w-4 h-4 stroke-[3]" /> : <Plus className="w-4 h-4 stroke-[3]" />}
                 {isSettled ? t('settle.locked_short') : t('expenses.add_new')}
