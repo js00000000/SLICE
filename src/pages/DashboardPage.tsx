@@ -24,6 +24,7 @@ export function DashboardPage() {
     currentGroup,
     members,
     expenses,
+    completedSettlements,
     currentMemberId,
     currentMember,
     isSettled,
@@ -48,8 +49,8 @@ export function DashboardPage() {
   }, [expenses]);
 
   const { balances } = useMemo(() => {
-    return calculateBalancesAndSettlements(members, expenses);
-  }, [members, expenses]);
+    return calculateBalancesAndSettlements(members, expenses, completedSettlements);
+  }, [members, expenses, completedSettlements]);
 
   const currentMemberBalance = currentMemberId ? (balances[currentMemberId] || 0) : 0;
 

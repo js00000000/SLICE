@@ -36,6 +36,16 @@ export interface Expense {
   updatedAt?: Timestamp;
 }
 
+export interface SettlementRecord {
+  id: string;
+  from: string; // memberId of payer
+  to: string;   // memberId of receiver
+  amount: number;
+  completedBy: string;       // userId who marked it paid
+  completedByMemberId: string; // memberId who marked it paid (must be from or to)
+  completedAt?: Timestamp;
+}
+
 export interface UserSettings {
   lastGroupId: string | null;
   joinedGroupIds?: string[];

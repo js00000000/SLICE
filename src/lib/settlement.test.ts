@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { calculateBalancesAndSettlements } from './settlement';
-import type { Member, Expense } from './settlement';
+import type { Member, Expense, CompletedSettlement } from './settlement';
 
 describe('Settlement Logic', () => {
   it('should calculate correct balances for simple two-person split', () => {
@@ -599,6 +599,86 @@ describe('Settlement Logic', () => {
     expect(settlements).toHaveLength(4);
   });
 
+  describe('with completed manual settlements', () => {
+    const members: Member[] = [
+      { id: '1', name: 'Alice' },
+      { id: '2', name: 'Bob' },
+    ];
+    const expenses: Expense[] = [
+      { id: 'e1', description: 'Lunch', amount: 100, paidBy: '1', splitAmong: ['1', '2'] },
+    ];
+
+    it('zeroes balances and removes settlement when the full debt is marked paid', () => {
+      const { balances, settlements } = calculateBalancesAndSettlements(
+        members,
+        expenses,
+        [{ from: '2', to: '1', amount: 50 }],
+      );
+      expect(balances['1']).toBe(0);
+      expect(balances['2']).toBe(0);
+      expect(settlements).toHaveLength(0);
+    });
+
+    it('applies partial payments and keeps the remaining settlement', () => {
+      const { balances, settlements } = calculateBalancesAndSettlements(
+        members,
+        expenses,
+        [{ from: '2', to: '1', amount: 20 }],
+      );
+      expect(balances['1']).toBe(30);
+      expect(balances['2']).toBe(-30);
+      expect(settlements).toEqual([{ from: '2', to: '1', amount: 30 }]);
+    });
+
+    it('flips the direction when more than the debt is paid', () => {
+      const { balances, settlements } = calculateBalancesAndSettlements(
+        members,
+        expenses,
+        [{ from: '2', to: '1', amount: 80 }],
+      );
+      expect(balances['1']).toBe(-30);
+      expect(balances['2']).toBe(30);
+      expect(settlements).toEqual([{ from: '1', to: '2', amount: 30 }]);
+    });
+
+    it('ignores payments referencing unknown members', () => {
+      const { balances } = calculateBalancesAndSettlements(
+        members,
+        expenses,
+        [{ from: 'ghost', to: '1', amount: 50 }],
+      );
+      expect(balances['1']).toBe(50);
+      expect(balances['2']).toBe(-50);
+    });
+
+    it('should completely settle a debtor when they pay their displayed whole-dollar balance', () => {
+      // 100 split among A, B, C:
+      // Exact cents: A (+66.66), B (-33.33), C (-33.33)
+      // Rounded balances: A: 67, B: -34, C: -33
+      // When B pays their rounded debt of $34 to A, B should be completely settled (0).
+      const members: Member[] = [
+        { id: '1', name: 'Alice' },
+        { id: '2', name: 'Bob' },
+        { id: '3', name: 'Charlie' },
+      ];
+      const expenses: Expense[] = [
+        { id: 'e1', description: 'Uneven Dinner', amount: 100, paidBy: '1', splitAmong: ['1', '2', '3'] },
+      ];
+
+      const { balances, settlements } = calculateBalancesAndSettlements(
+        members,
+        expenses,
+        [{ from: '2', to: '1', amount: 34 }], // Bob pays Alice $34
+      );
+
+      expect(balances['2']).toBe(0); // Bob is completely settled!
+      expect(balances['1']).toBe(33); // Alice has $33 remaining credit
+      expect(balances['3']).toBe(-33); // Charlie has $33 remaining debt
+
+      expect(settlements).toEqual([{ from: '3', to: '1', amount: 33 }]); // Only Charlie pays Alice
+    });
+  });
+
   it('should produce whole-dollar balances and settlements that sum exactly', () => {
     // Regression: previously settlements could be 33.33333... due to float math.
     const members: Member[] = [
@@ -632,5 +712,141 @@ describe('Settlement Logic', () => {
       const outgoing = settlements.filter(s => s.from === m.id).reduce((a, s) => a + s.amount, 0);
       expect(incoming - outgoing).toBe(balances[m.id]);
     });
+  });
+
+  it('should guarantee rounded balances sum to exactly zero when there are more creditors than debtors', () => {
+    // Regression: 3 creditors owed $1.50 each and 1 debtor owing $4.50.
+    // Initial rounded would be: +2, +2, +2, -4 -> diff = +2.
+    // Since there is only 1 debtor (Dave), the old algorithm adjusted Dave to -5 and stopped,
+    // leaving the sum at +1. The Largest Remainder Method handles this perfectly.
+    const members: Member[] = [
+      { id: '1', name: 'Alice' },
+      { id: '2', name: 'Bob' },
+      { id: '3', name: 'Charlie' },
+      { id: '4', name: 'Dave' },
+    ];
+    const expenses: Expense[] = [
+      { id: 'e1', description: 'Alice paid for Dave', amount: 1.50, paidBy: '1', splitAmong: ['4'] },
+      { id: 'e2', description: 'Bob paid for Dave', amount: 1.50, paidBy: '2', splitAmong: ['4'] },
+      { id: 'e3', description: 'Charlie paid for Dave', amount: 1.50, paidBy: '3', splitAmong: ['4'] },
+    ];
+
+    const { balances, settlements } = calculateBalancesAndSettlements(members, expenses);
+
+    // Sum of rounded balances must be exactly 0
+    const balanceSum = Object.values(balances).reduce((a, b) => a + b, 0);
+    expect(balanceSum).toBe(0);
+
+    // Verify all balances are integers
+    Object.values(balances).forEach(b => {
+      expect(Number.isInteger(b)).toBe(true);
+    });
+
+    // Verify settlements sum and match the individual balances perfectly
+    members.forEach(m => {
+      const incoming = settlements.filter(s => s.to === m.id).reduce((a, s) => a + s.amount, 0);
+      const outgoing = settlements.filter(s => s.from === m.id).reduce((a, s) => a + s.amount, 0);
+      expect(incoming - outgoing).toBe(balances[m.id]);
+    });
+  });
+
+  describe('SLICE Product Guarantees', () => {
+    it('satisfies the three core product goals: minimal transactions, cents-snapping, and 0-balance settled user exclusion', () => {
+      // Members: Alice ('1'), Bob ('2'), Charlie ('3'), Dave ('4')
+      const members: Member[] = [
+        { id: '1', name: 'Alice' },
+        { id: '2', name: 'Bob' },
+        { id: '3', name: 'Charlie' },
+        { id: '4', name: 'Dave' },
+      ];
+
+      // --- STEP 1: Initial Uneven Expense ---
+      // Alice paid $100 split evenly among Alice, Bob, and Charlie.
+      // Exact share: $33.333... each.
+      // Bob: -$33.33 (display rounded to -$34)
+      // Charlie: -$33.33 (display rounded to -$33)
+      // Alice: +$66.66 (display rounded to +$67)
+      let expenses: Expense[] = [
+        { id: 'e1', description: 'Uneven Dinner', amount: 100, paidBy: '1', splitAmong: ['1', '2', '3'] },
+      ];
+
+      let completedSettlements: CompletedSettlement[] = [];
+
+      let result = calculateBalancesAndSettlements(members, expenses, completedSettlements);
+      expect(result.balances['2']).toBe(-34); // Bob owes 34
+      expect(result.balances['3']).toBe(-33); // Charlie owes 33
+      expect(result.balances['1']).toBe(67);  // Alice receives 67
+
+      // Guarantee 1: Minimal transactions (A pays B, C pays B, etc.)
+      // Bob and Charlie both pay Alice.
+      expect(result.settlements).toHaveLength(2);
+      expect(result.settlements).toContainEqual({ from: '2', to: '1', amount: 34 });
+      expect(result.settlements).toContainEqual({ from: '3', to: '1', amount: 33 });
+
+      // --- STEP 2: Bob settles his debt ---
+      // Bob pays $34 to Alice.
+      completedSettlements.push({ from: '2', to: '1', amount: 34 });
+
+      result = calculateBalancesAndSettlements(members, expenses, completedSettlements);
+
+      // Guarantee 2: Cents-snapping (Bob is exactly 0, not +$1)
+      expect(result.balances['2']).toBe(0); // Bob is fully settled!
+      expect(result.balances['3']).toBe(-33); // Charlie still owes 33
+      expect(result.balances['1']).toBe(33); // Alice receives 33
+
+      // Bob must be completely excluded from suggested settlements
+      expect(result.settlements).toEqual([{ from: '3', to: '1', amount: 33 }]);
+
+      // --- STEP 3: Unrelated expense added (Dave and Alice) ---
+      // Alice pays $50 split evenly between Alice and Dave ($25 each).
+      // Bob and Charlie are NOT in this split.
+      expenses.push({ id: 'e2', description: 'Unrelated taxi', amount: 50, paidBy: '1', splitAmong: ['1', '4'] });
+
+      result = calculateBalancesAndSettlements(members, expenses, completedSettlements);
+
+      // Guarantee 3: 0-balance exclusion (Bob remains untouched at 0, no transactions for Bob!)
+      expect(result.balances['2']).toBe(0); // Bob remains completely untouched at 0!
+      expect(result.balances['3']).toBe(-33); // Charlie remains at -33
+      expect(result.balances['4']).toBe(-25); // Dave owes 25
+      expect(result.balances['1']).toBe(33 + 25); // Alice receives 58
+
+      // Suggested settlements should only involve Charlie -> Alice and Dave -> Alice.
+      // Bob is NOT involved.
+      expect(result.settlements).toHaveLength(2);
+      expect(result.settlements).toContainEqual({ from: '3', to: '1', amount: 33 });
+      expect(result.settlements).toContainEqual({ from: '4', to: '1', amount: 25 });
+      expect(result.settlements.some(s => s.from === '2' || s.to === '2')).toBe(false); // Bob is completely excluded!
+    });
+  });
+
+  it('should calculate correct whole-dollar balances and settlements when A pays 200 and only B and C split it', () => {
+    // A paid 200, split between B and C (A is not in the split).
+    // B's share: 100, C's share: 100.
+    // Together, B and C should pay a total of 200 to settle.
+    const members: Member[] = [
+      { id: '1', name: 'Alice' },
+      { id: '2', name: 'Bob' },
+      { id: '3', name: 'Charlie' },
+    ];
+    const expenses: Expense[] = [
+      { id: 'e1', description: 'treating B and C', amount: 200, paidBy: '1', splitAmong: ['2', '3'] },
+    ];
+
+    const { balances, settlements } = calculateBalancesAndSettlements(members, expenses);
+
+    // Alice should receive 200
+    expect(balances['1']).toBe(200);
+    // Bob should owe 100
+    expect(balances['2']).toBe(-100);
+    // Charlie should owe 100
+    expect(balances['3']).toBe(-100);
+
+    // Suggested settlements should sum to 200 exactly
+    expect(settlements).toHaveLength(2);
+    expect(settlements).toContainEqual({ from: '2', to: '1', amount: 100 });
+    expect(settlements).toContainEqual({ from: '3', to: '1', amount: 100 });
+
+    const totalSettledAmount = settlements.reduce((sum, s) => sum + s.amount, 0);
+    expect(totalSettledAmount).toBe(200);
   });
 });

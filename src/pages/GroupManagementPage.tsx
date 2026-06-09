@@ -19,8 +19,8 @@ export function GroupManagementPage() {
   const { groupId } = useParams();
   const { confirm } = useDialog();
   const { handleLogout, handleDeleteAccount } = useAuth();
-  const { 
-    members, expenses, currentMember, currentGroup, 
+  const {
+    members, expenses, completedSettlements, currentMember, currentGroup,
     handleUpdateProfile, handleDeleteMember, handleUpdateGroupName, handleDeleteGroup,
     handleCreateMemberByHost, handleLeaveGroup
   } = useGroup();
@@ -28,7 +28,10 @@ export function GroupManagementPage() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [newName, setNewName] = useState(currentGroup?.name || '');
   const [newMemberName, setNewMemberName] = useState('');
-  const { balances } = useMemo(() => calculateBalancesAndSettlements(members, expenses), [members, expenses]);
+  const { balances } = useMemo(
+    () => calculateBalancesAndSettlements(members, expenses, completedSettlements),
+    [members, expenses, completedSettlements],
+  );
 
   // Sync newName state when currentGroup loads
   const [prevGroupName, setPrevGroupName] = useState(currentGroup?.name);

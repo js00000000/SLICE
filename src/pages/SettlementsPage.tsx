@@ -13,12 +13,13 @@ import { useAuth } from '../contexts/AuthContext';
 
 export function SettlementsPage() {
   const { t, i18n } = useTranslation();
-  const { handleLogout, handleDeleteAccount } = useAuth();
+  const { user, handleLogout, handleDeleteAccount } = useAuth();
   const {
     groupId,
     currentGroup,
     members,
     expenses,
+    completedSettlements,
     currentMemberId,
     currentMember,
     isHost,
@@ -26,6 +27,8 @@ export function SettlementsPage() {
     handleUpdateProfile,
     handleSettleGroup,
     handleUnsettleGroup,
+    handleMarkSettlementPaid,
+    handleUnmarkSettlement,
   } = useGroup();
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -133,7 +136,15 @@ export function SettlementsPage() {
         )}
 
         {/* Balances list */}
-        <BalancesView members={members} expenses={expenses} currentMemberId={currentMemberId!} />
+        <BalancesView
+          members={members}
+          expenses={expenses}
+          currentMemberId={currentMemberId!}
+          completedSettlements={completedSettlements}
+          canUnmark={(record) => !!user && (record.completedBy === user.uid || isHost)}
+          onMarkPaid={isSettled ? handleMarkSettlementPaid : undefined}
+          onUnmark={handleUnmarkSettlement}
+        />
       </main>
 
       <BottomNav

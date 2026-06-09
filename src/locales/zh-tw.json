@@ -165,7 +165,18 @@
     "undo_msg": "取消結算後，支出將可重新編輯。",
     "unsettled_toast": "已取消結算,支出可繼續編輯。",
     "locked_msg": "群組已結算,無法新增或修改支出。",
-    "locked_short": "已鎖定"
+    "locked_short": "已鎖定",
+    "mark_paid_action": "標記已付款",
+    "mark_paid_title": "確認已完成付款？",
+    "mark_paid_msg": "請確認「{{from}}」已支付「{{to}}」${{amount}}。完成後將更新結算金額。",
+    "mark_paid_toast": "已記錄此筆付款",
+    "mark_paid_not_party": "只有付款人或收款人可以標記此筆付款。",
+    "completed_title": "已完成的付款",
+    "unmark_action": "撤銷",
+    "unmark_title": "撤銷此筆付款？",
+    "unmark_msg": "將刪除此筆付款紀錄並回復結算金額。",
+    "unmark_toast": "已撤銷此筆付款紀錄",
+    "unmark_not_allowed": "只有主持人或建立此紀錄的人可以撤銷。"
   },
   "sponsor": {
     "title": "支持 SLICE 繼續營運",

@@ -65,14 +65,40 @@ service cloud.firestore {
       // Expenses subcollection
       match /expenses/{expenseId} {
         allow read: if isAuthenticated();
-        
+
         // Any authenticated user (ideally limited to members) can create/edit expenses
         // We validate that the createdBy matches the current member link
-        allow create: if isAuthenticated() 
+        allow create: if isAuthenticated()
           && request.resource.data.amount is number
           && request.resource.data.description.size() <= 100;
-          
+
         allow update, delete: if isAuthenticated();
+      }
+
+      // Manual settlement records subcollection
+      // Each record represents an out-of-band money transfer that one party has
+      // confirmed completing (e.g. "Alice paid Bob $50 via Venmo").
+      match /settlements/{settlementId} {
+        allow read: if isAuthenticated();
+
+        // Only the payer or receiver can mark a payment complete.
+        // The marker must be authenticated as the member referenced by
+        // `completedByMemberId`, and that member must be either `from` or `to`.
+        allow create: if isAuthenticated()
+          && request.resource.data.completedBy == request.auth.uid
+          && request.resource.data.amount is number
+          && request.resource.data.amount > 0
+          && (request.resource.data.completedByMemberId == request.resource.data.from
+              || request.resource.data.completedByMemberId == request.resource.data.to)
+          && get(/databases/$(database)/documents/groups/$(groupId)/members/$(request.resource.data.completedByMemberId)).data.userId == request.auth.uid;
+
+        // Records are append-only. Use delete + create to "edit".
+        allow update: if false;
+
+        // The person who recorded the payment, or the group host, can undo it.
+        allow delete: if isAuthenticated()
+          && (resource.data.completedBy == request.auth.uid
+              || get(/databases/$(database)/documents/groups/$(groupId)).data.createdBy == request.auth.uid);
       }
     }
   }

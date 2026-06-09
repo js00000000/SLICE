@@ -25,6 +25,12 @@ export interface Settlement {
   amount: number;
 }
 
+export interface CompletedSettlement {
+  from: string;
+  to: string;
+  amount: number;
+}
+
 const toCents = (n: number) => Math.round(parseFloat(n.toString()) * 100);
 
 /**
@@ -40,33 +46,75 @@ function roundBalancesToWholeDollars(balancesCents: Record<string, number>): Rec
     rounded[id] = Math.round(cents / 100) + 0;
   });
 
-  let diff = Object.values(rounded).reduce((a, b) => a + b, 0);
+  const totalCentsSum = Object.values(balancesCents).reduce((a, b) => a + b, 0);
+  const targetSum = Math.round(totalCentsSum / 100);
+  const roundedSum = Object.values(rounded).reduce((a, b) => a + b, 0);
+
+  let diff = roundedSum - targetSum;
   if (diff === 0) return rounded;
 
   if (diff > 0) {
-    // Too much credit shown — push debtors with the largest fractional remainder more negative.
+    // Too much credit shown — try to push debtors more negative first.
     const debtors = Object.entries(balancesCents)
       .filter(([, c]) => c < 0)
       .map(([id, c]) => ({ id, fraction: Math.abs(c) % 100 }))
       .sort((a, b) => b.fraction - a.fraction);
+    
+    let adjustedCount = 0;
     for (let i = 0; i < diff && i < debtors.length; i++) {
       rounded[debtors[i].id] -= 1;
+      adjustedCount++;
+    }
+
+    // If there weren't enough debtors to absorb the difference, adjust other members
+    if (adjustedCount < diff) {
+      const adjustedIds = new Set(debtors.slice(0, adjustedCount).map(d => d.id));
+      const others = Object.entries(balancesCents)
+        .filter(([id]) => !adjustedIds.has(id))
+        .map(([id, c]) => ({ id, fraction: Math.abs(c) % 100 }))
+        .sort((a, b) => b.fraction - a.fraction);
+      
+      const remainingDiff = diff - adjustedCount;
+      for (let i = 0; i < remainingDiff && i < others.length; i++) {
+        rounded[others[i].id] -= 1;
+      }
     }
   } else {
-    // Too much debt shown — push creditors with the largest fractional remainder more positive.
+    // Too much debt shown — try to push creditors more positive first.
     const creditors = Object.entries(balancesCents)
       .filter(([, c]) => c > 0)
       .map(([id, c]) => ({ id, fraction: c % 100 }))
       .sort((a, b) => b.fraction - a.fraction);
+    
+    let adjustedCount = 0;
     for (let i = 0; i < -diff && i < creditors.length; i++) {
       rounded[creditors[i].id] += 1;
+      adjustedCount++;
+    }
+
+    // If there weren't enough creditors to absorb the difference, adjust other members
+    if (adjustedCount < -diff) {
+      const adjustedIds = new Set(creditors.slice(0, adjustedCount).map(c => c.id));
+      const others = Object.entries(balancesCents)
+        .filter(([id]) => !adjustedIds.has(id))
+        .map(([id, c]) => ({ id, fraction: Math.abs(c) % 100 }))
+        .sort((a, b) => b.fraction - a.fraction);
+      
+      const remainingDiff = -diff - adjustedCount;
+      for (let i = 0; i < remainingDiff && i < others.length; i++) {
+        rounded[others[i].id] += 1;
+      }
     }
   }
 
   return rounded;
 }
 
-export function calculateBalancesAndSettlements(members: Member[], expenses: Expense[]) {
+export function calculateBalancesAndSettlements(
+  members: Member[],
+  expenses: Expense[],
+  completedSettlements: CompletedSettlement[] = [],
+) {
   // Accumulate balances in integer cents for accuracy.
   const balancesCents: Record<string, number> = {};
   members.forEach(m => balancesCents[m.id] = 0);
@@ -103,6 +151,27 @@ export function calculateBalancesAndSettlements(members: Member[], expenses: Exp
         }
       });
     }
+  });
+
+  // Apply completed manual payments: each payment reduces the payer's debt
+  // and the receiver's credit. Skip records that reference unknown members
+  // so an orphaned record can't half-apply. Snapping is applied within a
+  // $1.00 threshold to prevent rounding artifacts from leaking.
+  completedSettlements.forEach(s => {
+    if (balancesCents[s.from] === undefined || balancesCents[s.to] === undefined) return;
+    const cents = toCents(s.amount);
+    const debtorBalanceCents = balancesCents[s.from];
+
+    let appliedCents = cents;
+    if (debtorBalanceCents < 0) {
+      const remainingDebtCents = Math.abs(debtorBalanceCents);
+      if (Math.abs(cents - remainingDebtCents) < 100) {
+        appliedCents = remainingDebtCents;
+      }
+    }
+
+    balancesCents[s.from] += appliedCents;
+    balancesCents[s.to] -= appliedCents;
   });
 
   // Round balances to whole dollars so they match the UI's display granularity

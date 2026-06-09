@@ -165,7 +165,18 @@
     "undo_msg": "This unlocks expenses so they can be edited again.",
     "unsettled_toast": "Group reopened. Expenses can be edited again.",
     "locked_msg": "Group is settled. Expenses are locked.",
-    "locked_short": "Locked"
+    "locked_short": "Locked",
+    "mark_paid_action": "Mark Paid",
+    "mark_paid_title": "Mark Payment Complete?",
+    "mark_paid_msg": "Confirm that {{from}} paid {{to}} ${{amount}}. This will update the balances.",
+    "mark_paid_toast": "Payment recorded",
+    "mark_paid_not_party": "Only the payer or receiver can mark this payment.",
+    "completed_title": "Completed Payments",
+    "unmark_action": "Undo",
+    "unmark_title": "Undo Payment?",
+    "unmark_msg": "This removes the payment record and restores the balance.",
+    "unmark_toast": "Payment record removed",
+    "unmark_not_allowed": "Only the host or person who recorded this can undo it."
   },
   "sponsor": {
     "title": "Support SLICE's Continued Operation",

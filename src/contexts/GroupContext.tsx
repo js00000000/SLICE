@@ -14,7 +14,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { firebaseService, type ExpenseInput } from '../lib/firebaseService';
-import type { Member, Group, Expense, UserSettings } from '../types';
+import type { Member, Group, Expense, UserSettings, SettlementRecord } from '../types';
 import { calculateBalancesAndSettlements } from '../lib/settlement';
 import { useAuth } from './AuthContext';
 import { useDialog } from './DialogContext';
@@ -25,6 +25,7 @@ interface GroupContextType {
   myGroups: Group[];
   members: Member[];
   expenses: Expense[];
+  completedSettlements: SettlementRecord[];
   currentMemberId: string | null;
   currentMember: Member | undefined;
   isHost: boolean;
@@ -45,6 +46,8 @@ interface GroupContextType {
   handleDeleteExpense: (expense: Expense) => Promise<void>;
   handleSettleGroup: () => Promise<void>;
   handleUnsettleGroup: () => Promise<void>;
+  handleMarkSettlementPaid: (settlement: { from: string; to: string; amount: number }) => Promise<void>;
+  handleUnmarkSettlement: (settlementId: string) => Promise<void>;
 }
 
 const GroupContext = createContext<GroupContextType | undefined>(undefined);
@@ -60,6 +63,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
   const [myGroups, setMyGroups] = useState<Group[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [completedSettlements, setCompletedSettlements] = useState<SettlementRecord[]>([]);
   const [currentMemberId, setCurrentMemberId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -108,6 +112,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       if (user && !groupId) setIsLoading(false);
       setMembers([]);
       setExpenses([]);
+      setCompletedSettlements([]);
       setCurrentGroup(null);
       setCurrentMemberId(null);
       return;
@@ -145,10 +150,17 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       setExpenses(expensesData);
     });
 
+    const unsubSettlements = onSnapshot(collection(db, 'groups', groupId, 'settlements'), (snapshot) => {
+      const settlementsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SettlementRecord));
+      settlementsData.sort((a, b) => (b.completedAt?.toMillis() || 0) - (a.completedAt?.toMillis() || 0));
+      setCompletedSettlements(settlementsData);
+    });
+
     return () => {
       unsubGroup();
       unsubMembers();
       unsubExpenses();
+      unsubSettlements();
     };
   }, [user, groupId, navigate]);
 
@@ -184,7 +196,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     if (!user || !groupId || !currentMemberId) return;
     
     // 1. Balance check
-    const { balances } = calculateBalancesAndSettlements(members, expenses);
+    const { balances } = calculateBalancesAndSettlements(members, expenses, completedSettlements);
     const myBalance = balances[currentMemberId] || 0;
     
     if (Math.abs(myBalance) > 0.01) {
@@ -231,10 +243,11 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
       try {
         await firebaseService.deleteGroup(
-          user.uid, 
-          groupId, 
-          expenses.map(e => e.id), 
-          members.map(m => m.id)
+          user.uid,
+          groupId,
+          expenses.map(e => e.id),
+          members.map(m => m.id),
+          completedSettlements.map(s => s.id),
         );
         navigate('/', { replace: true });
       } catch (error) { 
@@ -376,14 +389,75 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const handleMarkSettlementPaid = async (settlement: { from: string; to: string; amount: number }) => {
+    if (!user || !groupId || !currentMemberId) return;
+    if (settlement.from !== currentMemberId && settlement.to !== currentMemberId) {
+      toast.error(t('settle.mark_paid_not_party'));
+      return;
+    }
+    const fromName = members.find(m => m.id === settlement.from)?.name || '';
+    const toName = members.find(m => m.id === settlement.to)?.name || '';
+    const isConfirmed = await confirm(
+      t('settle.mark_paid_msg', {
+        from: fromName,
+        to: toName,
+        amount: settlement.amount.toFixed(0),
+      }),
+      {
+        title: t('settle.mark_paid_title'),
+        confirmLabel: t('settle.mark_paid_action'),
+        cancelLabel: t('common.cancel'),
+      },
+    );
+    if (!isConfirmed) return;
+    try {
+      await firebaseService.markSettlementPaid(groupId, {
+        from: settlement.from,
+        to: settlement.to,
+        amount: settlement.amount,
+        completedBy: user.uid,
+        completedByMemberId: currentMemberId,
+      });
+      toast.success(t('settle.mark_paid_toast'));
+    } catch (error) {
+      console.error('Mark settlement paid error:', error);
+      toast.error(t('common.error'));
+    }
+  };
+
+  const handleUnmarkSettlement = async (settlementId: string) => {
+    if (!user || !groupId) return;
+    const record = completedSettlements.find(s => s.id === settlementId);
+    if (!record) return;
+    if (record.completedBy !== user.uid && !isHost) {
+      toast.error(t('settle.unmark_not_allowed'));
+      return;
+    }
+    const isConfirmed = await confirm(t('settle.unmark_msg'), {
+      title: t('settle.unmark_title'),
+      confirmLabel: t('settle.unmark_action'),
+      cancelLabel: t('common.cancel'),
+    });
+    if (!isConfirmed) return;
+    try {
+      await firebaseService.unmarkSettlement(groupId, settlementId);
+      toast.success(t('settle.unmark_toast'));
+    } catch (error) {
+      console.error('Unmark settlement error:', error);
+      toast.error(t('common.error'));
+    }
+  };
+
   const value = {
-    groupId, currentGroup, myGroups, members, expenses, currentMemberId, currentMember,
+    groupId, currentGroup, myGroups, members, expenses, completedSettlements,
+    currentMemberId, currentMember,
     isHost, isSettled,
     isLoading,
     handleCreateGroup, handleJoinGroup, handleLeaveGroup, handleDeleteGroup,
     handleSelectMember, handleCreateMember, handleCreateMemberByHost, handleDeleteMember, handleUpdateProfile,
     handleUpdateGroupName, handleAddExpense, handleUpdateExpense, handleDeleteExpense,
     handleSettleGroup, handleUnsettleGroup,
+    handleMarkSettlementPaid, handleUnmarkSettlement,
   };
 
   return (

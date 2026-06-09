@@ -94,7 +94,13 @@ export const firebaseService = {
     await batch.commit();
   },
 
-  async deleteGroup(userId: string, groupId: string, expenseIds: string[], memberIds: string[]) {
+  async deleteGroup(
+    userId: string,
+    groupId: string,
+    expenseIds: string[],
+    memberIds: string[],
+    settlementIds: string[] = [],
+  ) {
     const batch = writeBatch(db);
 
     // 1. Delete all expenses
@@ -107,10 +113,15 @@ export const firebaseService = {
       batch.delete(doc(db, 'groups', groupId, 'members', id));
     }
 
-    // 3. Delete group itself
+    // 3. Delete all settlement records
+    for (const id of settlementIds) {
+      batch.delete(doc(db, 'groups', groupId, 'settlements', id));
+    }
+
+    // 4. Delete group itself
     batch.delete(doc(db, 'groups', groupId));
 
-    // 4. Update user settings (remove from joined lists)
+    // 5. Update user settings (remove from joined lists)
     batch.set(doc(db, 'users', userId), {
       lastGroupId: null,
       joinedGroupIds: arrayRemove(groupId),
@@ -222,6 +233,20 @@ export const firebaseService = {
 
   async deleteExpense(groupId: string, expenseId: string) {
     await deleteDoc(doc(db, 'groups', groupId, 'expenses', expenseId));
+  },
+
+  async markSettlementPaid(
+    groupId: string,
+    payload: { from: string; to: string; amount: number; completedBy: string; completedByMemberId: string },
+  ) {
+    return await addDoc(collection(db, 'groups', groupId, 'settlements'), {
+      ...payload,
+      completedAt: serverTimestamp(),
+    });
+  },
+
+  async unmarkSettlement(groupId: string, settlementId: string) {
+    await deleteDoc(doc(db, 'groups', groupId, 'settlements', settlementId));
   },
 
   async updateUserLastGroup(userId: string, groupId: string | null) {
