@@ -25,52 +25,99 @@ export interface Settlement {
   amount: number;
 }
 
+const toCents = (n: number) => Math.round(parseFloat(n.toString()) * 100);
+
+/**
+ * Rounds cent balances to whole-dollar values that sum to zero, biasing the
+ * rounding adjustment so creditors are never short-changed: any leftover cents
+ * are absorbed by debtors (or, if the leftover goes the other way, given to
+ * creditors). Picks who absorbs by largest fractional remainder.
+ */
+function roundBalancesToWholeDollars(balancesCents: Record<string, number>): Record<string, number> {
+  const rounded: Record<string, number> = {};
+  Object.entries(balancesCents).forEach(([id, cents]) => {
+    // `+ 0` collapses -0 (from rounding tiny negatives) to +0.
+    rounded[id] = Math.round(cents / 100) + 0;
+  });
+
+  let diff = Object.values(rounded).reduce((a, b) => a + b, 0);
+  if (diff === 0) return rounded;
+
+  if (diff > 0) {
+    // Too much credit shown — push debtors with the largest fractional remainder more negative.
+    const debtors = Object.entries(balancesCents)
+      .filter(([, c]) => c < 0)
+      .map(([id, c]) => ({ id, fraction: Math.abs(c) % 100 }))
+      .sort((a, b) => b.fraction - a.fraction);
+    for (let i = 0; i < diff && i < debtors.length; i++) {
+      rounded[debtors[i].id] -= 1;
+    }
+  } else {
+    // Too much debt shown — push creditors with the largest fractional remainder more positive.
+    const creditors = Object.entries(balancesCents)
+      .filter(([, c]) => c > 0)
+      .map(([id, c]) => ({ id, fraction: c % 100 }))
+      .sort((a, b) => b.fraction - a.fraction);
+    for (let i = 0; i < -diff && i < creditors.length; i++) {
+      rounded[creditors[i].id] += 1;
+    }
+  }
+
+  return rounded;
+}
+
 export function calculateBalancesAndSettlements(members: Member[], expenses: Expense[]) {
-  // 1. Calculate raw balances (positive = gets money back, negative = owes money)
-  const balances: Record<string, number> = {};
-  members.forEach(m => balances[m.id] = 0);
+  // Accumulate balances in integer cents for accuracy.
+  const balancesCents: Record<string, number> = {};
+  members.forEach(m => balancesCents[m.id] = 0);
 
   expenses.forEach(exp => {
-    const amount = parseFloat(exp.amount.toString());
-    // Handle multiple payers if available, otherwise fallback to single payer
-    if (exp.payments && exp.payments.length > 0) {
-      exp.payments.forEach(p => {
-        if (balances[p.memberId] !== undefined) {
-          balances[p.memberId] += parseFloat(p.amount.toString());
+    const totalCents = toCents(exp.amount);
+    const hasMultiplePayers = !!(exp.payments && exp.payments.length > 0);
+
+    if (hasMultiplePayers) {
+      exp.payments!.forEach(p => {
+        if (balancesCents[p.memberId] !== undefined) {
+          balancesCents[p.memberId] += toCents(p.amount);
         }
       });
-    } else if (balances[exp.paidBy] !== undefined) {
-      // Payer gets the full amount added to their balance (Legacy)
-      balances[exp.paidBy] += amount;
+    } else if (balancesCents[exp.paidBy] !== undefined) {
+      balancesCents[exp.paidBy] += totalCents;
     }
 
-    // Splitters subtract their share
     if (exp.splits && exp.splits.length > 0) {
       exp.splits.forEach(s => {
-        if (balances[s.memberId] !== undefined) {
-          balances[s.memberId] -= parseFloat(s.amount.toString());
+        if (balancesCents[s.memberId] !== undefined) {
+          balancesCents[s.memberId] -= toCents(s.amount);
         }
       });
     } else if (exp.splitAmong && exp.splitAmong.length > 0) {
-      const splitAmt = amount / exp.splitAmong.length;
-      exp.splitAmong.forEach(mId => {
-        if (balances[mId] !== undefined) {
-          balances[mId] -= splitAmt;
+      // Legacy equal-split path: distribute remainder cents to the first N participants.
+      const participantCount = exp.splitAmong.length;
+      const baseCents = Math.floor(totalCents / participantCount);
+      const remainderCents = totalCents % participantCount;
+      exp.splitAmong.forEach((mId, index) => {
+        const shareCents = baseCents + (index < remainderCents ? 1 : 0);
+        if (balancesCents[mId] !== undefined) {
+          balancesCents[mId] -= shareCents;
         }
       });
     }
   });
 
-  // 2. Compute settlements (Greedy algorithm to settle debts)
+  // Round balances to whole dollars so they match the UI's display granularity
+  // and so settlements always sum to balances exactly.
+  const balances = roundBalancesToWholeDollars(balancesCents);
+
+  // Greedy debtor/creditor matching on the rounded balances.
   const debtors: { id: string, amount: number }[] = [];
   const creditors: { id: string, amount: number }[] = [];
 
   Object.entries(balances).forEach(([id, amt]) => {
-    if (amt < -0.01) debtors.push({ id, amount: Math.abs(amt) });
-    else if (amt > 0.01) creditors.push({ id, amount: amt });
+    if (amt < 0) debtors.push({ id, amount: Math.abs(amt) });
+    else if (amt > 0) creditors.push({ id, amount: amt });
   });
 
-  // Sort to optimize matching (largest debts first)
   debtors.sort((a, b) => b.amount - a.amount);
   creditors.sort((a, b) => b.amount - a.amount);
 
@@ -78,18 +125,15 @@ export function calculateBalancesAndSettlements(members: Member[], expenses: Exp
   let d = 0;
   let c = 0;
 
-  const debtors_copy = debtors.map(x => ({ ...x }));
-  const creditors_copy = creditors.map(x => ({ ...x }));
-
-  while (d < debtors_copy.length && c < creditors_copy.length) {
-    const debtor = debtors_copy[d];
-    const creditor = creditors_copy[c];
+  while (d < debtors.length && c < creditors.length) {
+    const debtor = debtors[d];
+    const creditor = creditors[c];
     const amount = Math.min(debtor.amount, creditor.amount);
-    settlements.push({ from: debtor.id, to: creditor.id, amount: amount });
+    settlements.push({ from: debtor.id, to: creditor.id, amount });
     debtor.amount -= amount;
     creditor.amount -= amount;
-    if (debtor.amount < 0.01) d++;
-    if (creditor.amount < 0.01) c++;
+    if (debtor.amount === 0) d++;
+    if (creditor.amount === 0) c++;
   }
 
   return { balances, settlements };

@@ -97,7 +97,7 @@ describe('Settlement Logic', () => {
     expect(settlements).toHaveLength(0);
   });
 
-  it('should handle floating point numbers safely', () => {
+  it('should round to whole-dollar balances and settlements when the split is uneven', () => {
     const members: Member[] = [
       { id: '1', name: 'Alice' },
       { id: '2', name: 'Bob' },
@@ -109,20 +109,57 @@ describe('Settlement Logic', () => {
         description: 'Shared bill',
         amount: 100,
         paidBy: '1',
-        splitAmong: ['1', '2', '3'], // 33.333... each
+        splitAmong: ['1', '2', '3'], // raw cents: Alice +66.66, Bob -33.33, Charlie -33.33
       },
     ];
 
     const { balances, settlements } = calculateBalancesAndSettlements(members, expenses);
 
-    // Alice: 100 - 33.333... = 66.666...
-    // Bob: -33.333...
-    // Charlie: -33.333...
-    expect(balances['1']).toBeCloseTo(66.67, 1);
-    expect(balances['2']).toBeCloseTo(-33.33, 1);
-    expect(balances['3']).toBeCloseTo(-33.33, 1);
+    // The display rounds creditors up and pushes the leftover dollar onto the
+    // debtor with the largest fractional remainder, so totals balance exactly.
+    expect(balances['1']).toBe(67);
+    expect(balances['2']).toBe(-34);
+    expect(balances['3']).toBe(-33);
 
-    expect(settlements.reduce((sum, s) => sum + s.amount, 0)).toBeCloseTo(66.67, 1);
+    settlements.forEach(s => {
+      expect(Number.isInteger(s.amount)).toBe(true);
+    });
+
+    // Settlements sum to Alice's balance and each debtor's balance exactly.
+    expect(settlements.reduce((sum, s) => sum + s.amount, 0)).toBe(67);
+    expect(settlements).toContainEqual({ from: '2', to: '1', amount: 34 });
+    expect(settlements).toContainEqual({ from: '3', to: '1', amount: 33 });
+  });
+
+  it('should not drift across many uneven-split expenses', () => {
+    // Regression: previously each $10 / 3 expense seeded 3.333... into balances,
+    // accumulating floating-point noise. Cents math + whole-dollar rounding
+    // produces stable, summable balances.
+    const members: Member[] = [
+      { id: '1', name: 'Alice' },
+      { id: '2', name: 'Bob' },
+      { id: '3', name: 'Charlie' },
+    ];
+    const expenses: Expense[] = Array.from({ length: 5 }, (_, i) => ({
+      id: `e${i}`,
+      description: 'Lunch',
+      amount: 10,
+      paidBy: '1',
+      splitAmong: ['1', '2', '3'],
+    }));
+
+    const { balances, settlements } = calculateBalancesAndSettlements(members, expenses);
+
+    // Raw cents: Alice +33.30, Bob -16.65, Charlie -16.65.
+    // Rounded: 33, -17, -17 (sum -1). Push creditor up: Alice +34.
+    expect(balances['1']).toBe(34);
+    expect(balances['2']).toBe(-17);
+    expect(balances['3']).toBe(-17);
+
+    settlements.forEach(s => {
+      expect(Number.isInteger(s.amount)).toBe(true);
+    });
+    expect(settlements.reduce((sum, s) => sum + s.amount, 0)).toBe(34);
   });
 
   it('should handle cases where the payer is not in the splitAmong list', () => {
@@ -265,7 +302,7 @@ describe('Settlement Logic', () => {
     expect(balances['3']).toBe(40);
   });
 
-  it('should handle multiple payers with floating point amounts', () => {
+  it('should round sub-dollar balances to zero', () => {
     const members: Member[] = [
       { id: '1', name: 'Alice' },
       { id: '2', name: 'Bob' },
@@ -280,15 +317,16 @@ describe('Settlement Logic', () => {
           { memberId: '1', amount: 16.66 },
           { memberId: '2', amount: 16.67 },
         ],
-        splitAmong: ['1', '2'], // 16.665 each
+        splitAmong: ['1', '2'], // 3333 cents / 2 = 1666 base + 1 remainder
       },
     ];
 
-    const { balances } = calculateBalancesAndSettlements(members, expenses);
+    const { balances, settlements } = calculateBalancesAndSettlements(members, expenses);
 
-    const share = 33.33 / 2; // 16.665
-    expect(balances['1']).toBeCloseTo(16.66 - share, 2);
-    expect(balances['2']).toBeCloseTo(16.67 - share, 2);
+    // Raw cents balance is ±$0.01, well below display granularity → both 0.
+    expect(balances['1']).toBe(0);
+    expect(balances['2']).toBe(0);
+    expect(settlements).toHaveLength(0);
   });
 
   it('should fallback to single payer if payments array is empty', () => {
@@ -426,5 +464,173 @@ describe('Settlement Logic', () => {
 
     expect(balances['1']).toBe(100);
     expect(balances['2']).toBe(-100);
+  });
+
+  it('should never short-change the creditor when rounding for display', () => {
+    const members: Member[] = [
+      { id: '1', name: 'Alice' },
+      { id: '2', name: 'Bob' },
+      { id: '3', name: 'Charlie' },
+    ];
+    const expenses: Expense[] = [
+      {
+        id: 'e1',
+        description: 'Bob pays for an uneven split',
+        amount: 10,
+        paidBy: '2',
+        splitAmong: ['1', '2', '3'],
+      },
+    ];
+
+    const { balances, settlements } = calculateBalancesAndSettlements(members, expenses);
+
+    // Raw cents: Alice -3.34, Bob +6.67, Charlie -3.33.
+    // Bob (the payer/creditor) keeps his $7 — Alice (largest debtor fraction) absorbs the rounding.
+    expect(balances['1']).toBe(-4);
+    expect(balances['2']).toBe(7);
+    expect(balances['3']).toBe(-3);
+
+    expect(settlements.reduce((sum, s) => sum + s.amount, 0)).toBe(7);
+    expect(settlements).toContainEqual({ from: '1', to: '2', amount: 4 });
+    expect(settlements).toContainEqual({ from: '3', to: '2', amount: 3 });
+  });
+
+  it('should fall back to first-N when the legacy single payer is not in splitAmong', () => {
+    const members: Member[] = [
+      { id: '1', name: 'Alice' },
+      { id: '2', name: 'Bob' },
+      { id: '3', name: 'Charlie' },
+    ];
+    const expenses: Expense[] = [
+      {
+        id: 'e1',
+        description: 'Alice treats',
+        amount: 10,
+        paidBy: '1',
+        splitAmong: ['2', '3'], // payer not a participant
+      },
+    ];
+
+    const { balances } = calculateBalancesAndSettlements(members, expenses);
+
+    // 1000 / 2 = 500 base + 0 remainder. Clean split.
+    expect(balances['1']).toBe(10);
+    expect(balances['2']).toBe(-5);
+    expect(balances['3']).toBe(-5);
+  });
+
+  it('should handle a complex multi-member, mixed-expense scenario', () => {
+    // 5 members, 7 expenses mixing single-payer, multi-payer, custom splits,
+    // treats, and uneven amounts. Exercises rounding adjustment and produces
+    // two creditors + three debtors.
+    const members: Member[] = [
+      { id: '1', name: 'Alice' },
+      { id: '2', name: 'Bob' },
+      { id: '3', name: 'Charlie' },
+      { id: '4', name: 'Dave' },
+      { id: '5', name: 'Eve' },
+    ];
+    const expenses: Expense[] = [
+      // Alice pays $123.45 for dinner, split evenly 5 ways ($24.69 each, clean).
+      { id: 'e1', description: 'Dinner', amount: 123.45, paidBy: '1', splitAmong: ['1', '2', '3', '4', '5'] },
+      // Bob pays $50.50 for cab, split A/B/C (5050 / 3 = 1683 base + 1 remainder).
+      { id: 'e2', description: 'Cab', amount: 50.50, paidBy: '2', splitAmong: ['1', '2', '3'] },
+      // Alice + Charlie split paying $80 brunch, even 4-way.
+      {
+        id: 'e3', description: 'Brunch', amount: 80, paidBy: '1',
+        payments: [{ memberId: '1', amount: 40 }, { memberId: '3', amount: 40 }],
+        splitAmong: ['1', '2', '3', '4'],
+      },
+      // Dave pays $33 coffee, custom split.
+      {
+        id: 'e4', description: 'Coffee', amount: 33, paidBy: '4',
+        splitAmong: ['1', '2', '3'],
+        splits: [
+          { memberId: '1', amount: 10 },
+          { memberId: '2', amount: 15 },
+          { memberId: '3', amount: 8 },
+        ],
+      },
+      // Alice treats B/C/D/E to a $99.99 concert (9999 / 4 = 2499 base + 3 remainder).
+      { id: 'e5', description: 'Concert', amount: 99.99, paidBy: '1', splitAmong: ['2', '3', '4', '5'] },
+      // Eve pays $42.42 gas, split evenly 5 ways (4242 / 5 = 848 base + 2 remainder).
+      { id: 'e6', description: 'Gas', amount: 42.42, paidBy: '5', splitAmong: ['1', '2', '3', '4', '5'] },
+      // B/C/D each chip in $3000 + Eve $6000 = $150 hotel, split evenly 5 ways.
+      {
+        id: 'e7', description: 'Hotel', amount: 150, paidBy: '2',
+        payments: [
+          { memberId: '2', amount: 30 },
+          { memberId: '3', amount: 30 },
+          { memberId: '4', amount: 30 },
+          { memberId: '5', amount: 60 },
+        ],
+        splitAmong: ['1', '2', '3', '4', '5'],
+      },
+    ];
+
+    const { balances, settlements } = calculateBalancesAndSettlements(members, expenses);
+
+    // Raw cents totals before rounding:
+    //   A +153.42, B -59.51, C -63.00, D -45.17, E +14.26
+    // Math.round: 153, -60, -63, -45, 14 → sum -1
+    // Push creditor with largest fractional remainder (A: 42 > E: 26) up.
+    expect(balances['1']).toBe(154);
+    expect(balances['2']).toBe(-60);
+    expect(balances['3']).toBe(-63);
+    expect(balances['4']).toBe(-45);
+    expect(balances['5']).toBe(14);
+
+    // Sanity invariants.
+    Object.values(balances).forEach(b => expect(Number.isInteger(b)).toBe(true));
+    expect(Object.values(balances).reduce((a, b) => a + b, 0)).toBe(0);
+
+    settlements.forEach(s => expect(Number.isInteger(s.amount)).toBe(true));
+    members.forEach(m => {
+      const incoming = settlements.filter(s => s.to === m.id).reduce((a, s) => a + s.amount, 0);
+      const outgoing = settlements.filter(s => s.from === m.id).reduce((a, s) => a + s.amount, 0);
+      expect(incoming - outgoing).toBe(balances[m.id]);
+    });
+
+    // Greedy: C (63) → A, B (60) → A, D (45) splits between A (31) and E (14).
+    expect(settlements).toContainEqual({ from: '3', to: '1', amount: 63 });
+    expect(settlements).toContainEqual({ from: '2', to: '1', amount: 60 });
+    expect(settlements).toContainEqual({ from: '4', to: '1', amount: 31 });
+    expect(settlements).toContainEqual({ from: '4', to: '5', amount: 14 });
+    expect(settlements).toHaveLength(4);
+  });
+
+  it('should produce whole-dollar balances and settlements that sum exactly', () => {
+    // Regression: previously settlements could be 33.33333... due to float math.
+    const members: Member[] = [
+      { id: '1', name: 'Alice' },
+      { id: '2', name: 'Bob' },
+      { id: '3', name: 'Charlie' },
+      { id: '4', name: 'Dave' },
+    ];
+    const expenses: Expense[] = [
+      { id: 'e1', description: '', amount: 100, paidBy: '1', splitAmong: ['1', '2', '3'] },
+      { id: 'e2', description: '', amount: 55.55, paidBy: '2', splitAmong: ['1', '2', '4'] },
+      { id: 'e3', description: '', amount: 7.77, paidBy: '3', splitAmong: ['2', '3', '4'] },
+    ];
+
+    const { balances, settlements } = calculateBalancesAndSettlements(members, expenses);
+
+    Object.values(balances).forEach(b => {
+      expect(Number.isInteger(b)).toBe(true);
+    });
+    settlements.forEach(s => {
+      expect(Number.isInteger(s.amount)).toBe(true);
+    });
+
+    // Balances sum to zero exactly.
+    const balanceSum = Object.values(balances).reduce((a, b) => a + b, 0);
+    expect(balanceSum).toBe(0);
+
+    // For each member, their outgoing minus incoming settlements equals their (negated) balance.
+    members.forEach(m => {
+      const incoming = settlements.filter(s => s.to === m.id).reduce((a, s) => a + s.amount, 0);
+      const outgoing = settlements.filter(s => s.from === m.id).reduce((a, s) => a + s.amount, 0);
+      expect(incoming - outgoing).toBe(balances[m.id]);
+    });
   });
 });

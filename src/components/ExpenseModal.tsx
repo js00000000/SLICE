@@ -76,7 +76,7 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
       ? splits.filter(s => s.amount > 0).map(s => s.memberId)
       : splitAmong;
 
-    const finalSplits = isCustomSplit 
+    const finalSplits = isCustomSplit
       ? splits.filter(s => s.amount > 0)
       : calculateEvenSplit(parseFloat(amount) || 0, splitAmong);
 
