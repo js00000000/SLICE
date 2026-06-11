@@ -194,5 +194,9 @@
     "bmc_desc": "支援信用卡與全球多種主流支付方式",
     "contact": "📬 fusion.labs.tw@gmail.com",
     "disclaimer": "本站為個人非營利專案，贊助為自願性質，不提供對價服務。"
+  },
+  "pwa": {
+    "update_available": "有新版本可用",
+    "update_now": "立即更新"
   }
 }
