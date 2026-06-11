@@ -58,7 +58,7 @@ export function SponsorModal({ onClose }: SponsorModalProps) {
                 {t('sponsor.ecpay_desc')}
               </p>
               <a
-                href="https://p.ecpay.com.tw/C25FB73"
+                href="https://p.ecpay.com.tw/5F247ED"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full flex items-center justify-center gap-2 py-3 bg-accent-orange text-white rounded-xl font-nunito font-black text-sm border-2 border-main-text shadow-[2px_2px_0px_#1A1A2E] hover:bg-[#ff7b4b] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] transition-all duration-150 no-underline cursor-pointer"
