@@ -9,6 +9,9 @@ import App from './App.tsx'
 import { AuthProvider } from './contexts/AuthContext'
 import { GroupProvider } from './contexts/GroupContext'
 import { DialogProvider } from './contexts/DialogContext'
+import { installGlobalHaptic } from './utils/haptic'
+
+installGlobalHaptic()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
