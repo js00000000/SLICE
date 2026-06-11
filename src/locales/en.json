@@ -178,6 +178,51 @@
     "unmark_toast": "Payment record removed",
     "unmark_not_allowed": "Only the host or person who recorded this can undo it."
   },
+  "webview": {
+    "title": "Please Open in a Browser",
+    "description": "This app requires features (like Google Sign-In) that don't work inside in-app browsers. Please open it in Safari or Chrome for the full experience.",
+    "how_to_open": "How to open in your browser",
+    "or_copy_url": "Or copy the URL and paste it",
+    "copied": "Copied!",
+    "steps": {
+      "line_ios": [
+        "Tap the \"...\" button at the top-right corner",
+        "Select \"Open in browser\""
+      ],
+      "line_android": [
+        "Tap the \"...\" button at the top-right corner",
+        "Select \"Open with browser\""
+      ],
+      "facebook_ios": [
+        "Tap the \"...\" button at the bottom-right",
+        "Select \"Open in Safari\""
+      ],
+      "facebook_android": [
+        "Tap the \"...\" button at the top-right",
+        "Select \"Open in external browser\""
+      ],
+      "instagram_ios": [
+        "Tap the \"...\" button at the top-right",
+        "Select \"Open in Safari\""
+      ],
+      "instagram_android": [
+        "Tap the \"...\" button at the top-right",
+        "Select \"Open in external browser\""
+      ],
+      "other_ios": [
+        "Look for a share or \"...\" icon in the toolbar",
+        "Select \"Open in Safari\" or \"Open in browser\""
+      ],
+      "other_android": [
+        "Look for a share or \"...\" icon in the toolbar",
+        "Select \"Open in Chrome\" or \"Open in browser\""
+      ],
+      "other_other": [
+        "Copy the URL above",
+        "Paste it into Safari or Chrome"
+      ]
+    }
+  },
   "sponsor": {
     "title": "Support SLICE's Continued Operation",
     "desc_1": "SLICE is a free group split-billing and expense tracking platform maintained by an independent developer, free of charge and completely ad-free.",

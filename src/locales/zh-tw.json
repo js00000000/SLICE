@@ -178,6 +178,51 @@
     "unmark_toast": "已撤銷此筆付款紀錄",
     "unmark_not_allowed": "只有主持人或建立此紀錄的人可以撤銷。"
   },
+  "webview": {
+    "title": "請用瀏覽器開啟",
+    "description": "此應用程式需要 Google 登入等功能，這些功能在 App 內建瀏覽器中無法正常運作。請使用 Safari 或 Chrome 開啟，以獲得完整體驗。",
+    "how_to_open": "如何用瀏覽器開啟",
+    "or_copy_url": "或是複製連結後貼到瀏覽器",
+    "copied": "已複製！",
+    "steps": {
+      "line_ios": [
+        "點選右上角「⋯」按鈕",
+        "選擇「以瀏覽器開啟」"
+      ],
+      "line_android": [
+        "點選右上角「⋯」按鈕",
+        "選擇「以瀏覽器開啟」"
+      ],
+      "facebook_ios": [
+        "點選右下角「⋯」按鈕",
+        "選擇「在 Safari 中開啟」"
+      ],
+      "facebook_android": [
+        "點選右上角「⋯」按鈕",
+        "選擇「在外部瀏覽器中開啟」"
+      ],
+      "instagram_ios": [
+        "點選右上角「⋯」按鈕",
+        "選擇「在 Safari 中開啟」"
+      ],
+      "instagram_android": [
+        "點選右上角「⋯」按鈕",
+        "選擇「在外部瀏覽器中開啟」"
+      ],
+      "other_ios": [
+        "找到工具列中的分享或「⋯」圖示",
+        "選擇「以 Safari 開啟」或「以瀏覽器開啟」"
+      ],
+      "other_android": [
+        "找到工具列中的分享或「⋯」圖示",
+        "選擇「以 Chrome 開啟」或「以瀏覽器開啟」"
+      ],
+      "other_other": [
+        "複製上方的網址",
+        "貼到 Safari 或 Chrome 中開啟"
+      ]
+    }
+  },
   "sponsor": {
     "title": "支持 SLICE 繼續營運",
     "desc_1": "SLICE 是免費朋友群組分帳與快速記帳平台，由一位獨立開發者維護，不收費、無廣告。",
