@@ -178,6 +178,10 @@
     "unmark_toast": "已撤銷此筆付款紀錄",
     "unmark_not_allowed": "只有主持人或建立此紀錄的人可以撤銷。"
   },
+  "webview": {
+    "title": "建議用瀏覽器開啟",
+    "message": "在 App 內建瀏覽器中，Google 登入等功能無法正常使用。\n\n• LINE：點「⋯」→「以瀏覽器開啟」\n• Facebook / Instagram：點「⋯」→「以 Safari 開啟」\n• 其他 App：找分享或「⋯」圖示"
+  },
   "sponsor": {
     "title": "支持 SLICE 繼續營運",
     "desc_1": "SLICE 是免費朋友群組分帳與快速記帳平台，由一位獨立開發者維護，不收費、無廣告。",

@@ -23,6 +23,8 @@ import { LandingPage } from './pages/LandingPage';
 // Import Hooks
 import { useAuth } from './contexts/AuthContext';
 import { useGroup } from './contexts/GroupContext';
+import { useDialog } from './contexts/DialogContext';
+import { isWebview } from './utils/webview';
 
 const isValidRoute = (pathname: string): boolean => {
   if (pathname === '/' || pathname === '') return true;
@@ -34,17 +36,28 @@ const isValidRoute = (pathname: string): boolean => {
   return false;
 };
 
+const WEBVIEW_WARNED_KEY = 'slice_webview_warned';
+
 export default function App() {
   const { t, i18n } = useTranslation();
   const location = useLocation();
-  const { 
-    user, authLoading, googleLoading, guestLoading, isSoftLoggedOut, 
+  const { alert } = useDialog();
+  const {
+    user, authLoading, googleLoading, guestLoading, isSoftLoggedOut,
     handleGoogleLogin, handleGuestLogin, handleQuickStart
   } = useAuth();
   const { currentMemberId, currentMember, isLoading } = useGroup();
 
   const [invalidUrlGroup, setInvalidUrlGroup] = useState<string | null>(null);
   const [checkingUrlGroup, setCheckingUrlGroup] = useState(false);
+
+  useEffect(() => {
+    if (!isWebview()) return;
+    if (sessionStorage.getItem(WEBVIEW_WARNED_KEY)) return;
+    sessionStorage.setItem(WEBVIEW_WARNED_KEY, '1');
+    alert(t('webview.message'), { title: t('webview.title'), confirmLabel: t('common.confirm') });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Check if a group exists before letting unauthenticated users stay on protected URLs
   useEffect(() => {

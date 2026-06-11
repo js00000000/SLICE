@@ -178,6 +178,10 @@
     "unmark_toast": "Payment record removed",
     "unmark_not_allowed": "Only the host or person who recorded this can undo it."
   },
+  "webview": {
+    "title": "Open in Browser for Best Experience",
+    "message": "Features like Google Sign-In don't work in in-app browsers.\n\n• LINE: tap ··· → \"Open in browser\"\n• Facebook / Instagram: tap ··· → \"Open in Safari\"\n• Other apps: look for a share or ··· icon"
+  },
   "sponsor": {
     "title": "Support SLICE's Continued Operation",
     "desc_1": "SLICE is a free group split-billing and expense tracking platform maintained by an independent developer, free of charge and completely ad-free.",
