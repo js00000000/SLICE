@@ -127,6 +127,11 @@ export default function App() {
           <Helmet>
             <html lang={i18n.resolvedLanguage || i18n.language || 'en'} />
             <title>{t('common.seo_title')}</title>
+            <meta property="og:title" content={t('common.seo_title')} />
+            <meta property="og:description" content={t('common.seo_description')} />
+            <meta property="og:locale" content={i18n.resolvedLanguage?.startsWith('zh') ? 'zh_TW' : 'en_US'} />
+            <meta property="twitter:title" content={t('common.seo_title')} />
+            <meta property="twitter:description" content={t('common.seo_description')} />
           </Helmet>
           <LandingPage
             onGoogleLogin={handleGoogleLogin}
@@ -164,6 +169,7 @@ export default function App() {
         <meta name="description" content={t('common.seo_description')} />
         <meta property="og:title" content={t('common.seo_title') || APP_NAME} />
         <meta property="og:description" content={t('common.seo_description')} />
+        <meta property="og:locale" content={i18n.resolvedLanguage?.startsWith('zh') ? 'zh_TW' : 'en_US'} />
         <meta property="twitter:title" content={t('common.seo_title') || APP_NAME} />
         <meta property="twitter:description" content={t('common.seo_description')} />
       </Helmet>
