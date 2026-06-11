@@ -188,8 +188,11 @@ export function DashboardPage() {
             </div>
             <div className="space-y-3">
               {members.filter(member => (memberPaidTotals[member.id] || 0) > 0).length === 0 ? (
-                <div className="p-4 text-center">
-                  <p className="text-sm text-gray-400 font-medium">{t('expenses.no_expenses_recorded')}</p>
+                <div className="py-6 text-center">
+                  <div className="w-14 h-14 bg-brand-light border-2 border-main-text rounded-2xl flex items-center justify-center mx-auto mb-3 rotate-[-6deg] shadow-[2px_2px_0px_#1A1A2E]">
+                    <DollarSign className="w-7 h-7 text-accent-orange stroke-[2.5]" />
+                  </div>
+                  <p className="text-sm font-bold font-nunito text-main-text/80">{t('expenses.no_expenses_recorded')}</p>
                 </div>
               ) : (
                 members
@@ -238,8 +241,12 @@ export function DashboardPage() {
             </div>
             
             {expenses.length === 0 ? (
-              <div className="p-4 text-center">
-                <p className="text-sm text-gray-400 font-medium">{t('expenses.no_expenses_recorded')}</p>
+              <div className="py-6 text-center">
+                <div className="w-14 h-14 bg-brand-light border-2 border-main-text rounded-2xl flex items-center justify-center mx-auto mb-3 rotate-[-6deg] shadow-[2px_2px_0px_#1A1A2E]">
+                  <Receipt className="w-7 h-7 text-accent-orange stroke-[2.5]" />
+                </div>
+                <p className="text-sm font-bold font-nunito text-main-text/80">{t('expenses.no_expenses_recorded')}</p>
+                <p className="text-xs text-main-text/50 font-medium mt-1">{t('expenses.no_expenses_hint_dashboard')}</p>
               </div>
             ) : (
               <div className="space-y-3">

@@ -88,10 +88,10 @@ export function BalancesView({
           <p className="text-xs font-black font-nunito uppercase tracking-wider text-main-text/60 mb-4">{t('balances.settlements')}</p>
           {settlements.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 py-6 text-center">
-              <div className="w-12 h-12 bg-success-light border-2 border-success-green/20 rounded-full flex items-center justify-center text-success-green">
-                <CheckCircle2 className="w-6 h-6 stroke-[2.5]" />
+              <div className="w-14 h-14 bg-success-light border-2 border-main-text rounded-2xl flex items-center justify-center rotate-[-6deg] shadow-[2px_2px_0px_#1A1A2E]">
+                <CheckCircle2 className="w-7 h-7 text-success-green stroke-[2.5]" />
               </div>
-              <span className="text-sm font-bold text-main-text/80">{t('balances.no_expenses')}</span>
+              <span className="text-sm font-bold font-nunito text-main-text/80 max-w-xs">{t('balances.no_expenses')}</span>
             </div>
           ) : (
             <div className="space-y-3 max-h-80 overflow-y-auto pr-1">

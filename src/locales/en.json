@@ -118,6 +118,7 @@
     "no_matching_hint": "Try clearing the filter",
     "no_expenses_recorded": "No expenses recorded",
     "no_expenses_hint": "Click the button below to add your first expense",
+    "no_expenses_hint_dashboard": "Tap 'Add Expense' to record your first one",
     "your_share": "Your Share",
     "my_share": "My Share",
     "paid_action": "paid",
