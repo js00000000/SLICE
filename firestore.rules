@@ -21,7 +21,7 @@ service cloud.firestore {
     match /groups/{groupId} {
       // Allow anyone with the link (groupId) to read for joining
       // In a production app, you might want to restrict this to members only
-      allow read: if isAuthenticated();
+      allow read: if true;
       
       // Creating a group
       allow create: if isAuthenticated() 

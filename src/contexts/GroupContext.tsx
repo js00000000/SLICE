@@ -123,10 +123,16 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       if (docSnap.exists()) {
         setCurrentGroup({ id: docSnap.id, ...docSnap.data() } as Group);
       } else {
+        if (window.location.pathname.startsWith(`/group/${groupId}`)) {
+          toast.error(t('common.error_group_not_found'));
+        }
         navigate('/', { replace: true });
       }
     }, (error) => {
       console.error("Group fetch error:", error);
+      if (window.location.pathname.startsWith(`/group/${groupId}`)) {
+        toast.error(t('common.error_group_not_found'));
+      }
       navigate('/', { replace: true });
     });
 
@@ -189,6 +195,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       const msg = (error as Error).message === 'group_not_found' ? t('common.error_group_not_found') : t('common.error');
       toast.error(msg);
       setIsLoading(false); 
+      throw error;
     }
   };
 

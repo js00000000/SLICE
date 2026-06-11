@@ -1,7 +1,10 @@
-import { useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from './lib/firebase';
 import { LoadingView } from './components/LoadingView';
 import { LoginView } from './components/LoginView';
 import { AuthGuard } from './components/ProtectedRoute';
@@ -21,13 +24,73 @@ import { LandingPage } from './pages/LandingPage';
 import { useAuth } from './contexts/AuthContext';
 import { useGroup } from './contexts/GroupContext';
 
+const isValidRoute = (pathname: string): boolean => {
+  if (pathname === '/' || pathname === '') return true;
+  if (/^\/join\/[^/]+\/?$/.test(pathname)) return true;
+  if (/^\/group\/[^/]+\/?$/.test(pathname)) return true;
+  if (/^\/group\/[^/]+\/expenses\/?$/.test(pathname)) return true;
+  if (/^\/group\/[^/]+\/settlements\/?$/.test(pathname)) return true;
+  if (/^\/group\/[^/]+\/members\/?$/.test(pathname)) return true;
+  return false;
+};
+
 export default function App() {
   const { t, i18n } = useTranslation();
+  const location = useLocation();
   const { 
     user, authLoading, googleLoading, guestLoading, isSoftLoggedOut, 
     handleGoogleLogin, handleGuestLogin, handleQuickStart
   } = useAuth();
   const { currentMemberId, currentMember, isLoading } = useGroup();
+
+  const [invalidUrlGroup, setInvalidUrlGroup] = useState<string | null>(null);
+  const [checkingUrlGroup, setCheckingUrlGroup] = useState(false);
+
+  // Check if a group exists before letting unauthenticated users stay on protected URLs
+  useEffect(() => {
+    if (user && !isSoftLoggedOut) {
+      setInvalidUrlGroup(null);
+      return;
+    }
+
+    const match = location.pathname.match(/^\/(join|group)\/([^/]+)/);
+    const urlGroupId = match ? match[2] : null;
+
+    if (!urlGroupId) {
+      setInvalidUrlGroup(null);
+      return;
+    }
+
+    let isMounted = true;
+    setCheckingUrlGroup(true);
+
+    const checkGroup = async () => {
+      try {
+        const groupRef = doc(db, 'groups', urlGroupId);
+        const docSnap = await getDoc(groupRef);
+        if (isMounted) {
+          if (!docSnap.exists()) {
+            setInvalidUrlGroup(urlGroupId);
+            toast.error(t('common.error_group_not_found'));
+          } else {
+            setInvalidUrlGroup(null);
+          }
+          setCheckingUrlGroup(false);
+        }
+      } catch (err) {
+        console.error("Error checking group existence:", err);
+        if (isMounted) {
+          setCheckingUrlGroup(false);
+        }
+      }
+    };
+
+    checkGroup();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [location.pathname, user, isSoftLoggedOut, t]);
 
   // Manual title fallback for login and loading states
   useEffect(() => {
@@ -38,7 +101,7 @@ export default function App() {
     }
   }, [user, isSoftLoggedOut, authLoading, t]);
 
-  if (authLoading) return (
+  if (authLoading || checkingUrlGroup) return (
     <div className="mobile-container">
       <Helmet>
         <title>{APP_NAME}</title>
@@ -48,7 +111,15 @@ export default function App() {
   );
   
   if (!user || isSoftLoggedOut) {
-    const isRootPath = window.location.pathname === '/';
+    if (invalidUrlGroup) {
+      return <Navigate to="/" replace />;
+    }
+
+    if (!isValidRoute(location.pathname)) {
+      return <Navigate to="/" replace />;
+    }
+
+    const isRootPath = location.pathname === '/';
     
     if (isRootPath) {
       return (
