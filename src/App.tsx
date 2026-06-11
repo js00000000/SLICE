@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
@@ -8,8 +8,6 @@ import { db } from './lib/firebase';
 import { LoadingView } from './components/LoadingView';
 import { LoginView } from './components/LoginView';
 import { AuthGuard } from './components/ProtectedRoute';
-import { WebviewWarning } from './components/WebviewWarning';
-import { detectWebview } from './utils/webview';
 import { APP_NAME } from './constants';
 
 // Import Pages
@@ -39,7 +37,6 @@ const isValidRoute = (pathname: string): boolean => {
 export default function App() {
   const { t, i18n } = useTranslation();
   const location = useLocation();
-  const webviewInfo = useMemo(() => detectWebview(), []);
   const { 
     user, authLoading, googleLoading, guestLoading, isSoftLoggedOut, 
     handleGoogleLogin, handleGuestLogin, handleQuickStart
@@ -103,10 +100,6 @@ export default function App() {
       document.title = t('common.seo_title') || APP_NAME;
     }
   }, [user, isSoftLoggedOut, authLoading, t]);
-
-  if (webviewInfo.isWebview) {
-    return <WebviewWarning brand={webviewInfo.brand} os={webviewInfo.os} />;
-  }
 
   if (authLoading || checkingUrlGroup) return (
     <div className="mobile-container">
