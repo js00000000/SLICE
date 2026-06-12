@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -32,7 +32,7 @@ interface GroupContextType {
   isSettled: boolean;
   isLoading: boolean;
   handleCreateGroup: (name: string) => Promise<void>;
-  handleJoinGroup: (id: string) => Promise<void>;
+  handleJoinGroup: (joinId: string) => Promise<void>;
   handleLeaveGroup: () => Promise<void>;
   handleDeleteGroup: () => Promise<void>;
   handleSelectMember: (memberId: string) => Promise<void>;
@@ -66,6 +66,8 @@ export function GroupProvider({ children }: { children: ReactNode }) {
   const [completedSettlements, setCompletedSettlements] = useState<SettlementRecord[]>([]);
   const [currentMemberId, setCurrentMemberId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [joinedGroupIds, setJoinedGroupIds] = useState<string[]>([]);
+  const [userSettingsLoaded, setUserSettingsLoaded] = useState(false);
 
   // Sync state with URL
   useEffect(() => {
@@ -79,18 +81,26 @@ export function GroupProvider({ children }: { children: ReactNode }) {
 
   // User Settings Hook
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setJoinedGroupIds([]);
+      setUserSettingsLoaded(false);
+      setMyGroups([]);
+      return;
+    }
 
+    setUserSettingsLoaded(false);
     const settingsRef = doc(db, 'users', user.uid);
     const unsubSettings = onSnapshot(settingsRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data() as UserSettings;
-        if (data.joinedGroupIds && data.joinedGroupIds.length > 0) {
+        const ids = data.joinedGroupIds || [];
+        setJoinedGroupIds(ids);
+        if (ids.length > 0) {
           const groupsQuery = query(
             collection(db, 'groups'),
-            where(documentId(), 'in', data.joinedGroupIds.slice(0, 30))
+            where(documentId(), 'in', ids.slice(0, 30))
           );
-          
+
           getDocs(groupsQuery).then(snapshot => {
             const groupsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Group));
             setMyGroups(groupsData);
@@ -99,12 +109,21 @@ export function GroupProvider({ children }: { children: ReactNode }) {
           setMyGroups([]);
         }
       } else {
+        setJoinedGroupIds([]);
         setMyGroups([]);
       }
+      setUserSettingsLoaded(true);
     });
 
     return () => unsubSettings();
   }, [user]);
+
+  // Keep latest joinedGroupIds accessible without re-subscribing the group
+  // data effect every time the array reference changes (which would tear down
+  // and re-create listeners on unrelated settings updates, and would also
+  // race with leave/delete flows that mutate joinedGroupIds before navigating).
+  const joinedGroupIdsRef = useRef<string[]>(joinedGroupIds);
+  joinedGroupIdsRef.current = joinedGroupIds;
 
   // Group Data Hook
   useEffect(() => {
@@ -115,6 +134,22 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       setCompletedSettlements([]);
       setCurrentGroup(null);
       setCurrentMemberId(null);
+      return;
+    }
+
+    // Wait for user settings to load before deciding membership. Without this
+    // gate we'd race the snapshot listener and could redirect the host away
+    // from a group they just created.
+    if (!userSettingsLoaded) {
+      setIsLoading(true);
+      return;
+    }
+
+    // Block non-members: only users whose joinedGroupIds includes this group
+    // may access /group/:groupId. Joining must go through /join/:joinId.
+    if (!joinedGroupIdsRef.current.includes(groupId)) {
+      toast.error(t('common.error_group_not_found'));
+      navigate('/', { replace: true });
       return;
     }
 
@@ -168,7 +203,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       unsubExpenses();
       unsubSettlements();
     };
-  }, [user, groupId, navigate]);
+  }, [user, groupId, userSettingsLoaded, navigate, t]);
 
   const handleCreateGroup = async (name: string) => {
     if (!user || !name.trim()) return;
@@ -184,17 +219,21 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const handleJoinGroup = async (id: string) => {
-    if (!user || !id.trim()) return;
+  const handleJoinGroup = async (joinId: string) => {
+    if (!user || !joinId.trim()) return;
     setIsLoading(true);
     try {
-      await firebaseService.joinGroup(user.uid, id);
-      navigate(`/group/${id.trim()}`);
-    } catch (error) { 
-      console.error("Join group error:", error); 
+      const resolvedGroupId = await firebaseService.resolveJoinId(joinId);
+      if (!resolvedGroupId) {
+        throw new Error('group_not_found');
+      }
+      await firebaseService.joinGroup(user.uid, resolvedGroupId);
+      navigate(`/group/${resolvedGroupId}`);
+    } catch (error) {
+      console.error("Join group error:", error);
       const msg = (error as Error).message === 'group_not_found' ? t('common.error_group_not_found') : t('common.error');
       toast.error(msg);
-      setIsLoading(false); 
+      setIsLoading(false);
       throw error;
     }
   };
@@ -222,12 +261,14 @@ export function GroupProvider({ children }: { children: ReactNode }) {
 
     if (isConfirmed) {
       setIsLoading(true);
+      // Navigate first so the group data effect's cleanup runs before the
+      // membership-related state mutates underneath us.
+      navigate('/', { replace: true });
       try {
         await firebaseService.leaveGroup(user.uid, groupId, currentMemberId);
         toast.success(t('groups.leave_group_success'));
-        navigate('/', { replace: true });
-      } catch (error) { 
-        console.error("Leave group error:", error); 
+      } catch (error) {
+        console.error("Leave group error:", error);
         toast.error(t('common.error'));
       } finally {
         setIsLoading(false);
@@ -323,6 +364,16 @@ export function GroupProvider({ children }: { children: ReactNode }) {
 
   const currentMember = members.find(m => m.id === currentMemberId);
   const isHost = !!currentMember?.isHost;
+
+  // Backfill the joinId field for groups created before it existed. Only the
+  // host has write access to the group doc per Firestore rules.
+  useEffect(() => {
+    if (!currentGroup || !isHost) return;
+    if (currentGroup.joinId) return;
+    firebaseService.ensureJoinId(currentGroup.id).catch(err => {
+      console.error("Backfill joinId error:", err);
+    });
+  }, [currentGroup, isHost]);
   const isSettled = !!currentGroup?.settledAt;
 
   const handleAddExpense = async (expenseData: ExpenseInput) => {

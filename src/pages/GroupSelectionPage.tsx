@@ -17,7 +17,7 @@ export function GroupSelectionPage() {
   const { myGroups, handleCreateGroup, handleJoinGroup } = useGroup();
 
   const [groupName, setGroupName] = useState('');
-  const [groupIdToJoin, setGroupIdToJoin] = useState('');
+  const [joinCode, setJoinCode] = useState('');
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   // Manual title fallback
@@ -127,20 +127,20 @@ export function GroupSelectionPage() {
             <div className="flex flex-col gap-3">
               <input
                 type="text"
-                value={groupIdToJoin}
-                onChange={(e) => setGroupIdToJoin(e.target.value)}
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value)}
                 placeholder={t('groups.enter_id')}
                 className="w-full px-4 py-3 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none text-base font-bold bg-white font-mono"
               />
               <button
                 onClick={async () => {
                   try {
-                    await handleJoinGroup(groupIdToJoin);
+                    await handleJoinGroup(joinCode);
                   } catch (err) {
                     // Handled and toasted inside GroupContext
                   }
                 }}
-                disabled={!groupIdToJoin.trim()}
+                disabled={!joinCode.trim()}
                 className="w-full py-3 bg-brand-light text-accent-orange rounded-xl font-nunito font-black text-md border-2 border-main-text shadow-[3px_3px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] disabled:opacity-50 disabled:transform-none disabled:shadow-none cursor-pointer"
               >
                 {t('groups.join')}

@@ -115,7 +115,7 @@ export function DashboardPage() {
           
           <button
             onClick={() => {
-              const url = `${window.location.origin}/join/${groupId}`;
+              const url = `${window.location.origin}/join/${currentGroup?.joinId || groupId}`;
               navigator.clipboard.writeText(url);
               toast.success(t('groups.link_copied'));
             }}

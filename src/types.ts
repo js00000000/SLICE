@@ -14,6 +14,10 @@ export interface Group {
   name: string;
   createdBy: string;
   createdAt: Timestamp;
+  // Public token used in invite URLs (/join/:joinId). Decoupled from the
+  // internal Firestore id so the id itself can't be guessed to join the group.
+  // Optional for legacy groups created before this field existed.
+  joinId?: string;
   settledAt?: Timestamp | null;
   settledBy?: string | null;
 }

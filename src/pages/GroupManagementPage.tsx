@@ -146,10 +146,10 @@ export function GroupManagementPage() {
             <div className="flex items-center justify-between border-t border-dashed border-gray-100 pt-3">
               <span className="text-xs font-black uppercase font-nunito tracking-wider text-main-text/50">{t('groups.group_id')}</span>
               <div className="flex items-center gap-2">
-                <code className="text-xs bg-brand-light border border-main-text/10 px-2.5 py-1 rounded-lg font-mono font-bold text-accent-orange">{currentGroup?.id}</code>
+                <code className="text-xs bg-brand-light border border-main-text/10 px-2.5 py-1 rounded-lg font-mono font-bold text-accent-orange">{currentGroup?.joinId || currentGroup?.id}</code>
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText(currentGroup?.id || '');
+                    navigator.clipboard.writeText(currentGroup?.joinId || currentGroup?.id || '');
                     toast.success(t('groups.id_copied'));
                   }}
                   className="p-1.5 text-main-text hover:text-accent-orange bg-white border-2 border-transparent hover:border-main-text rounded-lg transition-colors cursor-pointer"
@@ -164,7 +164,7 @@ export function GroupManagementPage() {
               <span className="text-xs font-black uppercase font-nunito tracking-wider text-main-text/50">{t('common.share')}</span>
               <button
                 onClick={() => {
-                  const url = `${window.location.origin}/join/${currentGroup?.id}`;
+                  const url = `${window.location.origin}/join/${currentGroup?.joinId || currentGroup?.id}`;
                   navigator.clipboard.writeText(url);
                   toast.success(t('groups.link_copied'));
                 }}

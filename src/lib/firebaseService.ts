@@ -3,6 +3,7 @@ import {
   doc,
   setDoc,
   getDoc,
+  getDocs,
   addDoc,
   updateDoc,
   deleteDoc,
@@ -11,16 +12,33 @@ import {
   arrayRemove,
   writeBatch,
   deleteField,
+  query,
+  where,
+  limit,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Member, Expense } from '../types';
 
 export type ExpenseInput = Omit<Expense, 'id' | 'createdBy' | 'createdAt' | 'updatedAt'>;
 
+// Random invite token for /join/:joinId URLs. Excludes visually ambiguous
+// characters (0/O/1/I/l) so it's safer to read off a screen.
+const JOIN_ID_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+function generateJoinId(length = 10): string {
+  const bytes = new Uint8Array(length);
+  crypto.getRandomValues(bytes);
+  let out = '';
+  for (let i = 0; i < length; i++) {
+    out += JOIN_ID_ALPHABET[bytes[i] % JOIN_ID_ALPHABET.length];
+  }
+  return out;
+}
+
 export const firebaseService = {
   async createGroup(userId: string, groupName: string, hostName: string) {
     const groupRef = doc(collection(db, 'groups'));
     const groupId = groupRef.id;
+    const joinId = generateJoinId();
 
     const batch = writeBatch(db);
 
@@ -28,6 +46,7 @@ export const firebaseService = {
     batch.set(groupRef, {
       name: groupName.trim(),
       createdBy: userId,
+      joinId,
       createdAt: serverTimestamp(),
     });
 
@@ -49,6 +68,41 @@ export const firebaseService = {
 
     await batch.commit();
     return groupId;
+  },
+
+  // Resolve a public join token to its Firestore group id.
+  // Returns null if the join token doesn't match any group.
+  // Legacy fallback: groups created before the joinId field exists can still be
+  // joined via their raw Firestore id. Once a group has joinId, that fallback
+  // is intentionally disabled for it (so id-guessing can't bypass the gate).
+  async resolveJoinId(joinId: string): Promise<string | null> {
+    const trimmed = joinId.trim();
+    if (!trimmed) return null;
+
+    const q = query(collection(db, 'groups'), where('joinId', '==', trimmed), limit(1));
+    const snap = await getDocs(q);
+    if (!snap.empty) return snap.docs[0].id;
+
+    // Legacy fallback for invite links generated before joinId existed.
+    const legacyRef = doc(db, 'groups', trimmed);
+    const legacySnap = await getDoc(legacyRef);
+    if (legacySnap.exists() && !legacySnap.data().joinId) {
+      return legacySnap.id;
+    }
+    return null;
+  },
+
+  // Backfill joinId for groups created before this field existed. Host-only
+  // (Firestore rules require createdBy == auth.uid for group updates).
+  async ensureJoinId(groupId: string): Promise<string> {
+    const groupRef = doc(db, 'groups', groupId);
+    const snap = await getDoc(groupRef);
+    if (!snap.exists()) throw new Error('group_not_found');
+    const existing = snap.data().joinId as string | undefined;
+    if (existing) return existing;
+    const joinId = generateJoinId();
+    await updateDoc(groupRef, { joinId, updatedAt: serverTimestamp() });
+    return joinId;
   },
 
   async joinGroup(userId: string, groupId: string) {

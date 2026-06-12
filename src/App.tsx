@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from './lib/firebase';
+import { firebaseService } from './lib/firebaseService';
 import { LoadingView } from './components/LoadingView';
 import { LoginView } from './components/LoginView';
 import { AuthGuard } from './components/ProtectedRoute';
@@ -59,7 +60,9 @@ export default function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Check if a group exists before letting unauthenticated users stay on protected URLs
+  // Check if a group exists before letting unauthenticated users stay on protected URLs.
+  // For /join/:joinId we resolve the public join token. For /group/:groupId we still
+  // do an existence check (the in-app membership gate lives in GroupContext).
   useEffect(() => {
     // Wait until auth state is known. Otherwise we may start the check as an
     // anonymous user, then have the effect re-run when auth completes — the
@@ -72,10 +75,11 @@ export default function App() {
       return;
     }
 
-    const match = location.pathname.match(/^\/(join|group)\/([^/]+)/);
-    const urlGroupId = match ? match[2] : null;
+    const joinMatch = location.pathname.match(/^\/join\/([^/]+)/);
+    const groupMatch = location.pathname.match(/^\/group\/([^/]+)/);
+    const urlToken = joinMatch ? joinMatch[1] : groupMatch ? groupMatch[1] : null;
 
-    if (!urlGroupId) {
+    if (!urlToken) {
       setInvalidUrlGroup(null);
       setCheckingUrlGroup(false);
       return;
@@ -86,11 +90,17 @@ export default function App() {
 
     const checkGroup = async () => {
       try {
-        const groupRef = doc(db, 'groups', urlGroupId);
-        const docSnap = await getDoc(groupRef);
+        let exists = false;
+        if (joinMatch) {
+          const resolvedGroupId = await firebaseService.resolveJoinId(urlToken);
+          exists = resolvedGroupId !== null;
+        } else {
+          const docSnap = await getDoc(doc(db, 'groups', urlToken));
+          exists = docSnap.exists();
+        }
         if (isMounted) {
-          if (!docSnap.exists()) {
-            setInvalidUrlGroup(urlGroupId);
+          if (!exists) {
+            setInvalidUrlGroup(urlToken);
             toast.error(t('common.error_group_not_found'));
           } else {
             setInvalidUrlGroup(null);
@@ -224,7 +234,7 @@ export default function App() {
             } />
 
             <Route path="/group/:groupId/members" element={<GroupManagementPage />} />
-            <Route path="/join/:groupId" element={<JoinGroupPage />} />
+            <Route path="/join/:joinId" element={<JoinGroupPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
