@@ -407,10 +407,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // 3. Delete from Auth
       await deleteUser(currentUser);
-      
+
       setUser(null);
       toast.success(t('auth.delete_account_success'));
-      navigate('/');
     } catch (err: unknown) {
       const error = err as AuthError;
       console.error("Delete account error:", error);
@@ -424,7 +423,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await deleteUser(currentUser);
             setUser(null);
             toast.success(t('auth.delete_account_success'));
-            navigate('/');
           } catch (reauthErr: unknown) {
             const reauthError = reauthErr as AuthError;
             if (reauthError.code === 'auth/popup-blocked') {

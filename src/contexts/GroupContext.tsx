@@ -260,6 +260,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
           members.map(m => m.id),
           completedSettlements.map(s => s.id),
         );
+        toast.success(t('groups.delete_group_success'));
       } catch (error) {
         console.error("Delete group error:", error);
         toast.error(t('common.error'));

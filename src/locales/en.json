@@ -66,6 +66,7 @@
     "link_copied": "Invite link copied",
     "delete_group": "Delete Group",
     "delete_group_msg": "This will permanently delete the group '{{name}}' and all records. This cannot be undone.",
+    "delete_group_success": "Group deleted",
     "group_info": "Group Info",
     "group_name": "Group Name",
     "group_id": "Group ID",

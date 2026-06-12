@@ -66,6 +66,7 @@
     "link_copied": "已複製邀請連結",
     "delete_group": "刪除此群組",
     "delete_group_msg": "此操作將永久刪除群組「{{name}}」及所有成員與支出紀錄，不可復原。",
+    "delete_group_success": "群組已刪除",
     "group_info": "群組資訊",
     "group_name": "群組名稱",
     "group_id": "群組 ID",
