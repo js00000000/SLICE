@@ -1,4 +1,5 @@
-import { ArrowLeft, Languages, User as LucideUser, LayoutGrid } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ArrowLeft, Languages, User as LucideUser, LayoutGrid, Menu } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { APP_NAME } from '../constants';
@@ -22,10 +23,49 @@ export function AppHeader({
 }: AppHeaderProps) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const isZh = i18n.resolvedLanguage?.startsWith('zh');
+  const nextLangLabel = isZh ? 'EN' : '中文';
 
   const toggleLanguage = () => {
-    const newLang = i18n.resolvedLanguage?.startsWith('zh') ? 'en' : 'zh-TW';
-    i18n.changeLanguage(newLang);
+    i18n.changeLanguage(isZh ? 'en' : 'zh-TW');
+  };
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e: MouseEvent | TouchEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('touchstart', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('touchstart', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [menuOpen]);
+
+  const handleProfile = () => {
+    setMenuOpen(false);
+    onProfileClick?.();
+  };
+
+  const handleLanguage = () => {
+    toggleLanguage();
+    setMenuOpen(false);
+  };
+
+  const handleGroups = () => {
+    setMenuOpen(false);
+    navigate('/');
   };
 
   return (
@@ -55,34 +95,75 @@ export function AppHeader({
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          {showProfile && currentMemberName && (
-            <button
-              onClick={onProfileClick}
-              className="flex items-center gap-1.5 text-xs font-bold text-main-text bg-brand-light px-3 py-1.5 rounded-full border-2 border-main-text hover:bg-white transition-all hover:scale-105 active:scale-95 cursor-pointer"
-              title={t('profile.title')}
-            >
-              <LucideUser className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span className="max-w-[80px] truncate">{currentMemberName}</span>
-            </button>
-          )}
-
+        <div className="relative" ref={menuRef}>
           <button
-            onClick={toggleLanguage}
-            className="p-2 text-main-text hover:text-accent-orange hover:bg-brand-light border-2 border-transparent hover:border-main-text rounded-xl transition-all duration-150 cursor-pointer"
-            title={t('common.switch_lang')}
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            aria-label={t('common.settings')}
+            className={`p-2 text-main-text border-2 rounded-xl transition-all duration-150 cursor-pointer ${
+              menuOpen
+                ? 'bg-brand-light border-main-text text-accent-orange'
+                : 'border-transparent hover:text-accent-orange hover:bg-brand-light hover:border-main-text'
+            }`}
           >
-            <Languages className="w-4 h-4 stroke-[2]" />
+            <Menu className="w-5 h-5 stroke-[2.5]" />
           </button>
 
-          {showGroups && (
-            <button
-              onClick={() => navigate('/')}
-              className="p-2 text-main-text hover:text-accent-orange hover:bg-brand-light border-2 border-transparent hover:border-main-text rounded-xl transition-all duration-150 cursor-pointer"
-              title={t('groups.my_groups')}
+          {menuOpen && (
+            <div
+              role="menu"
+              className="absolute right-0 mt-2 w-60 bg-white border-3 border-main-text rounded-2xl shadow-[4px_4px_0px_#1A1A2E] overflow-hidden font-plus-jakarta animate-in fade-in zoom-in-95 duration-150 origin-top-right"
             >
-              <LayoutGrid className="w-4 h-4 stroke-[2.5]" />
-            </button>
+              {showProfile && currentMemberName && (
+                <button
+                  role="menuitem"
+                  onClick={handleProfile}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left text-main-text hover:bg-brand-light transition-colors cursor-pointer border-b-2 border-main-text/10"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-brand-light border-2 border-main-text flex items-center justify-center shrink-0">
+                    <LucideUser className="w-4 h-4 stroke-[2.5]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-main-text/50 leading-none mb-0.5">
+                      {t('profile.title')}
+                    </div>
+                    <div className="text-sm font-black truncate">{currentMemberName}</div>
+                  </div>
+                </button>
+              )}
+
+              <button
+                role="menuitem"
+                onClick={handleLanguage}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left text-main-text hover:bg-brand-light transition-colors cursor-pointer border-b-2 border-main-text/10 last:border-b-0"
+              >
+                <div className="w-8 h-8 rounded-lg bg-brand-light border-2 border-main-text flex items-center justify-center shrink-0">
+                  <Languages className="w-4 h-4 stroke-[2.5]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-black">{t('common.switch_lang')}</div>
+                </div>
+                <span className="text-xs font-black text-accent-orange bg-brand-light border-2 border-main-text rounded-full px-2 py-0.5">
+                  {nextLangLabel}
+                </span>
+              </button>
+
+              {showGroups && (
+                <button
+                  role="menuitem"
+                  onClick={handleGroups}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left text-main-text hover:bg-brand-light transition-colors cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-brand-light border-2 border-main-text flex items-center justify-center shrink-0">
+                    <LayoutGrid className="w-4 h-4 stroke-[2.5]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-black">{t('groups.my_groups')}</div>
+                  </div>
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>
