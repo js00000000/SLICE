@@ -157,6 +157,8 @@ export default function App() {
           <Helmet>
             <html lang={i18n.resolvedLanguage || i18n.language || 'en'} />
             <title>{t('common.seo_title')}</title>
+            <meta name="title" content={t('common.seo_title')} />
+            <meta name="description" content={t('common.seo_description')} />
             <meta property="og:title" content={t('common.seo_title')} />
             <meta property="og:description" content={t('common.seo_description')} />
             <meta property="og:locale" content={i18n.resolvedLanguage?.startsWith('zh') ? 'zh_TW' : 'en_US'} />
@@ -178,6 +180,8 @@ export default function App() {
         <Helmet>
           <html lang={i18n.resolvedLanguage || i18n.language || 'en'} />
           <title>{t('common.seo_title')}</title>
+          <meta name="title" content={t('common.seo_title')} />
+          <meta name="description" content={t('common.seo_description')} />
         </Helmet>
         <LoginView
           onGoogleLogin={handleGoogleLogin}
@@ -196,6 +200,7 @@ export default function App() {
       <Helmet>
         <html lang={i18n.resolvedLanguage || i18n.language || 'en'} />
         <title>{APP_NAME}</title>
+        <meta name="title" content={t('common.seo_title') || APP_NAME} />
         <meta name="description" content={t('common.seo_description')} />
         <meta property="og:title" content={t('common.seo_title') || APP_NAME} />
         <meta property="og:description" content={t('common.seo_description')} />
