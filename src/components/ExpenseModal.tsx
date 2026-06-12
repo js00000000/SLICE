@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, CheckCircle2, Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Member, Expense, Payment } from '../types';
@@ -40,6 +40,23 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
   const isEditing = !!initialData;
   const isAllSelected = members.length > 0 && splitAmong.length === members.length;
 
+  const firstPayerAmountRef = useRef<HTMLInputElement>(null);
+
+  const toggleMultiplePayers = () => {
+    if (!isMultiplePayers) {
+      const secondMember = members.find(m => m.id !== paidBy);
+      const initialPayments: Payment[] = [{ memberId: paidBy, amount: 0 }];
+      if (secondMember) {
+        initialPayments.push({ memberId: secondMember.id, amount: 0 });
+      }
+      setPayments(initialPayments);
+      setIsMultiplePayers(true);
+      requestAnimationFrame(() => firstPayerAmountRef.current?.focus());
+    } else {
+      setIsMultiplePayers(false);
+    }
+  };
+
   useEffect(() => {
     if (!isMultiplePayers) {
       setPayments([{ memberId: paidBy, amount: parseFloat(amount) || 0 }]);
@@ -71,6 +88,7 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!description || !amount || (isCustomSplit ? splits.filter(s => s.amount > 0).length === 0 : splitAmong.length === 0) || !isAmountValid || !isSplitValid) return;
+    if (isMultiplePayers && payments.filter(p => p.amount > 0).length === 0) return;
 
     const finalSplitAmong = isCustomSplit 
       ? splits.filter(s => s.amount > 0).map(s => s.memberId)
@@ -80,11 +98,15 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
       ? splits.filter(s => s.amount > 0)
       : calculateEvenSplit(parseFloat(amount) || 0, splitAmong);
 
+    const finalPayments = isMultiplePayers
+      ? payments.filter(p => p.amount > 0)
+      : [{ memberId: paidBy, amount: parseFloat(amount) }];
+
     onSave({
       description: description.trim(),
       amount: parseFloat(amount),
-      paidBy: isMultiplePayers ? payments[0].memberId : paidBy,
-      payments: isMultiplePayers ? payments : [{ memberId: paidBy, amount: parseFloat(amount) }],
+      paidBy: isMultiplePayers ? finalPayments[0].memberId : paidBy,
+      payments: finalPayments,
       splitAmong: finalSplitAmong,
       splits: finalSplits
     }, initialData?.id);
@@ -201,13 +223,15 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
                 <label className="block text-xs font-black uppercase font-nunito tracking-wider text-main-text/60">
                   {t('expenses.paid_by')}
                 </label>
-                <button
-                  type="button"
-                  onClick={() => setIsMultiplePayers(!isMultiplePayers)}
-                  className="text-xs font-black font-nunito text-accent-orange hover:underline cursor-pointer"
-                >
-                  {isMultiplePayers ? t('expenses.single_payer') : t('expenses.multiple_payers')}
-                </button>
+                {members.length >= 2 && (
+                  <button
+                    type="button"
+                    onClick={toggleMultiplePayers}
+                    className="text-xs font-black font-nunito text-accent-orange hover:underline cursor-pointer"
+                  >
+                    {isMultiplePayers ? t('expenses.single_payer') : t('expenses.multiple_payers')}
+                  </button>
+                )}
               </div>
 
               {!isMultiplePayers ? (
@@ -248,6 +272,7 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
                         <div className="relative w-32 shrink-0">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-main-text font-nunito font-black">$</span>
                           <input
+                            ref={index === 0 ? firstPayerAmountRef : undefined}
                             type="number"
                             step="any"
                             value={p.amount || ''}
