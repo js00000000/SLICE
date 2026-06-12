@@ -248,6 +248,10 @@ export function GroupProvider({ children }: { children: ReactNode }) {
 
     if (isConfirmed) {
       setIsLoading(true);
+      // Navigate away first so the group-doc snapshot listener (which sees the
+      // deletion via local mutation echo before the network round-trip) doesn't
+      // fire a misleading "group not found" toast.
+      navigate('/', { replace: true });
       try {
         await firebaseService.deleteGroup(
           user.uid,
@@ -256,12 +260,11 @@ export function GroupProvider({ children }: { children: ReactNode }) {
           members.map(m => m.id),
           completedSettlements.map(s => s.id),
         );
-        navigate('/', { replace: true });
-      } catch (error) { 
-        console.error("Delete group error:", error); 
+      } catch (error) {
+        console.error("Delete group error:", error);
         toast.error(t('common.error'));
-      } finally { 
-        setIsLoading(false); 
+      } finally {
+        setIsLoading(false);
       }
     }
   };

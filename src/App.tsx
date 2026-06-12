@@ -61,8 +61,14 @@ export default function App() {
 
   // Check if a group exists before letting unauthenticated users stay on protected URLs
   useEffect(() => {
+    // Wait until auth state is known. Otherwise we may start the check as an
+    // anonymous user, then have the effect re-run when auth completes — the
+    // early-return path below would leave `checkingUrlGroup` stuck at true.
+    if (authLoading) return;
+
     if (user && !isSoftLoggedOut) {
       setInvalidUrlGroup(null);
+      setCheckingUrlGroup(false);
       return;
     }
 
@@ -71,6 +77,7 @@ export default function App() {
 
     if (!urlGroupId) {
       setInvalidUrlGroup(null);
+      setCheckingUrlGroup(false);
       return;
     }
 
@@ -103,7 +110,7 @@ export default function App() {
     return () => {
       isMounted = false;
     };
-  }, [location.pathname, user, isSoftLoggedOut, t]);
+  }, [location.pathname, user, isSoftLoggedOut, authLoading, t]);
 
   // Manual title fallback for login and loading states
   useEffect(() => {

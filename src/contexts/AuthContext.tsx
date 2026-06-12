@@ -388,6 +388,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setDeleteLoading(true);
 
+      // Navigate away from any /group/:id URL first so the group-doc snapshot
+      // listener doesn't fire a "group not found" toast when cleanupUserData
+      // deletes the user's groups below.
+      navigate('/');
+
       // For Google users, revoke the stored token if it exists without showing a popup
       if (currentUser.providerData.some(p => p.providerId === 'google.com')) {
         try {
