@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutGrid, DollarSign, Plus, Receipt, Users, Lock } from 'lucide-react';
+import { LayoutDashboard, DollarSign, Plus, Receipt, Users, Lock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -83,7 +83,7 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
                 : 'text-gray-500 hover:text-main-text'
             }`}
           >
-            <LayoutGrid className="w-5.5 h-5.5 stroke-[2.5]" />
+            <LayoutDashboard className="w-5.5 h-5.5 stroke-[2.5]" />
             <span className="text-[10px] font-black tracking-tight truncate w-full text-center">{t('common.dashboard')}</span>
           </button>
 
