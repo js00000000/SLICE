@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import type { Member, Expense } from '../types';
 import { formatDate, formatCurrency } from '../utils/format';
 import { useGroup } from '../contexts/GroupContext';
-import { CountUp } from './CountUp';
 
 interface ExpensesListProps {
   expenses: Expense[];
@@ -118,7 +117,7 @@ export function ExpensesList({ expenses, members, onEdit, onDelete, filterPaidBy
                             ))}
                             <span className="text-gray-400 text-xs">{t('expenses.paid_action')}</span>
                             <span className="font-nunito font-black text-main-text whitespace-nowrap bg-brand-light px-2 py-0.5 rounded border border-main-text/10">
-                              <CountUp value={exp.amount} formatter={formatCurrency} />
+                              {formatCurrency(exp.amount)}
                             </span>
                           </>
                         ) : (
@@ -128,7 +127,7 @@ export function ExpensesList({ expenses, members, onEdit, onDelete, filterPaidBy
                             </span> 
                             <span className="text-gray-400 text-xs">{t('expenses.paid_action')}</span>
                             <span className="font-nunito font-black text-main-text whitespace-nowrap bg-brand-light px-2 py-0.5 rounded border border-main-text/10">
-                              <CountUp value={exp.amount} formatter={formatCurrency} />
+                              {formatCurrency(exp.amount)}
                             </span>
                           </>
                         )}
@@ -177,7 +176,7 @@ export function ExpensesList({ expenses, members, onEdit, onDelete, filterPaidBy
 
                     {myShare !== null && myShare > 0 && (
                       <div className="text-xs font-black text-accent-orange font-nunito bg-[#FFF0EA] px-2 py-0.5 rounded-full border border-accent-orange/30">
-                        {t('expenses.my_share') || 'My Share'}: <CountUp value={myShare} formatter={formatCurrency} className="font-black" />
+                        {t('expenses.my_share') || 'My Share'}: <span className="font-black">{formatCurrency(myShare)}</span>
                       </div>
                     )}
                   </div>

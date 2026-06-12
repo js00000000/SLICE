@@ -173,7 +173,7 @@ function SettlementRow({ settlement, members, currentMemberId, index, onMarkPaid
           </span>
         </div>
         <span className="font-nunito font-black text-sm text-main-text bg-page-bg/60 border border-main-text/10 px-2 py-0.5 rounded-md whitespace-nowrap">
-          <CountUp value={settlement.amount} formatter={formatCurrency} />
+          {formatCurrency(settlement.amount)}
         </span>
       </div>
       {canMarkPaid && (
