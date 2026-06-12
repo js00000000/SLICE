@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, User as LucideUser, LogOut, Link2, Loader2, Trash2 } from 'lucide-react';
+import { X, User as LucideUser, Link2, Loader2, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Member } from '../types';
 import { useDialog } from '../contexts/DialogContext';
@@ -11,7 +11,6 @@ interface ProfileModalProps {
   currentMember: Member;
   onClose: () => void;
   onSave: (data: Partial<Member>) => void;
-  onLogout: () => void;
   onDeleteAccount: () => void;
 }
 
@@ -19,7 +18,6 @@ export function ProfileModal({
   currentMember,
   onClose,
   onSave,
-  onLogout,
   onDeleteAccount
 }: ProfileModalProps) {
   useScrollLock();
@@ -40,17 +38,6 @@ export function ProfileModal({
     onSave({
       name: name.trim()
     });
-  };
-
-  const handleLogoutClick = async () => {
-    const isConfirmed = await confirm(t('auth.logout_msg'), {
-      title: t('auth.logout'),
-      confirmLabel: t('auth.logout'),
-      cancelLabel: t('common.cancel')
-    });
-    if (isConfirmed) {
-      onLogout();
-    }
   };
 
   const handleDeleteAccountClick = async () => {
@@ -180,18 +167,8 @@ export function ProfileModal({
             </button>
           </div>
 
-          {/* Logout & Delete Actions */}
+          {/* Delete Account Action */}
           <div className="space-y-3 pt-5 border-t-2 border-dashed border-main-text/10">
-            <button
-              type="button"
-              onClick={handleLogoutClick}
-              disabled={deleteLoading}
-              className="w-full py-3 bg-white text-main-text border-2 border-main-text rounded-xl font-nunito font-black text-sm hover:bg-brand-light transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E]"
-            >
-              <LogOut className="w-4 h-4 text-accent-orange stroke-[2.5]" />
-              {t('auth.logout')}
-            </button>
-            
             <button
               type="button"
               onClick={handleDeleteAccountClick}

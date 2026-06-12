@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Languages, User as LucideUser, LayoutGrid, Menu } from 'lucide-react';
+import { ArrowLeft, Languages, User as LucideUser, LayoutGrid, LogOut, Menu } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { APP_NAME } from '../constants';
+import { useAuth } from '../contexts/AuthContext';
+import { useDialog } from '../contexts/DialogContext';
 
 interface AppHeaderProps {
   showBack?: boolean;
@@ -23,6 +25,8 @@ export function AppHeader({
 }: AppHeaderProps) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const { user, handleLogout } = useAuth();
+  const { confirm } = useDialog();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -66,6 +70,18 @@ export function AppHeader({
   const handleGroups = () => {
     setMenuOpen(false);
     navigate('/');
+  };
+
+  const handleLogoutClick = async () => {
+    setMenuOpen(false);
+    const isConfirmed = await confirm(t('auth.logout_msg'), {
+      title: t('auth.logout'),
+      confirmLabel: t('auth.logout'),
+      cancelLabel: t('common.cancel')
+    });
+    if (isConfirmed) {
+      await handleLogout();
+    }
   };
 
   return (
@@ -153,13 +169,28 @@ export function AppHeader({
                 <button
                   role="menuitem"
                   onClick={handleGroups}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left text-main-text hover:bg-brand-light transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left text-main-text hover:bg-brand-light transition-colors cursor-pointer border-b-2 border-main-text/10 last:border-b-0"
                 >
                   <div className="w-8 h-8 rounded-lg bg-brand-light border-2 border-main-text flex items-center justify-center shrink-0">
                     <LayoutGrid className="w-4 h-4 stroke-[2.5]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-black">{t('groups.my_groups')}</div>
+                  </div>
+                </button>
+              )}
+
+              {user && (
+                <button
+                  role="menuitem"
+                  onClick={handleLogoutClick}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left text-main-text hover:bg-brand-light transition-colors cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-brand-light border-2 border-main-text flex items-center justify-center shrink-0">
+                    <LogOut className="w-4 h-4 text-accent-orange stroke-[2.5]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-black">{t('auth.logout')}</div>
                   </div>
                 </button>
               )}

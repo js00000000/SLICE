@@ -17,7 +17,7 @@ import { useAuth } from '../contexts/AuthContext';
 export function ExpensesPage() {
   const location = useLocation();
   const { t } = useTranslation();
-  const { handleLogout, handleDeleteAccount } = useAuth();
+  const { handleDeleteAccount } = useAuth();
   const {
     groupId,
     currentGroup,
@@ -179,7 +179,6 @@ export function ExpensesPage() {
             await handleUpdateProfile(data);
             setIsProfileModalOpen(false);
           }}
-          onLogout={handleLogout}
           onDeleteAccount={handleDeleteAccount}
         />
       )}

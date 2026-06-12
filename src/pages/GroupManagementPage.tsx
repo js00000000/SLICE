@@ -18,7 +18,7 @@ export function GroupManagementPage() {
   const { t, i18n } = useTranslation();
   const { groupId } = useParams();
   const { confirm } = useDialog();
-  const { handleLogout, handleDeleteAccount } = useAuth();
+  const { handleDeleteAccount } = useAuth();
   const {
     members, expenses, completedSettlements, currentMember, currentGroup,
     handleUpdateProfile, handleDeleteMember, handleUpdateGroupName, handleDeleteGroup,
@@ -321,7 +321,6 @@ export function GroupManagementPage() {
             await handleUpdateProfile(data);
             setIsProfileModalOpen(false);
           }}
-          onLogout={handleLogout}
           onDeleteAccount={handleDeleteAccount}
         />
       )}

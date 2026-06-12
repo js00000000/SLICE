@@ -18,7 +18,7 @@ import { formatDate, formatCurrency } from '../utils/format';
 export function DashboardPage() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
-  const { handleLogout, handleDeleteAccount } = useAuth();
+  const { handleDeleteAccount } = useAuth();
   const {
     groupId,
     currentGroup,
@@ -304,7 +304,6 @@ export function DashboardPage() {
             await handleUpdateProfile(data);
             setIsProfileModalOpen(false);
           }}
-          onLogout={handleLogout}
           onDeleteAccount={handleDeleteAccount}
         />
       )}

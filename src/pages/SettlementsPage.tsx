@@ -13,7 +13,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 export function SettlementsPage() {
   const { t, i18n } = useTranslation();
-  const { user, handleLogout, handleDeleteAccount } = useAuth();
+  const { user, handleDeleteAccount } = useAuth();
   const {
     groupId,
     currentGroup,
@@ -160,7 +160,6 @@ export function SettlementsPage() {
             await handleUpdateProfile(data);
             setIsProfileModalOpen(false);
           }}
-          onLogout={handleLogout}
           onDeleteAccount={handleDeleteAccount}
         />
       )}

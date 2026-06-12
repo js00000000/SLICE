@@ -13,7 +13,7 @@ import type { Member } from '../types';
 export function GroupSelectionPage() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
-  const { user, handleLogout, handleDeleteAccount } = useAuth();
+  const { user, handleDeleteAccount } = useAuth();
   const { myGroups, handleCreateGroup, handleJoinGroup } = useGroup();
 
   const [groupName, setGroupName] = useState('');
@@ -156,7 +156,6 @@ export function GroupSelectionPage() {
           currentMember={{ name: displayName, isHost: false } as Member}
           onClose={() => setIsProfileModalOpen(false)}
           onSave={() => setIsProfileModalOpen(false)}
-          onLogout={handleLogout}
           onDeleteAccount={handleDeleteAccount}
         />
       )}
