@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
-import { X, CheckCircle2, Plus, Trash2 } from 'lucide-react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { X, CheckCircle2, Plus, Trash2, ChevronDown, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Member, Expense, Payment } from '../types';
 import { calculateEvenSplit, isCustomSplit as detectCustomSplit } from '../utils/split';
@@ -235,15 +236,12 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
               </div>
 
               {!isMultiplePayers ? (
-                <select 
-                  value={paidBy} 
-                  onChange={(e) => setPaidBy(e.target.value)}
-                  className="w-full text-base font-bold text-main-text px-4 py-3 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none bg-white shadow-[2px_2px_0px_#1A1A2E] cursor-pointer"
-                >
-                  {members.map(m => (
-                    <option key={m.id} value={m.id}>{m.name}</option>
-                  ))}
-                </select>
+                <PayerSelect
+                  value={paidBy}
+                  members={members}
+                  onChange={setPaidBy}
+                  size="md"
+                />
               ) : (
                 <div className="space-y-3 bg-page-bg/50 p-3.5 rounded-xl border-2 border-dashed border-main-text/20">
                   {payments.map((p, index) => {
@@ -253,21 +251,12 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
                     
                     return (
                       <div key={index} className="flex gap-2 items-center">
-                        <select 
-                          value={p.memberId} 
-                          onChange={(e) => updatePayer(index, { memberId: e.target.value })}
-                          className="flex-1 text-base font-bold text-main-text px-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none bg-white"
-                        >
-                          {members.map(m => (
-                            <option 
-                              key={m.id} 
-                              value={m.id}
-                              disabled={otherPayerIds.includes(m.id)}
-                            >
-                              {m.name}
-                            </option>
-                          ))}
-                        </select>
+                        <PayerSelect
+                          value={p.memberId}
+                          members={members}
+                          disabledIds={otherPayerIds}
+                          onChange={(id) => updatePayer(index, { memberId: id })}
+                        />
                         
                         <div className="relative w-32 shrink-0">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-main-text font-nunito font-black">$</span>
@@ -419,6 +408,109 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
           </button>
         </div>
       </form>
+    </div>
+  );
+}
+
+interface PayerSelectProps {
+  value: string;
+  members: Member[];
+  disabledIds?: string[];
+  onChange: (id: string) => void;
+  size?: 'sm' | 'md';
+}
+
+function PayerSelect({ value, members, disabledIds = [], onChange, size = 'sm' }: PayerSelectProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [panelPos, setPanelPos] = useState<{ top: number; left: number; width: number } | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    const updatePos = () => {
+      const rect = triggerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      setPanelPos({
+        top: rect.bottom + 6,
+        left: rect.left,
+        width: rect.width,
+      });
+    };
+    updatePos();
+    window.addEventListener('resize', updatePos);
+    window.addEventListener('scroll', updatePos, true);
+    return () => {
+      window.removeEventListener('resize', updatePos);
+      window.removeEventListener('scroll', updatePos, true);
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (triggerRef.current?.contains(target) || panelRef.current?.contains(target)) return;
+      setIsOpen(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [isOpen]);
+
+  const selected = members.find(m => m.id === value);
+  const triggerPadding = size === 'md' ? 'px-4 py-3' : 'px-3 py-2';
+
+  return (
+    <div className="flex-1 min-w-0">
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => setIsOpen(prev => !prev)}
+        className={`w-full flex items-center justify-between gap-2 text-base font-bold text-main-text ${triggerPadding} border-2 border-main-text rounded-xl bg-white shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] transition-all cursor-pointer`}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+      >
+        <span className="truncate text-left">{selected?.name ?? ''}</span>
+        <ChevronDown className={`w-4 h-4 stroke-[3] shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && panelPos && createPortal(
+        <div
+          ref={panelRef}
+          role="listbox"
+          style={{ top: panelPos.top, left: panelPos.left, width: panelPos.width }}
+          className="fixed z-[60] max-h-72 overflow-y-auto bg-white border-2 border-main-text rounded-xl shadow-[4px_4px_0px_#1A1A2E] p-1"
+        >
+          {members.map(m => {
+            const isActive = m.id === value;
+            const isDisabled = !isActive && disabledIds.includes(m.id);
+            return (
+              <button
+                key={m.id}
+                type="button"
+                role="option"
+                aria-selected={isActive}
+                disabled={isDisabled}
+                onClick={() => {
+                  onChange(m.id);
+                  setIsOpen(false);
+                }}
+                className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg font-nunito font-black text-sm text-left transition-colors ${
+                  isDisabled
+                    ? 'text-main-text/30 cursor-not-allowed'
+                    : isActive
+                      ? 'bg-accent-orange text-white cursor-pointer'
+                      : 'text-main-text hover:bg-brand-light cursor-pointer'
+                }`}
+              >
+                <span className="truncate">{m.name}</span>
+                {isActive && <Check className="w-4 h-4 stroke-[3] shrink-0" />}
+              </button>
+            );
+          })}
+        </div>,
+        document.body,
+      )}
     </div>
   );
 }
