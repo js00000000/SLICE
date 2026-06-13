@@ -108,7 +108,7 @@ export function LandingPage({
                 </>
               ) : (
                 <>
-                  Splitting expenses,<br />
+                  Group expense sharing,<br />
                   made <span className="text-accent-orange underline decoration-wavy decoration-3 underline-offset-8">effortless</span>.
                 </>
               )}
@@ -185,9 +185,9 @@ export function LandingPage({
 
             {/* Login widget header */}
             <div className="text-center space-y-3 border-b-2 border-dashed border-main-text/10 pb-4">
-              <h2 className="text-2.5xl font-nunito font-black text-main-text leading-tight">
+              <p className="text-2.5xl font-nunito font-black text-main-text leading-tight">
                 {t('auth.login_title') || 'SLICE Application'}
-              </h2>
+              </p>
               <p className="text-xs text-gray-500 font-medium">
                 {t('auth.login_subtitle') || 'Quick & Simple Split Billing'}
               </p>
