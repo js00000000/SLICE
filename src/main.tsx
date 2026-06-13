@@ -14,6 +14,14 @@ import { PWARegister } from './components/PWARegister'
 
 installGlobalHaptic()
 
+if (import.meta.env.VITE_APP_ENV === 'production') {
+  const s = document.createElement('script')
+  s.defer = true
+  s.src = 'https://static.cloudflareinsights.com/beacon.min.js'
+  s.setAttribute('data-cf-beacon', '{"token":"a372bca91b9e4934b5d5de2785c009cc"}')
+  document.head.appendChild(s)
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <HelmetProvider>
