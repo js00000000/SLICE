@@ -165,6 +165,7 @@ export function LandingPage({
   return (
     <>
       <Helmet>
+        <link rel="canonical" href="https://slice.fusion-labs.cc/" />
         <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
         <script type="application/ld+json">{JSON.stringify(howToSchema)}</script>
       </Helmet>
