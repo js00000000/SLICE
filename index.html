@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-Hant-TW">
 
 <head>
   <meta charset="UTF-8" />
@@ -7,25 +7,58 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="canonical" href="https://slice.fusion-labs.cc/" />
 
-  <!-- Primary Meta Tags -->
-  <title>SLICE</title>
-  <meta name="title" content="SLICE - Quick & Simple Group Expense Sharing" />
-  <meta name="description" content="SLICE is a simple expense sharing tool designed for groups. Support anonymous and Google login, easily track expenses and calculate settlements. Perfect for dining, trips, and roommates." />
+  <!-- Primary Meta Tags (zh-TW default; Helmet swaps to en at runtime) -->
+  <title>SLICE — 快速、簡單的群組分帳工具</title>
+  <meta name="title" content="SLICE — 快速、簡單的群組分帳工具" />
+  <meta name="description" content="SLICE 是一款專為群組設計的簡單分帳工具。支援匿名登入、Google 登入，輕鬆追蹤支出、計算結清金額。適合朋友聚餐、出遊、室友分帳。" />
   <meta name="theme-color" content="#FF6B35" />
+
+  <!-- Hreflang alternates -->
+  <link rel="alternate" hreflang="zh-TW" href="https://slice.fusion-labs.cc/" />
+  <link rel="alternate" hreflang="en" href="https://slice.fusion-labs.cc/" />
+  <link rel="alternate" hreflang="x-default" href="https://slice.fusion-labs.cc/" />
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://slice.fusion-labs.cc/" />
   <meta property="og:site_name" content="SLICE" />
-  <meta property="og:locale" content="en_US" />
-  <meta property="og:title" content="SLICE - Quick & Simple Group Expense Sharing" />
-  <meta property="og:description" content="SLICE is a simple expense sharing tool designed for groups. Support anonymous and Google login, easily track expenses and calculate settlements. Perfect for dining, trips, and roommates." />
+  <meta property="og:locale" content="zh_TW" />
+  <meta property="og:locale:alternate" content="en_US" />
+  <meta property="og:title" content="SLICE — 快速、簡單的群組分帳工具" />
+  <meta property="og:description" content="SLICE 是一款專為群組設計的簡單分帳工具。支援匿名登入、Google 登入，輕鬆追蹤支出、計算結清金額。適合朋友聚餐、出遊、室友分帳。" />
+  <meta property="og:image" content="https://slice.fusion-labs.cc/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="SLICE — 旅遊分帳神器" />
 
   <!-- Twitter -->
-  <meta property="twitter:card" content="summary" />
+  <meta property="twitter:card" content="summary_large_image" />
   <meta property="twitter:url" content="https://slice.fusion-labs.cc/" />
-  <meta property="twitter:title" content="SLICE - Quick & Simple Group Expense Sharing" />
-  <meta property="twitter:description" content="SLICE is a simple expense sharing tool designed for groups. Support anonymous and Google login, easily track expenses and calculate settlements. Perfect for dining, trips, and roommates." />
+  <meta property="twitter:title" content="SLICE — 快速、簡單的群組分帳工具" />
+  <meta property="twitter:description" content="SLICE 是一款專為群組設計的簡單分帳工具。支援匿名登入、Google 登入，輕鬆追蹤支出、計算結清金額。適合朋友聚餐、出遊、室友分帳。" />
+  <meta property="twitter:image" content="https://slice.fusion-labs.cc/og-image.png" />
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "SLICE",
+    "alternateName": ["SLICE 旅遊分帳神器", "SLICE — Group Expense Sharing"],
+    "description": "SLICE 是一款專為群組設計的簡單分帳工具。支援匿名登入、Google 登入，輕鬆追蹤支出、計算結清金額。適合朋友聚餐、出遊、室友分帳。",
+    "url": "https://slice.fusion-labs.cc/",
+    "applicationCategory": "FinanceApplication",
+    "applicationSubCategory": "Expense Sharing",
+    "operatingSystem": "Web",
+    "browserRequirements": "Requires JavaScript. Modern browser.",
+    "inLanguage": ["zh-TW", "en"],
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
 
   <!-- Web App Manifest is injected by vite-plugin-pwa -->
 
