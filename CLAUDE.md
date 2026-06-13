@@ -80,6 +80,6 @@ These are hard requirements, not preferences:
 ## Environment & deployment
 
 - Required env vars: `VITE_FIREBASE_*` (see `.env.example`). The Netlify cleanup function additionally needs `CLEANUP_CRON_SECRET` and `FIREBASE_SERVICE_ACCOUNT`.
-- `.firebaserc` defines two projects: `default` → `easy-split-7c171` (prod) and `dev` → `easy-split-dev-1cfa3`.
+- `.firebaserc` defines two projects: `default` → `slice-b1807` (prod) and `dev` → `easy-split-dev-1cfa3`.
 - Hosted on Netlify (`netlify.toml`): build `npm run build`, publish `dist`, SPA rewrite `/* → /index.html`. Firebase hosting config exists (`firebase.json`) but Netlify is the live deployment.
 - Vite manual chunks (`vite.config.ts`): `firebase`, `ui-icons` (lucide-react), `vendor`. Keep this split if adding heavy deps.
