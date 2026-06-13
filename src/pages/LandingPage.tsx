@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import {
   Languages, CheckCircle2, Shield, Users,
-  Receipt, DollarSign, Loader2, Sparkles, Smartphone, UserCircle
+  Receipt, DollarSign, Loader2, Sparkles, Smartphone, UserCircle,
+  LogIn, Link2, Calculator, ChevronDown
 } from 'lucide-react';
 import { APP_NAME } from '../constants';
 import { CountUp } from '../components/CountUp';
@@ -24,7 +26,16 @@ export function LandingPage({
 }: LandingPageProps) {
   const { t, i18n } = useTranslation();
   const [isSponsorOpen, setIsSponsorOpen] = useState(false);
+  const [openFaqs, setOpenFaqs] = useState<Set<number>>(new Set());
   const isZh = i18n.resolvedLanguage?.startsWith('zh');
+
+  const toggleFaq = (idx: number) => {
+    setOpenFaqs(prev => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx); else next.add(idx);
+      return next;
+    });
+  };
 
   const toggleLanguage = () => {
     const newLang = isZh ? 'en' : 'zh-TW';
@@ -56,7 +67,89 @@ export function LandingPage({
     }
   ];
 
+  const steps = [
+    {
+      icon: <LogIn className="w-6 h-6 text-accent-orange stroke-[2.5]" />,
+      title: isZh ? '立即登入' : 'Sign in',
+      desc: isZh
+        ? '訪客模式秒進，也可用 Google 登入。免填表單、免設密碼。'
+        : 'Continue as guest or sign in with Google — no email, no password, no signup form.'
+    },
+    {
+      icon: <Link2 className="w-6 h-6 text-accent-orange stroke-[2.5]" />,
+      title: isZh ? '分享群組連結' : 'Share a group',
+      desc: isZh
+        ? '建立群組、複製邀請連結，朋友點擊即可加入。免安裝任何 App。'
+        : 'Create a group, copy the invite link, and your friends are in. No app install required.'
+    },
+    {
+      icon: <Calculator className="w-6 h-6 text-accent-orange stroke-[2.5]" />,
+      title: isZh ? '記帳、智慧結算' : 'Add expenses & settle',
+      desc: isZh
+        ? '輸入支出後，SLICE 自動算出最佳結算方式，最少次轉帳即可清帳。'
+        : 'Log who paid, who owes. SLICE finds the minimum transfers to clear all balances.'
+    }
+  ];
+
+  const faqs = isZh ? [
+    {
+      q: 'SLICE 真的免費嗎？',
+      a: 'SLICE 完全免費供個人使用，沒有廣告，也沒有付費版本。'
+    },
+    {
+      q: '需要註冊帳號嗎？',
+      a: '不需要。訪客模式可直接開始使用，資料儲存於本機，日後想保留紀錄時再連結 Google 帳號即可。'
+    },
+    {
+      q: '可以不平均分攤嗎？',
+      a: '可以。每筆支出都支援自訂分攤金額、百分比分攤，並支援多人共同付款的情境。'
+    },
+    {
+      q: '朋友要怎麼加入我的群組？',
+      a: '從群組頁面複製專屬邀請連結傳送即可，朋友點擊就能加入，無需事先註冊帳號。'
+    },
+    {
+      q: '我的資料安全嗎？',
+      a: '群組資料儲存於 Google Firebase，僅您邀請的成員可存取。我們不出售、不分享您的資料，詳見隱私權政策。'
+    }
+  ] : [
+    {
+      q: 'Is SLICE free?',
+      a: 'Yes — SLICE is completely free for personal use, with no ads and no premium tier.'
+    },
+    {
+      q: 'Do I need to register?',
+      a: 'No. Guest mode works instantly — your data lives on this device until you choose to link a Google account.'
+    },
+    {
+      q: 'Can I split expenses unevenly?',
+      a: 'Yes. Set custom amounts per person, or split by percentage. Multi-payer expenses are supported too.'
+    },
+    {
+      q: 'How do friends join my group?',
+      a: "Share the unique invite link from the group page. They click and they're in — no SLICE account required up front."
+    },
+    {
+      q: 'Is my data private?',
+      a: "Your group data is stored on Google Firebase, accessible only to members you invite. We don't sell or share it. See our privacy policy."
+    }
+  ];
+
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map(({ q, a }) => ({
+      '@type': 'Question',
+      name: q,
+      acceptedAnswer: { '@type': 'Answer', text: a }
+    }))
+  };
+
   return (
+    <>
+      <Helmet>
+        <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
+      </Helmet>
     <div className="min-h-screen bg-page-bg text-main-text selection:bg-brand-light font-plus-jakarta flex flex-col relative overflow-hidden pb-12">
       {/* Premium Backdrop Ornament Details */}
       <div className="absolute top-12 left-12 w-64 h-64 bg-brand-light rounded-full blur-3xl opacity-60 pointer-events-none" />
@@ -279,6 +372,88 @@ export function LandingPage({
         </div>
       </section>
 
+      {/* How It Works */}
+      <section className="w-full max-w-7xl mx-auto px-6 py-12 md:py-20 border-t-2 border-dashed border-main-text/10 relative z-10">
+        <div className="text-center space-y-2 mb-12">
+          <h2 className="text-3xl font-nunito font-black text-main-text">
+            {isZh ? '三步驟，輕鬆結清' : 'Three steps to settle up'}
+          </h2>
+          <p className="text-sm text-gray-500 font-medium">
+            {isZh ? '從建立群組到完成結算，整個流程不到三分鐘。' : 'From group to settled in under three minutes.'}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto">
+          {steps.map((step, idx) => (
+            <div
+              key={idx}
+              className="relative bg-white p-6 rounded-[20px] border-3 border-main-text shadow-[4px_4px_0px_#1A1A2E] space-y-4"
+            >
+              <div className="absolute -top-5 -left-3 w-12 h-12 bg-accent-orange text-white rounded-full border-3 border-main-text flex items-center justify-center font-nunito font-black text-xl rotate-[-6deg] shadow-[3px_3px_0px_#1A1A2E]">
+                {idx + 1}
+              </div>
+              <div className="w-12 h-12 bg-brand-light border-2 border-main-text rounded-xl flex items-center justify-center rotate-[-3deg] shadow-[2px_2px_0px_#1A1A2E] shrink-0 ml-auto">
+                {step.icon}
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-nunito font-black text-lg text-main-text">{step.title}</h3>
+                <p className="text-sm text-gray-500 font-medium leading-relaxed">{step.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="w-full max-w-7xl mx-auto px-6 py-12 md:py-20 border-t-2 border-dashed border-main-text/10 relative z-10">
+        <div className="text-center space-y-2 mb-12">
+          <h2 className="text-3xl font-nunito font-black text-main-text">
+            {isZh ? '常見問題' : 'Frequently asked questions'}
+          </h2>
+          <p className="text-sm text-gray-500 font-medium">
+            {isZh ? '使用 SLICE 之前，先看看大家最常問的問題。' : 'The questions people ask most before getting started.'}
+          </p>
+        </div>
+
+        <div className="max-w-3xl mx-auto space-y-4">
+          {faqs.map(({ q, a }, idx) => {
+            const isOpen = openFaqs.has(idx);
+            const panelId = `faq-panel-${idx}`;
+            const buttonId = `faq-button-${idx}`;
+            return (
+              <div
+                key={idx}
+                className="bg-white rounded-[18px] border-3 border-main-text shadow-[4px_4px_0px_#1A1A2E] overflow-hidden"
+              >
+                <button
+                  type="button"
+                  id={buttonId}
+                  aria-expanded={isOpen}
+                  aria-controls={panelId}
+                  onClick={() => toggleFaq(idx)}
+                  className="w-full flex items-center justify-between gap-4 p-5 md:p-6 text-left cursor-pointer hover:bg-brand-light/40 transition-colors"
+                >
+                  <h3 className="font-nunito font-black text-base md:text-lg text-main-text leading-snug">{q}</h3>
+                  <span className={`shrink-0 w-9 h-9 bg-brand-light border-2 border-main-text rounded-full flex items-center justify-center shadow-[2px_2px_0px_#1A1A2E] transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
+                    <ChevronDown className="w-4 h-4 text-accent-orange stroke-[3]" />
+                  </span>
+                </button>
+                <div
+                  id={panelId}
+                  role="region"
+                  aria-labelledby={buttonId}
+                  className={`grid transition-[grid-template-rows] duration-300 ease-out ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
+                >
+                  <div className="overflow-hidden">
+                    <p className="px-5 md:px-6 pb-5 md:pb-6 text-sm text-gray-500 font-medium leading-relaxed">{a}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
       {/* Footer Info */}
       <footer className="w-full max-w-7xl mx-auto px-6 pt-10 border-t border-dashed border-main-text/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-black text-main-text/40 font-nunito tracking-wide shrink-0">
         <span>© {new Date().getFullYear()} {APP_NAME}. ALL RIGHTS RESERVED.</span>
@@ -316,5 +491,6 @@ export function LandingPage({
       </footer>
       {isSponsorOpen && <SponsorModal onClose={() => setIsSponsorOpen(false)} />}
     </div>
+    </>
   );
 }
