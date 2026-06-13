@@ -98,7 +98,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: production
-      url: ${{ steps.netlify.outputs.deploy-url }}
+      url: https://slice.fusion-labs.cc
     steps:
       - uses: actions/checkout@v4
 
@@ -121,19 +121,12 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
 
-      - name: Publish to Netlify (production site)
-        id: netlify
-        uses: nwtgck/actions-netlify@v3.0
+      - name: Publish to Cloudflare Pages (production)
+        uses: cloudflare/wrangler-action@v3
         with:
-          publish-dir: ./dist
-          production-deploy: true
-          deploy-message: 'Manual prod deploy: ${{ github.sha }}'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          enable-pull-request-comment: false
-          enable-commit-comment: false
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy ./dist --project-name=slice --branch=main --commit-dirty=true
 
       - name: Deploy Firestore rules to production
         run: npx firebase-tools@latest deploy --only firestore:rules --project default --non-interactive
