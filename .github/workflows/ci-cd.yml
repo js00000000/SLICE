@@ -56,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: test
-      url: ${{ steps.netlify.outputs.deploy-url }}
+      url: https://slice-test.pages.dev
     steps:
       - uses: actions/checkout@v4
 
@@ -79,19 +79,12 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
 
-      - name: Publish to Netlify (test site)
-        id: netlify
-        uses: nwtgck/actions-netlify@v3.0
+      - name: Publish to Cloudflare Pages (test)
+        uses: cloudflare/wrangler-action@v3
         with:
-          publish-dir: ./dist
-          production-deploy: true
-          deploy-message: ${{ github.event.head_commit.message }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          enable-pull-request-comment: false
-          enable-commit-comment: false
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy ./dist --project-name=slice-test --branch=main --commit-dirty=true
 
       - name: Deploy Firestore rules to dev
         run: npx firebase-tools@latest deploy --only firestore:rules --project dev --non-interactive
