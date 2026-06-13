@@ -20,6 +20,7 @@ import { SettlementsPage } from './pages/SettlementsPage';
 import { GroupManagementPage } from './pages/GroupManagementPage';
 import { JoinGroupPage } from './pages/JoinGroupPage';
 import { LandingPage } from './pages/LandingPage';
+import { LegalPage } from './pages/LegalPage';
 
 // Import Hooks
 import { useAuth } from './contexts/AuthContext';
@@ -29,6 +30,7 @@ import { isWebview } from './utils/webview';
 
 const isValidRoute = (pathname: string): boolean => {
   if (pathname === '/' || pathname === '') return true;
+  if (pathname === '/privacy' || pathname === '/terms') return true;
   if (/^\/join\/[^/]+\/?$/.test(pathname)) return true;
   if (/^\/group\/[^/]+\/?$/.test(pathname)) return true;
   if (/^\/group\/[^/]+\/expenses\/?$/.test(pathname)) return true;
@@ -130,6 +132,10 @@ export default function App() {
       document.title = t('common.seo_title') || APP_NAME;
     }
   }, [user, isSoftLoggedOut, authLoading, t]);
+
+  // Legal pages render regardless of auth state, ahead of the loading gate.
+  if (location.pathname === '/privacy') return <LegalPage kind="privacy" />;
+  if (location.pathname === '/terms') return <LegalPage kind="terms" />;
 
   if (authLoading || checkingUrlGroup) return (
     <div className="mobile-container">

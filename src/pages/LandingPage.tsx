@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Languages, CheckCircle2, Shield, Users,
@@ -303,7 +304,15 @@ export function LandingPage({
           </a>
         </div>
 
-        <span>MADE WITH ❤️ FOR AWESOME TRAVELS</span>
+        <div className="flex items-center gap-4 text-[10px] font-bold tracking-wider uppercase">
+          <Link to="/privacy" className="text-main-text/50 hover:text-accent-orange transition-colors no-underline">
+            {isZh ? '隱私權' : 'Privacy'}
+          </Link>
+          <span className="text-main-text/20">·</span>
+          <Link to="/terms" className="text-main-text/50 hover:text-accent-orange transition-colors no-underline">
+            {isZh ? '服務條款' : 'Terms'}
+          </Link>
+        </div>
       </footer>
       {isSponsorOpen && <SponsorModal onClose={() => setIsSponsorOpen(false)} />}
     </div>
