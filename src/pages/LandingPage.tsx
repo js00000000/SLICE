@@ -474,7 +474,7 @@ export function LandingPage({
 
       {/* Footer Info */}
       <footer className="w-full max-w-7xl mx-auto px-6 pt-10 border-t border-dashed border-main-text/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-black text-main-text/40 font-nunito tracking-wide shrink-0">
-        <span>© {new Date().getFullYear()} {APP_NAME}. ALL RIGHTS RESERVED.</span>
+        <span>© {new Date().getFullYear()} {APP_NAME} · MADE BY FUSION LABS</span>
 
         <div className="flex items-center gap-3 flex-wrap justify-center">
           {/* Playful Sponsor Link inside Footer */}
