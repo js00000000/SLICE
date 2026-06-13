@@ -33,6 +33,25 @@ export function LegalPage({ kind }: LegalPageProps) {
   const path = kind === 'privacy' ? '/privacy' : '/terms';
   const url = `https://slice.fusion-labs.cc${path}`;
 
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: APP_NAME,
+        item: 'https://slice.fusion-labs.cc/'
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: content.title,
+        item: url
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-page-bg text-main-text font-plus-jakarta">
       <Helmet>
@@ -44,6 +63,7 @@ export function LegalPage({ kind }: LegalPageProps) {
         <meta property="og:description" content={content.description} />
         <meta property="og:url" content={url} />
         <meta property="og:locale" content={isZh ? 'zh_TW' : 'en_US'} />
+        <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>
       </Helmet>
 
       <header className="w-full max-w-3xl mx-auto px-6 h-20 flex items-center justify-between">

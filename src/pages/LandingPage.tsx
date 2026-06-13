@@ -145,10 +145,28 @@ export function LandingPage({
     }))
   };
 
+  const howToSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: isZh ? '三步驟用 SLICE 完成群組分帳' : 'How to settle group expenses with SLICE',
+    description: isZh
+      ? '從建立群組到結算，三步驟完成。'
+      : 'From creating a group to settling up, in three steps.',
+    inLanguage: isZh ? 'zh-TW' : 'en',
+    totalTime: 'PT3M',
+    step: steps.map((s, i) => ({
+      '@type': 'HowToStep',
+      position: i + 1,
+      name: s.title,
+      text: s.desc
+    }))
+  };
+
   return (
     <>
       <Helmet>
         <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
+        <script type="application/ld+json">{JSON.stringify(howToSchema)}</script>
       </Helmet>
     <div className="min-h-screen bg-page-bg text-main-text selection:bg-brand-light font-plus-jakarta flex flex-col relative overflow-hidden pb-12">
       {/* Premium Backdrop Ornament Details */}

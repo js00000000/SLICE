@@ -42,21 +42,40 @@
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "WebApplication",
-    "name": "SLICE",
-    "alternateName": ["SLICE 旅遊分帳神器", "SLICE — Group Expense Sharing"],
-    "description": "SLICE 群組分帳神器，輕鬆記帳、智慧結算。支援匿名與 Google 登入，朋友出遊、聚餐、室友分攤皆適用。立即免費開始。",
-    "url": "https://slice.fusion-labs.cc/",
-    "applicationCategory": "FinanceApplication",
-    "applicationSubCategory": "Expense Sharing",
-    "operatingSystem": "Web",
-    "browserRequirements": "Requires JavaScript. Modern browser.",
-    "inLanguage": ["zh-TW", "en"],
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD"
-    }
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://slice.fusion-labs.cc/#publisher",
+        "name": "Fusion Labs",
+        "url": "https://slice.fusion-labs.cc/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://slice.fusion-labs.cc/favicon.svg"
+        }
+      },
+      {
+        "@type": "WebApplication",
+        "@id": "https://slice.fusion-labs.cc/#app",
+        "name": "SLICE",
+        "alternateName": ["SLICE 旅遊分帳神器", "SLICE — Group Expense Sharing"],
+        "description": "SLICE 群組分帳神器，輕鬆記帳、智慧結算。支援匿名與 Google 登入，朋友出遊、聚餐、室友分攤皆適用。立即免費開始。",
+        "url": "https://slice.fusion-labs.cc/",
+        "image": "https://slice.fusion-labs.cc/og-image.png",
+        "applicationCategory": "FinanceApplication",
+        "applicationSubCategory": "Expense Sharing",
+        "operatingSystem": "Web",
+        "browserRequirements": "Requires JavaScript. Modern browser.",
+        "inLanguage": ["zh-TW", "en"],
+        "datePublished": "2024-09-01",
+        "dateModified": "2026-06-13",
+        "publisher": { "@id": "https://slice.fusion-labs.cc/#publisher" },
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    ]
   }
   </script>
 
