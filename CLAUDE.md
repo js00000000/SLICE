@@ -18,7 +18,7 @@ There is no separate typecheck script; `npm run build` runs `tsc -b` first and i
 
 ## Architecture
 
-SLICE is a mobile-first group-expense splitting SPA. Frontend-only (React 19 + Vite 8 + Tailwind 4); persistence and auth are Firebase (Firestore + Auth) accessed directly from the browser. There is no application server — the only backend code is one Netlify scheduled function (`netlify/functions/cleanup-idle-guests.ts`) that uses `firebase-admin` to GC abandoned anonymous accounts.
+SLICE is a mobile-first group-expense splitting SPA. Frontend-only (React 19 + Vite 8 + Tailwind 4); persistence and auth are Firebase (Firestore + Auth) accessed directly from the browser. There is no application server.
 
 ### Provider stack (`src/main.tsx`)
 
@@ -79,7 +79,7 @@ These are hard requirements, not preferences:
 
 ## Environment & deployment
 
-- Required env vars: `VITE_FIREBASE_*` (see `.env.example`). The Netlify cleanup function additionally needs `CLEANUP_CRON_SECRET` and `FIREBASE_SERVICE_ACCOUNT`.
+- Required env vars: `VITE_FIREBASE_*` (see `.env.example`).
 - `.firebaserc` defines two projects: `default` → `slice-b1807` (prod) and `dev` → `easy-split-dev-1cfa3`.
 - Hosted on Netlify (`netlify.toml`): build `npm run build`, publish `dist`, SPA rewrite `/* → /index.html`. Firebase hosting config exists (`firebase.json`) but Netlify is the live deployment.
 - Vite manual chunks (`vite.config.ts`): `firebase`, `ui-icons` (lucide-react), `vendor`. Keep this split if adding heavy deps.
