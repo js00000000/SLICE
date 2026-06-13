@@ -10,7 +10,7 @@ import { AuthProvider } from './contexts/AuthContext'
 import { GroupProvider } from './contexts/GroupContext'
 import { DialogProvider } from './contexts/DialogContext'
 import { installGlobalHaptic } from './utils/haptic'
-import { PWAUpdatePrompt } from './components/PWAUpdatePrompt'
+import { PWARegister } from './components/PWARegister'
 
 installGlobalHaptic()
 
@@ -54,7 +54,7 @@ createRoot(document.getElementById('root')!).render(
             },
           }}
         />
-        <PWAUpdatePrompt />
+        <PWARegister />
         <DialogProvider>
           <AuthProvider>
             <GroupProvider>

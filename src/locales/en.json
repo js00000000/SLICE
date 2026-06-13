@@ -196,9 +196,5 @@
     "bmc_desc": "Supports credit cards and global payment options.",
     "contact": "📬 fusion.labs.tw@gmail.com",
     "disclaimer": "This site is a personal non-profit project. Sponsorship is voluntary and does not provide any consideration/service."
-  },
-  "pwa": {
-    "update_available": "New version available",
-    "update_now": "Update"
   }
 }

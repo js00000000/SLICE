@@ -9,7 +9,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'prompt',
+      registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'icons.svg', 'robots.txt', 'sitemap.xml'],
       manifest: {
         name: 'SLICE 群組分帳',
