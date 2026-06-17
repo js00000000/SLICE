@@ -46,6 +46,7 @@ interface UserSettings {
   lastLoginOn?: Timestamp | null;
   isAnonymous?: boolean;
   loginMethod?: 'anonymous' | 'google';
+  country?: string | null;
 }
 
 interface Group {
@@ -96,9 +97,14 @@ export default function App() {
   const [dataLoading, setDataLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // Search States
+  // Search & Sorting States
   const [userSearch, setUserSearch] = useState("");
   const [groupSearch, setGroupSearch] = useState("");
+  
+  const [userSortField, setUserSortField] = useState<"createdOn" | "lastLoginOn" | "joinedGroups" | "id">("createdOn");
+  const [userSortOrder, setUserSortOrder] = useState<"asc" | "desc">("desc");
+  const [groupSortField, setGroupSortField] = useState<"createdAt" | "name" | "settled" | "createdBy">("createdAt");
+  const [groupSortOrder, setGroupSortOrder] = useState<"asc" | "desc">("desc");
 
   // Detailed view of a group
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
@@ -153,7 +159,8 @@ export default function App() {
           createdOn: data.createdOn,
           lastLoginOn: data.lastLoginOn,
           isAnonymous: data.isAnonymous ?? false,
-          loginMethod: data.loginMethod || "anonymous"
+          loginMethod: data.loginMethod || "anonymous",
+          country: data.country || null
         });
       });
       setUsersList(loadedUsers);
@@ -289,24 +296,94 @@ export default function App() {
     }).format(val);
   };
 
-  // Filter lists
-  const filteredUsers = usersList.filter(u => {
-    const s = userSearch.toLowerCase();
-    return (
-      u.id.toLowerCase().includes(s) ||
-      u.loginMethod?.toLowerCase().includes(s) ||
-      (u.isAnonymous ? "anonymous" : "google").includes(s)
-    );
-  });
+  // Get Country Display helper
+  const getCountryDisplay = (code: string | null | undefined) => {
+    if (!code) return "—";
+    const upperCode = code.toUpperCase();
+    
+    // Map flag emojis using regional indicator symbols (e.g. A = 127397 + 65)
+    let flag = "";
+    try {
+      flag = upperCode.replace(/./g, char => 
+        String.fromCodePoint(char.charCodeAt(0) + 127397)
+      );
+    } catch {
+      flag = "📍";
+    }
+    
+    const names: Record<string, string> = {
+      TW: "台灣",
+      US: "美國",
+      HK: "香港",
+      JP: "日本",
+      SG: "新加坡",
+      CN: "中國",
+      CA: "加拿大",
+      GB: "英國",
+      KR: "韓國",
+      AU: "澳洲",
+      DE: "德國",
+      FR: "法國"
+    };
+    
+    const name = names[upperCode] || upperCode;
+    return `${flag} ${name}`;
+  };
 
-  const filteredGroups = groupsList.filter(g => {
-    const s = groupSearch.toLowerCase();
-    return (
-      g.name.toLowerCase().includes(s) ||
-      g.id.toLowerCase().includes(s) ||
-      (g.joinId && g.joinId.toLowerCase().includes(s))
-    );
-  });
+  // Filter & Sort Users List
+  const filteredUsers = usersList
+    .filter(u => {
+      const s = userSearch.toLowerCase();
+      return (
+        u.id.toLowerCase().includes(s) ||
+        (u.loginMethod || "anonymous").toLowerCase().includes(s) ||
+        (u.country || "").toLowerCase().includes(s) ||
+        (u.isAnonymous ? "anonymous" : "google").includes(s)
+      );
+    })
+    .sort((a, b) => {
+      let comparison = 0;
+      if (userSortField === "createdOn" || userSortField === "lastLoginOn") {
+        const timeA = a[userSortField]?.toMillis() || 0;
+        const timeB = b[userSortField]?.toMillis() || 0;
+        comparison = timeA - timeB;
+      } else if (userSortField === "joinedGroups") {
+        const countA = a.joinedGroupIds?.length || 0;
+        const countB = b.joinedGroupIds?.length || 0;
+        comparison = countA - countB;
+      } else if (userSortField === "id") {
+        comparison = a.id.localeCompare(b.id);
+      }
+      return userSortOrder === "asc" ? comparison : -comparison;
+    });
+
+  // Filter & Sort Groups List
+  const filteredGroups = groupsList
+    .filter(g => {
+      const s = groupSearch.toLowerCase();
+      return (
+        g.name.toLowerCase().includes(s) ||
+        g.id.toLowerCase().includes(s) ||
+        (g.joinId && g.joinId.toLowerCase().includes(s))
+      );
+    })
+    .sort((a, b) => {
+      let comparison = 0;
+      if (groupSortField === "createdAt") {
+        const timeA = a.createdAt?.toMillis() || 0;
+        const timeB = b.createdAt?.toMillis() || 0;
+        comparison = timeA - timeB;
+      } else if (groupSortField === "name") {
+        comparison = a.name.localeCompare(b.name, "zh-TW");
+      } else if (groupSortField === "settled") {
+        const settledA = a.settledAt ? 1 : 0;
+        const settledB = b.settledAt ? 1 : 0;
+        comparison = settledA - settledB; // Unsettled first, settled last
+      } else if (groupSortField === "createdBy") {
+        comparison = a.createdBy.localeCompare(b.createdBy);
+      }
+      return groupSortOrder === "asc" ? comparison : -comparison;
+    });
 
   // Calculate high-level stats
   const totalUsersCount = usersList.length;
@@ -578,21 +655,43 @@ export default function App() {
         {/* TAB 2: USERS */}
         {activeTab === "users" && (
           <div className="space-y-6 animate-fadeIn">
-            {/* Search filter */}
-            <div className="flex items-center bg-white border-2 border-main-text rounded-xl px-4 py-2.5 shadow-[3px_3px_0px_#1A1A2E] w-full max-w-md">
-              <Search className="w-5 h-5 text-gray-400 shrink-0 mr-3" />
-              <input
-                type="text"
-                placeholder="搜尋 UID、登入機制 (google / anonymous)..."
-                value={userSearch}
-                onChange={(e) => setUserSearch(e.target.value)}
-                className="w-full text-base focus:outline-none placeholder-gray-400 font-medium"
-              />
-              {userSearch && (
-                <button onClick={() => setUserSearch("")} className="p-1 text-gray-400 hover:text-gray-600">
-                  <X className="w-4 h-4" />
-                </button>
-              )}
+            {/* Search & Sort filters */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center bg-white border-2 border-main-text rounded-xl px-4 py-2.5 shadow-[3px_3px_0px_#1A1A2E] w-full max-w-md">
+                <Search className="w-5 h-5 text-gray-400 shrink-0 mr-3" />
+                <input
+                  type="text"
+                  placeholder="搜尋 UID、國家、登入機制 (google / anonymous)..."
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  className="w-full text-base focus:outline-none placeholder-gray-400 font-medium"
+                />
+                {userSearch && (
+                  <button onClick={() => setUserSearch("")} className="p-1 text-gray-400 hover:text-gray-600">
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              
+              <div className="flex items-center gap-2 self-start md:self-auto">
+                <span className="text-sm font-bold text-gray-500 font-plus-jakarta shrink-0">排序方式：</span>
+                <select
+                  value={`${userSortField}-${userSortOrder}`}
+                  onChange={(e) => {
+                    const [field, order] = e.target.value.split("-") as [any, any];
+                    setUserSortField(field);
+                    setUserSortOrder(order);
+                  }}
+                  className="bg-white border-2 border-main-text rounded-xl px-3 py-2 text-base font-bold text-main-text shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] focus:outline-none focus:ring-0 cursor-pointer"
+                >
+                  <option value="createdOn-desc">註冊時間 (新 ➔ 舊)</option>
+                  <option value="createdOn-asc">註冊時間 (舊 ➔ 新)</option>
+                  <option value="lastLoginOn-desc">最後登入 (新 ➔ 舊)</option>
+                  <option value="joinedGroups-desc">加入群組數 (多 ➔ 少)</option>
+                  <option value="joinedGroups-asc">加入群組數 (少 ➔ 多)</option>
+                  <option value="id-asc">UID (A ➔ Z)</option>
+                </select>
+              </div>
             </div>
 
             {/* Users table */}
@@ -603,6 +702,7 @@ export default function App() {
                     <tr className="bg-brand-light border-b-2 border-main-text text-sm font-bold text-gray-600">
                       <th className="p-4 font-nunito font-black">用戶識別碼 (UID)</th>
                       <th className="p-4 font-nunito font-black">登入管道</th>
+                      <th className="p-4 font-nunito font-black">來源地區</th>
                       <th className="p-4 font-nunito font-black">註冊時間</th>
                       <th className="p-4 font-nunito font-black">最後登入</th>
                       <th className="p-4 font-nunito font-black">加入群組數</th>
@@ -635,6 +735,11 @@ export default function App() {
                               </span>
                             )}
                           </td>
+                          <td className="p-4">
+                            <span className="font-plus-jakarta text-xs font-bold text-gray-600 bg-gray-50 px-2 py-1 border border-gray-200 rounded-md">
+                              {getCountryDisplay(u.country)}
+                            </span>
+                          </td>
                           <td className="p-4 text-xs font-semibold text-gray-500">
                             {formatDate(u.createdOn)}
                           </td>
@@ -648,7 +753,7 @@ export default function App() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={5} className="p-8 text-center text-sm font-semibold text-gray-400">
+                        <td colSpan={6} className="p-8 text-center text-sm font-semibold text-gray-400">
                           無符合條件的使用者
                         </td>
                       </tr>
@@ -663,21 +768,43 @@ export default function App() {
         {/* TAB 3: GROUPS */}
         {activeTab === "groups" && (
           <div className="space-y-6 animate-fadeIn">
-            {/* Search filter */}
-            <div className="flex items-center bg-white border-2 border-main-text rounded-xl px-4 py-2.5 shadow-[3px_3px_0px_#1A1A2E] w-full max-w-md">
-              <Search className="w-5 h-5 text-gray-400 shrink-0 mr-3" />
-              <input
-                type="text"
-                placeholder="搜尋群組名稱、群組 ID、邀請碼..."
-                value={groupSearch}
-                onChange={(e) => setGroupSearch(e.target.value)}
-                className="w-full text-base focus:outline-none placeholder-gray-400 font-medium"
-              />
-              {groupSearch && (
-                <button onClick={() => setGroupSearch("")} className="p-1 text-gray-400 hover:text-gray-600">
-                  <X className="w-4 h-4" />
-                </button>
-              )}
+            {/* Search & Sort filters */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center bg-white border-2 border-main-text rounded-xl px-4 py-2.5 shadow-[3px_3px_0px_#1A1A2E] w-full max-w-md">
+                <Search className="w-5 h-5 text-gray-400 shrink-0 mr-3" />
+                <input
+                  type="text"
+                  placeholder="搜尋群組名稱、群組 ID、邀請碼..."
+                  value={groupSearch}
+                  onChange={(e) => setGroupSearch(e.target.value)}
+                  className="w-full text-base focus:outline-none placeholder-gray-400 font-medium"
+                />
+                {groupSearch && (
+                  <button onClick={() => setGroupSearch("")} className="p-1 text-gray-400 hover:text-gray-600">
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              
+              <div className="flex items-center gap-2 self-start md:self-auto">
+                <span className="text-sm font-bold text-gray-500 font-plus-jakarta shrink-0">排序方式：</span>
+                <select
+                  value={`${groupSortField}-${groupSortOrder}`}
+                  onChange={(e) => {
+                    const [field, order] = e.target.value.split("-") as [any, any];
+                    setGroupSortField(field);
+                    setGroupSortOrder(order);
+                  }}
+                  className="bg-white border-2 border-main-text rounded-xl px-3 py-2 text-base font-bold text-main-text shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] focus:outline-none focus:ring-0 cursor-pointer"
+                >
+                  <option value="createdAt-desc">創立時間 (新 ➔ 舊)</option>
+                  <option value="createdAt-asc">創立時間 (舊 ➔ 新)</option>
+                  <option value="name-asc">群組名稱 (A ➔ Z)</option>
+                  <option value="settled-desc">結清狀態 (進行中優先)</option>
+                  <option value="settled-asc">結清狀態 (已結清優先)</option>
+                  <option value="createdBy-asc">建立者 UID (A ➔ Z)</option>
+                </select>
+              </div>
             </div>
 
             {/* Groups Grid / List */}
