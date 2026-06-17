@@ -292,7 +292,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!auth.currentUser) {
         const result = await signInAnonymously(auth);
         
-        const defaultGroupName = t('groups.default_group_name', { defaultValue: 'My Trip' });
+        const defaultGroupName = t('groups.default_group_name', { defaultValue: '未命名旅程' });
         const defaultHostName = t('groups.default_host_name', { defaultValue: 'Me' });
         
         try {
