@@ -2,22 +2,34 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { isWebview } from './webview';
 
 describe('isWebview', () => {
-  let originalUserAgent: string;
+  let originalUserAgent: string | undefined;
+  let hadNavigator = true;
 
   beforeEach(() => {
-    originalUserAgent = navigator.userAgent;
+    if (typeof globalThis.navigator === 'undefined') {
+      hadNavigator = false;
+      (globalThis as any).navigator = { userAgent: '' };
+    }
+    originalUserAgent = globalThis.navigator?.userAgent;
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
-    Object.defineProperty(navigator, 'userAgent', {
-      value: originalUserAgent,
-      configurable: true,
-    });
+    if (hadNavigator && originalUserAgent !== undefined) {
+      Object.defineProperty(globalThis.navigator, 'userAgent', {
+        value: originalUserAgent,
+        configurable: true,
+      });
+    } else {
+      delete (globalThis as any).navigator;
+    }
   });
 
   const setUserAgent = (ua: string) => {
-    Object.defineProperty(navigator, 'userAgent', {
+    if (typeof globalThis.navigator === 'undefined') {
+      (globalThis as any).navigator = { userAgent: '' };
+    }
+    Object.defineProperty(globalThis.navigator, 'userAgent', {
       value: ua,
       configurable: true,
     });

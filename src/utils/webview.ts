@@ -1,4 +1,5 @@
 export function isWebview(): boolean {
+  if (typeof navigator === 'undefined' || !navigator.userAgent) return false;
   const ua = navigator.userAgent;
 
   if (/Line\//i.test(ua) || /LIFF\//.test(ua)) return true;
