@@ -162,8 +162,8 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
   };
 
   return (
-    <div className="fixed inset-0 bg-main-text/40 backdrop-blur-sm z-50 flex items-end justify-center p-0 animate-in fade-in duration-200 select-none">
-      <form onSubmit={handleSubmit} className="bg-white w-full max-w-md rounded-t-[24px] border-t-3 border-x-3 border-main-text shadow-[0_-12px_40px_rgba(26,26,46,0.15)] flex flex-col max-h-[82dvh] overflow-hidden animate-slide-up">
+    <div className="fixed inset-0 bg-main-text/40 backdrop-blur-sm z-50 flex items-end justify-center pt-16 sm:pt-20 px-0 pb-0 animate-in fade-in duration-200 select-none">
+      <form onSubmit={handleSubmit} className="bg-white w-full max-w-md rounded-t-[24px] border-t-3 border-x-3 border-main-text shadow-[0_-12px_40px_rgba(26,26,46,0.15)] flex flex-col max-h-[calc(100dvh-4rem)] sm:max-h-[calc(100dvh-5rem)] overflow-hidden animate-slide-up">
         
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b-3 border-main-text shrink-0 bg-brand-light">
