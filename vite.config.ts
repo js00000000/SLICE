@@ -10,22 +10,52 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icons.svg', 'robots.txt', 'sitemap.xml'],
+      includeAssets: [
+        'favicon.svg',
+        'icons.svg',
+        'robots.txt',
+        'sitemap.xml',
+        'apple-touch-icon-180x180.png',
+      ],
+      devOptions: {
+        // Generate/serve the service worker during `npm run dev` so PWA
+        // behaviour (install prompt, offline) can be tested locally.
+        enabled: true,
+      },
       manifest: {
         name: 'SLICE 群組分帳',
         short_name: 'SLICE',
         description:
           '專為群組設計的簡單分帳工具。支援匿名登入、Google 登入，輕鬆追蹤支出、計算結清金額。',
+        lang: 'zh-Hant-TW',
         start_url: '/',
         display: 'standalone',
-        background_color: '#ffffff',
+        background_color: '#FFF0EA',
         theme_color: '#FF6B35',
         icons: [
           {
             src: 'favicon.svg',
             sizes: 'any',
             type: 'image/svg+xml',
-            purpose: 'any maskable',
+            purpose: 'any',
+          },
+          {
+            src: 'pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any',
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any',
+          },
+          {
+            src: 'maskable-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
           },
         ],
       },

@@ -38,3 +38,6 @@ dist-ssr
 
 # Remotion render output
 video
+
+# vite-plugin-pwa dev service worker output
+dev-dist
