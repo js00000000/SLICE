@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+@theme {
+  --font-nunito: "Nunito", sans-serif;
+  --font-plus-jakarta: "Plus Jakarta Sans", sans-serif;
+  --color-accent-orange: #FF6B35;
+  --color-brand-light: #FFF0EA;
+  --color-page-bg: #F7F7F5;
+  --color-main-text: #1A1A2E;
+  --color-success-green: #0A7A4A;
+  --color-success-light: #EAFAF3;
+  --color-main-dark: #1A1A2E;
+}
+
+@layer base {
+  body {
+    @apply bg-page-bg font-plus-jakarta text-main-text antialiased selection:bg-brand-light;
+  }
+  
+  h1, h2, h3, .font-display {
+    @apply font-nunito font-black text-main-text;
+  }
+}
+
+/* Button bounce interaction */
+.btn-bounce {
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.btn-bounce:active {
+  transform: scale(0.96);
+}
+
+/* Scrollbar customizations */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #1A1A2E20;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #1A1A2E40;
+}

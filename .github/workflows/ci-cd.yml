@@ -20,8 +20,38 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      backoffice: ${{ steps.filter.outputs.backoffice }}
+      app: ${{ steps.filter.outputs.app }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Filter changed paths
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backoffice:
+              - 'backoffice/**'
+              - '.github/workflows/ci-cd.yml'
+            app:
+              - 'src/**'
+              - 'public/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'vite.config.ts'
+              - 'index.html'
+              - 'tsconfig*.json'
+              - 'firestore.rules'
+              - '.github/workflows/ci-cd.yml'
+
   test:
     name: Test & build
+    needs: changes
+    if: ${{ needs.changes.outputs.app == 'true' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -51,8 +81,8 @@ jobs:
 
   deploy-test:
     name: Deploy to test
-    needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [changes, test]
+    if: ${{ needs.changes.outputs.app == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     environment:
       name: test
@@ -93,8 +123,8 @@ jobs:
 
   deploy-production:
     name: Deploy to production (manual)
-    needs: test
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'production'
+    needs: [changes, test]
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'production' }}
     runs-on: ubuntu-latest
     environment:
       name: production
@@ -132,3 +162,40 @@ jobs:
         run: npx firebase-tools@latest deploy --only firestore:rules --project default --non-interactive
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+  deploy-backoffice:
+    name: Deploy Backoffice
+    needs: changes
+    if: ${{ needs.changes.outputs.backoffice == 'true' && (github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'pull_request') }}
+    runs-on: ubuntu-latest
+    environment:
+      name: test # Backoffice always connects to the Firebase dev/test database!
+      url: https://slice-backoffice.pages.dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install backoffice dependencies
+        run: cd backoffice && npm ci
+
+      - name: Build backoffice
+        run: cd backoffice && npm run build
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+
+      - name: Publish to Cloudflare Pages (Backoffice)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy ./backoffice/dist --project-name=slice-backoffice --branch=main --commit-dirty=true
