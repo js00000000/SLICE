@@ -12,7 +12,12 @@ import {
   getDocs, 
   query, 
   orderBy, 
-  Timestamp
+  Timestamp,
+  deleteDoc,
+  updateDoc,
+  writeBatch,
+  arrayRemove,
+  where
 } from "firebase/firestore";
 import { 
   auth, 
@@ -33,7 +38,11 @@ import {
   X, 
   CheckCircle,
   LayoutDashboard,
-  UserCheck
+  UserCheck,
+  Trash2,
+  AlertTriangle,
+  UserX,
+  FolderX
 } from "lucide-react";
 
 // Types matching SLICE schema
@@ -112,6 +121,12 @@ export default function App() {
   const [selectedGroupExpenses, setSelectedGroupExpenses] = useState<Expense[]>([]);
   const [selectedGroupSettlements, setSelectedGroupSettlements] = useState<Settlement[]>([]);
   const [detailsLoading, setDetailsLoading] = useState(false);
+
+  // Deletion States
+  const [userToDelete, setUserToDelete] = useState<UserSettings | null>(null);
+  const [groupToDelete, setGroupToDelete] = useState<Group | null>(null);
+  const [isDeletingUser, setIsDeletingUser] = useState(false);
+  const [isDeletingGroup, setIsDeletingGroup] = useState(false);
 
   // Auth monitoring
   useEffect(() => {
@@ -265,6 +280,158 @@ export default function App() {
       await signOut(auth);
     } catch (error) {
       console.error("Sign out failed:", error);
+    }
+  };
+
+  const handleDeleteGroup = async (groupId: string) => {
+    setIsDeletingGroup(true);
+    try {
+      // 1. Delete all subcollections (members, expenses, settlements)
+      const membersSnap = await getDocs(collection(db, "groups", groupId, "members"));
+      const expensesSnap = await getDocs(collection(db, "groups", groupId, "expenses"));
+      const settlementsSnap = await getDocs(collection(db, "groups", groupId, "settlements"));
+
+      const batch = writeBatch(db);
+
+      membersSnap.forEach((mDoc) => {
+        batch.delete(mDoc.ref);
+      });
+
+      expensesSnap.forEach((eDoc) => {
+        batch.delete(eDoc.ref);
+      });
+
+      settlementsSnap.forEach((sDoc) => {
+        batch.delete(sDoc.ref);
+      });
+
+      // 2. Delete group doc itself
+      batch.delete(doc(db, "groups", groupId));
+
+      // Commit all deletions
+      await batch.commit();
+
+      // 3. Update all users' group references
+      const usersToUpdate = usersList.filter(u => 
+        u.lastGroupId === groupId || (u.joinedGroupIds && u.joinedGroupIds.includes(groupId))
+      );
+
+      for (const u of usersToUpdate) {
+        const userRef = doc(db, "users", u.id);
+        const updates: any = {};
+        if (u.lastGroupId === groupId) {
+          updates.lastGroupId = null;
+        }
+        if (u.joinedGroupIds && u.joinedGroupIds.includes(groupId)) {
+          updates.joinedGroupIds = arrayRemove(groupId);
+        }
+        await updateDoc(userRef, updates);
+      }
+
+      // Close details if the deleted group was selected
+      if (selectedGroup && selectedGroup.id === groupId) {
+        setSelectedGroup(null);
+      }
+
+      setGroupToDelete(null);
+      
+      // Refresh list
+      await fetchData();
+      
+      alert("群組及其所有子資料已成功刪除！");
+    } catch (error) {
+      console.error("Error deleting group:", error);
+      alert("刪除群組失敗，請檢查權限或控制台日誌。");
+    } finally {
+      setIsDeletingGroup(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    setIsDeletingUser(true);
+    try {
+      // 1. Find user's settings to get joinedGroupIds
+      const userRef = doc(db, "users", userId);
+      const userSnap = await getDoc(userRef);
+      let joinedGroupIds: string[] = [];
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        joinedGroupIds = data.joinedGroupIds || [];
+      }
+
+      // 2. Groups created by this user
+      const groupsCreatedByUser = groupsList.filter(g => g.createdBy === userId);
+      
+      // Delete all groups created by this user
+      for (const g of groupsCreatedByUser) {
+        const membersSnap = await getDocs(collection(db, "groups", g.id, "members"));
+        const expensesSnap = await getDocs(collection(db, "groups", g.id, "expenses"));
+        const settlementsSnap = await getDocs(collection(db, "groups", g.id, "settlements"));
+
+        const batch = writeBatch(db);
+        membersSnap.forEach((mDoc) => batch.delete(mDoc.ref));
+        expensesSnap.forEach((eDoc) => batch.delete(eDoc.ref));
+        settlementsSnap.forEach((sDoc) => batch.delete(sDoc.ref));
+        batch.delete(doc(db, "groups", g.id));
+        await batch.commit();
+
+        // Also clean references for other users of this deleted group
+        const usersToUpdate = usersList.filter(u => 
+          u.id !== userId && (u.lastGroupId === g.id || (u.joinedGroupIds && u.joinedGroupIds.includes(g.id)))
+        );
+
+        for (const u of usersToUpdate) {
+          const otherUserRef = doc(db, "users", u.id);
+          const updates: any = {};
+          if (u.lastGroupId === g.id) {
+            updates.lastGroupId = null;
+          }
+          if (u.joinedGroupIds && u.joinedGroupIds.includes(g.id)) {
+            updates.joinedGroupIds = arrayRemove(g.id);
+          }
+          await updateDoc(otherUserRef, updates);
+        }
+        
+        if (selectedGroup && selectedGroup.id === g.id) {
+          setSelectedGroup(null);
+        }
+      }
+
+      // 3. Remove user membership from groups they joined but did not create
+      const groupsJoinedButNotCreated = joinedGroupIds.filter(groupId => 
+        !groupsCreatedByUser.some(g => g.id === groupId)
+      );
+
+      for (const groupId of groupsJoinedButNotCreated) {
+        try {
+          const membersRef = collection(db, "groups", groupId, "members");
+          const q = query(membersRef, where("userId", "==", userId));
+          const qSnap = await getDocs(q);
+          
+          const batch = writeBatch(db);
+          qSnap.forEach((doc) => {
+            batch.delete(doc.ref);
+          });
+          await batch.commit();
+        } catch (err) {
+          console.error(`Error removing user ${userId} from group ${groupId}:`, err);
+        }
+      }
+
+      // 4. Finally, delete the user doc itself
+      await deleteDoc(userRef);
+
+      setUserToDelete(null);
+      
+      // Refresh list
+      await fetchData();
+
+      alert("使用者及其建立的相關群組已成功刪除！");
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      alert("刪除使用者失敗，請檢查權限或控制台日誌。");
+    } finally {
+      setIsDeletingUser(false);
     }
   };
 
@@ -705,7 +872,8 @@ export default function App() {
                       <th className="p-4 font-nunito font-black">來源地區</th>
                       <th className="p-4 font-nunito font-black">註冊時間</th>
                       <th className="p-4 font-nunito font-black">最後登入</th>
-                      <th className="p-4 font-nunito font-black">加入群組數</th>
+                      <th className="p-4 font-nunito font-black text-center">加入群組數</th>
+                      <th className="p-4 font-nunito font-black">操作</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y-2 divide-gray-100">
@@ -749,11 +917,20 @@ export default function App() {
                           <td className="p-4 font-nunito font-black text-sm text-center">
                             {u.joinedGroupIds?.length || 0}
                           </td>
+                          <td className="p-4">
+                            <button
+                              onClick={() => setUserToDelete(u)}
+                              className="bg-white hover:bg-red-50 text-red-500 text-xs font-bold py-1.5 px-3 border-2 border-main-text rounded-lg shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] btn-bounce cursor-pointer flex items-center gap-1.5"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              刪除用戶
+                            </button>
+                          </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={6} className="p-8 text-center text-sm font-semibold text-gray-400">
+                        <td colSpan={7} className="p-8 text-center text-sm font-semibold text-gray-400">
                           無符合條件的使用者
                         </td>
                       </tr>
@@ -863,13 +1040,20 @@ export default function App() {
                               </span>
                             )}
                           </td>
-                          <td className="p-4">
+                          <td className="p-4 flex items-center gap-2">
                             <button
                               onClick={() => fetchGroupDetails(g)}
-                              className="bg-white hover:bg-gray-50 text-main-text text-xs font-bold py-1.5 px-3 border-2 border-main-text rounded-lg shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] btn-bounce cursor-pointer flex items-center gap-1"
+                              className="bg-white hover:bg-gray-50 text-main-text text-xs font-bold py-1.5 px-3 border-2 border-main-text rounded-lg shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] btn-bounce cursor-pointer flex items-center gap-1 whitespace-nowrap"
                             >
                               查看明細
                               <ArrowRight className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => setGroupToDelete(g)}
+                              className="bg-white hover:bg-red-50 text-red-500 text-xs font-bold py-1.5 px-3 border-2 border-main-text rounded-lg shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] btn-bounce cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              刪除
                             </button>
                           </td>
                         </tr>
@@ -1039,7 +1223,14 @@ export default function App() {
                   </div>
 
                   {/* Modal Footer */}
-                  <div className="bg-gray-50 border-t-3 border-main-text p-4 flex justify-end shrink-0">
+                  <div className="bg-gray-50 border-t-3 border-main-text p-4 flex justify-between items-center shrink-0">
+                    <button
+                      onClick={() => setGroupToDelete(selectedGroup)}
+                      className="bg-white hover:bg-red-50 text-red-500 font-nunito font-black text-sm py-2 px-5 border-2 border-main-text rounded-xl shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] btn-bounce cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      刪除此群組
+                    </button>
                     <button
                       onClick={() => setSelectedGroup(null)}
                       className="bg-white hover:bg-gray-100 text-main-text font-nunito font-black text-sm py-2 px-5 border-2 border-main-text rounded-xl shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] btn-bounce cursor-pointer"
@@ -1052,6 +1243,111 @@ export default function App() {
               </div>
             )}
 
+          </div>
+        )}
+
+        {/* USER DELETE CONFIRMATION MODAL */}
+        {userToDelete && (
+          <div className="fixed inset-0 bg-[#1A1A2E]/50 flex items-center justify-center p-4 z-50 overflow-y-auto font-plus-jakarta">
+            <div className="bg-white border-3 border-main-text rounded-2xl w-full max-w-md overflow-hidden shadow-[6px_6px_0px_#1A1A2E] flex flex-col animate-fadeIn">
+              <div className="bg-[#FFF0EA] border-b-3 border-main-text p-5 flex items-center gap-3 shrink-0">
+                <div className="bg-accent-orange p-2 rounded-lg border-2 border-main-text">
+                  <UserX className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-lg font-nunito font-black text-main-text">
+                  刪除使用者與其群組
+                </h3>
+              </div>
+              <div className="p-6 space-y-4 overflow-y-auto">
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  您即將刪除使用者 <strong className="font-mono text-xs bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded text-main-text">{userToDelete.id}</strong>。
+                </p>
+                <div className="bg-red-50 border-2 border-red-500 rounded-xl p-4 text-xs space-y-1.5 text-red-700">
+                  <p className="font-bold flex items-center gap-1.5">
+                    <AlertTriangle className="w-4 h-4 text-red-500" />
+                    警告：此動作無法復原！
+                  </p>
+                  <p>1. 使用者設定檔將會被永久刪除。</p>
+                  <p>2. <strong>此使用者建立的所有分帳群組 ({groupsList.filter(g => g.createdBy === userToDelete.id).length} 個) 及其帳目和成員資料亦將會被一併刪除。</strong></p>
+                  <p>3. 此使用者加入的其他群組將會自動移除其成員資料。</p>
+                </div>
+
+                {groupsList.filter(g => g.createdBy === userToDelete.id).length > 0 && (
+                  <div className="space-y-1.5">
+                    <span className="text-xs font-bold text-gray-500">即將被刪除的群組：</span>
+                    <div className="max-h-28 overflow-y-auto border border-dashed border-gray-200 rounded-lg p-2 bg-gray-50 space-y-1">
+                      {groupsList.filter(g => g.createdBy === userToDelete.id).map(g => (
+                        <div key={g.id} className="text-xs font-semibold text-gray-600 flex justify-between gap-2">
+                          <span className="truncate max-w-[200px]">{g.name}</span>
+                          <span className="font-mono text-[10px] text-gray-400 shrink-0">ID: {g.id.substring(0, 6)}...</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="bg-gray-50 border-t-2 border-main-text p-4 flex gap-3 shrink-0">
+                <button
+                  onClick={() => setUserToDelete(null)}
+                  disabled={isDeletingUser}
+                  className="flex-1 bg-white hover:bg-gray-100 text-main-text font-nunito font-black text-sm py-2.5 px-4 border-2 border-main-text rounded-xl shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] btn-bounce cursor-pointer text-center disabled:opacity-50"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={() => handleDeleteUser(userToDelete.id)}
+                  disabled={isDeletingUser}
+                  className="flex-1 bg-red-500 hover:bg-red-600 text-white font-nunito font-black text-sm py-2.5 px-4 border-2 border-main-text rounded-xl shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] btn-bounce cursor-pointer text-center flex items-center justify-center gap-1.5 disabled:opacity-50"
+                >
+                  {isDeletingUser ? "刪除中..." : "確認刪除"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* GROUP DELETE CONFIRMATION MODAL */}
+        {groupToDelete && (
+          <div className="fixed inset-0 bg-[#1A1A2E]/50 flex items-center justify-center p-4 z-50 overflow-y-auto font-plus-jakarta">
+            <div className="bg-white border-3 border-main-text rounded-2xl w-full max-w-md overflow-hidden shadow-[6px_6px_0px_#1A1A2E] flex flex-col animate-fadeIn">
+              <div className="bg-[#FFF0EA] border-b-3 border-main-text p-5 flex items-center gap-3 shrink-0">
+                <div className="bg-accent-orange p-2 rounded-lg border-2 border-main-text">
+                  <FolderX className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-lg font-nunito font-black text-main-text">
+                  刪除群組資料
+                </h3>
+              </div>
+              <div className="p-6 space-y-4 shrink-0">
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  您即將刪除群組：<strong className="text-main-text">{groupToDelete.name}</strong>
+                </p>
+                <div className="bg-red-50 border-2 border-red-500 rounded-xl p-4 text-xs space-y-1.5 text-red-700">
+                  <p className="font-bold flex items-center gap-1.5">
+                    <AlertTriangle className="w-4 h-4 text-red-500" />
+                    警告：此動作無法復原！
+                  </p>
+                  <p>1. 群組主文件及所有子文件 (成員、支出、結清) 將被永久刪除。</p>
+                  <p>2. 所有群組成員的使用者帳號將自動解除與此群組的連結。</p>
+                </div>
+              </div>
+              <div className="bg-gray-50 border-t-2 border-main-text p-4 flex gap-3 shrink-0">
+                <button
+                  onClick={() => setGroupToDelete(null)}
+                  disabled={isDeletingGroup}
+                  className="flex-1 bg-white hover:bg-gray-100 text-main-text font-nunito font-black text-sm py-2.5 px-4 border-2 border-main-text rounded-xl shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] btn-bounce cursor-pointer text-center disabled:opacity-50"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={() => handleDeleteGroup(groupToDelete.id)}
+                  disabled={isDeletingGroup}
+                  className="flex-1 bg-red-500 hover:bg-red-600 text-white font-nunito font-black text-sm py-2.5 px-4 border-2 border-main-text rounded-xl shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] btn-bounce cursor-pointer text-center flex items-center justify-center gap-1.5 disabled:opacity-50"
+                >
+                  {isDeletingGroup ? "刪除中..." : "確認刪除"}
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
