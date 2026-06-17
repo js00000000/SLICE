@@ -182,8 +182,8 @@
     "unmark_not_allowed": "Only the host or person who recorded this can undo it."
   },
   "webview": {
-    "title": "In-App Browser Blocked",
-    "subtitle": "For security and stability, Google Sign-In and other critical features are blocked inside in-app browsers (like LINE, Facebook, Instagram, Threads, X/Twitter, Messenger, or WeChat).",
+    "title": "In-App Browser Warning",
+    "subtitle": "Google Sign-In and other critical features work best inside Safari or Chrome. You can continue using the app, but some actions might fail.",
     "instruction_title": "How to Open in External Browser",
     "step_1": "Tap the menu icon (···) or share button (📤) in the corner of your screen.",
     "step_2": "Select \"Open in external browser\", \"Open in Safari\", or \"Open in Chrome\".",

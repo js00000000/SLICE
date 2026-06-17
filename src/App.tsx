@@ -26,7 +26,7 @@ import { LegalPage } from './pages/LegalPage';
 import { useAuth } from './contexts/AuthContext';
 import { useGroup } from './contexts/GroupContext';
 import { isWebview } from './utils/webview';
-import { WebviewBlocker } from './components/WebviewBlocker';
+import { WebviewWarningBanner } from './components/WebviewWarningBanner';
 
 const isValidRoute = (pathname: string): boolean => {
   if (pathname === '/' || pathname === '') return true;
@@ -50,6 +50,14 @@ export default function App() {
 
   const [invalidUrlGroup, setInvalidUrlGroup] = useState<string | null>(null);
   const [checkingUrlGroup, setCheckingUrlGroup] = useState(false);
+  const [showWebviewBanner, setShowWebviewBanner] = useState(false);
+
+  useEffect(() => {
+    if (isWebview()) {
+      const isDismissed = sessionStorage.getItem('webview-warning-dismissed') === 'true';
+      setShowWebviewBanner(!isDismissed);
+    }
+  }, []);
 
   // Check if a group exists before letting unauthenticated users stay on protected URLs.
   // For /join/:joinId we resolve the public join token. For /group/:groupId we still
@@ -126,11 +134,6 @@ export default function App() {
   if (location.pathname === '/privacy') return <LegalPage kind="privacy" />;
   if (location.pathname === '/terms') return <LegalPage kind="terms" />;
 
-  // Prevent users from using the app within in-app webviews (LINE, Facebook, etc.)
-  if (isWebview()) {
-    return <WebviewBlocker />;
-  }
-
   if (authLoading || checkingUrlGroup) return (
     <div className="mobile-container">
       <Helmet>
@@ -165,24 +168,35 @@ export default function App() {
             <meta property="twitter:title" content={t('common.seo_title')} />
             <meta property="twitter:description" content={t('common.seo_description')} />
           </Helmet>
+          {showWebviewBanner && (
+            <div className="fixed-in-container top-0 z-[100]">
+              <WebviewWarningBanner onDismiss={() => setShowWebviewBanner(false)} />
+            </div>
+          )}
           <LandingPage
             onGoogleLogin={handleGoogleLogin}
             onQuickStart={handleQuickStart}
             isGoogleLoading={googleLoading}
             isGuestLoading={guestLoading}
+            hasWebviewBanner={showWebviewBanner}
           />
         </>
       );
     }
 
     return (
-      <div className="mobile-container">
+      <div className={`mobile-container transition-all duration-300 ${showWebviewBanner ? 'has-webview-banner' : ''}`}>
         <Helmet>
           <html lang={i18n.resolvedLanguage || i18n.language || 'en'} />
           <title>{t('common.seo_title')}</title>
           <meta name="title" content={t('common.seo_title')} />
           <meta name="description" content={t('common.seo_description')} />
         </Helmet>
+        {showWebviewBanner && (
+          <div className="fixed-in-container top-0 z-[100]">
+            <WebviewWarningBanner onDismiss={() => setShowWebviewBanner(false)} />
+          </div>
+        )}
         <LoginView
           onGoogleLogin={handleGoogleLogin}
           onGuestLogin={handleGuestLogin}
@@ -196,7 +210,7 @@ export default function App() {
   }
 
   return (
-    <div className="mobile-container">
+    <div className={`mobile-container transition-all duration-300 ${showWebviewBanner ? 'has-webview-banner' : ''}`}>
       <Helmet>
         <html lang={i18n.resolvedLanguage || i18n.language || 'en'} />
         <title>{APP_NAME}</title>
@@ -208,6 +222,11 @@ export default function App() {
         <meta property="twitter:title" content={t('common.seo_title') || APP_NAME} />
         <meta property="twitter:description" content={t('common.seo_description')} />
       </Helmet>
+      {showWebviewBanner && (
+        <div className="fixed-in-container top-0 z-[100]">
+          <WebviewWarningBanner onDismiss={() => setShowWebviewBanner(false)} />
+        </div>
+      )}
       
       {isLoading ? (
         <LoadingView />

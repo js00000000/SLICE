@@ -46,6 +46,24 @@
   .fixed-in-container > * {
     pointer-events: auto;
   }
+
+  /* Webview banner scrolling layout offsets */
+  .mobile-container.has-webview-banner {
+    padding-top: 78px;
+  }
+  
+  .mobile-container.has-webview-banner .sticky {
+    top: 78px !important;
+  }
+
+  @media (min-width: 640px) {
+    .mobile-container.has-webview-banner {
+      padding-top: 70px;
+    }
+    .mobile-container.has-webview-banner .sticky {
+      top: 70px !important;
+    }
+  }
   
   /* Stagger fade-up animation */
   .stagger-item {
