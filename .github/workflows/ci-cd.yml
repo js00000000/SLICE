@@ -169,7 +169,7 @@ jobs:
     if: ${{ needs.changes.outputs.backoffice == 'true' && (github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'pull_request') }}
     runs-on: ubuntu-latest
     environment:
-      name: test # Backoffice always connects to the Firebase dev/test database!
+      name: production # Backoffice on Cloudflare connects to the production Firebase database!
       url: https://slice-backoffice.pages.dev
     steps:
       - uses: actions/checkout@v4
