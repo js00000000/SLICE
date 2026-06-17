@@ -58,4 +58,5 @@ export interface UserSettings {
   lastLoginOn?: Timestamp;
   isAnonymous?: boolean;
   loginMethod?: 'anonymous' | 'google';
+  country?: string | null;
 }

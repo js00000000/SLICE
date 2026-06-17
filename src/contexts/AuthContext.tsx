@@ -33,6 +33,7 @@ import {
 import { auth, googleProvider, db } from '../lib/firebase';
 import { firebaseService } from '../lib/firebaseService';
 import { AbandonGuestConfirmationModal } from '../components/MergeConfirmationModal';
+import { fetchUserGeolocation } from '../utils/geolocation';
 import type { UserSettings } from '../types';
 
 interface AuthContextType {
@@ -118,6 +119,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userDocSnap = await getDoc(userDocRef);
         const loginMethod = currentUser.isAnonymous ? 'anonymous' : 'google';
         
+        // Fetch country with explicit try-catch and safe fallback so it NEVER blocks login or register
+        let detectedCountry: string | null = null;
+        try {
+          const geoInfo = await fetchUserGeolocation();
+          detectedCountry = geoInfo.countryCode;
+        } catch (geoError) {
+          console.warn("Non-blocking error during geo fetch:", geoError);
+        }
+        
         if (!userDocSnap.exists()) {
           await setDoc(userDocRef, {
             lastGroupId: null,
@@ -126,6 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             lastLoginOn: serverTimestamp(),
             isAnonymous: currentUser.isAnonymous,
             loginMethod: loginMethod,
+            country: detectedCountry,
           });
         } else {
           const data = userDocSnap.data() as UserSettings;
@@ -133,6 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             lastLoginOn: serverTimestamp(),
             isAnonymous: currentUser.isAnonymous,
             loginMethod: loginMethod,
+            country: detectedCountry || data.country || null,
             ...(!data.createdOn ? { createdOn: serverTimestamp() } : {})
           });
         }
