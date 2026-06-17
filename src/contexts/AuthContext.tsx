@@ -124,11 +124,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           const geoInfo = await fetchUserGeolocation();
           detectedCountry = geoInfo.countryCode;
+          console.log('[AuthContext] Fetched user country code:', detectedCountry);
         } catch (geoError) {
-          console.warn("Non-blocking error during geo fetch:", geoError);
+          console.warn("[AuthContext] Non-blocking error during geo fetch:", geoError);
         }
         
         if (!userDocSnap.exists()) {
+          console.log('[AuthContext] Creating new user settings document with country:', detectedCountry);
           await setDoc(userDocRef, {
             lastGroupId: null,
             joinedGroupIds: [],
@@ -140,11 +142,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
         } else {
           const data = userDocSnap.data() as UserSettings;
+          const targetCountry = detectedCountry || data.country || null;
+          console.log('[AuthContext] Updating existing user settings document. Detected country:', detectedCountry, 'Existing country:', data.country, 'Target country written:', targetCountry);
           await updateDoc(userDocRef, {
             lastLoginOn: serverTimestamp(),
             isAnonymous: currentUser.isAnonymous,
             loginMethod: loginMethod,
-            country: detectedCountry || data.country || null,
+            country: targetCountry,
             ...(!data.createdOn ? { createdOn: serverTimestamp() } : {})
           });
         }

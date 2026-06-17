@@ -5,14 +5,15 @@ export interface GeoInfo {
 /**
  * Fetches the user's geolocation from the Cloudflare Edge API route (/api/geo).
  * This operation is fully fault-tolerant:
- * - It has a strict 2-second timeout to ensure it never blocks login/registration.
+ * - It has a strict 5-second timeout to ensure it never blocks login/registration.
  * - It silently catches any errors or network failures and gracefully returns a null country.
  */
 export async function fetchUserGeolocation(): Promise<GeoInfo> {
+  console.log('[Geolocation] Starting Cloudflare edge country detection...');
   const controller = new AbortController();
   const timeoutId = setTimeout(() => {
     controller.abort();
-  }, 2000); // 2-second strict limit
+  }, 5000); // 5-second limit
 
   try {
     const response = await fetch('/api/geo', {
@@ -29,13 +30,13 @@ export async function fetchUserGeolocation(): Promise<GeoInfo> {
     }
 
     const data = await response.json() as { countryCode?: string | null };
+    console.log('[Geolocation] Detection complete. Country code received:', data.countryCode || 'null');
     return {
       countryCode: data.countryCode || null,
     };
   } catch (error) {
     clearTimeout(timeoutId);
-    // Log a warning instead of an error to prevent noise in tracking, since this is non-critical
-    console.warn('Geolocation lookup bypassed or timed out. Defaulting to null country. Details:', error);
+    console.warn('[Geolocation] Geolocation lookup bypassed or timed out. Defaulting to null country. Details:', error);
     return { countryCode: null };
   }
 }
