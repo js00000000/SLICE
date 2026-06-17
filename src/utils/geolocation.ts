@@ -9,7 +9,6 @@ export interface GeoInfo {
  * - It silently catches any errors or network failures and gracefully returns a null country.
  */
 export async function fetchUserGeolocation(): Promise<GeoInfo> {
-  console.log('[Geolocation] Starting Cloudflare edge country detection...');
   const controller = new AbortController();
   const timeoutId = setTimeout(() => {
     controller.abort();
@@ -30,13 +29,12 @@ export async function fetchUserGeolocation(): Promise<GeoInfo> {
     }
 
     const data = await response.json() as { countryCode?: string | null };
-    console.log('[Geolocation] Detection complete. Country code received:', data.countryCode || 'null');
     return {
       countryCode: data.countryCode || null,
     };
   } catch (error) {
     clearTimeout(timeoutId);
-    console.warn('[Geolocation] Geolocation lookup bypassed or timed out. Defaulting to null country. Details:', error);
+    console.warn('Geolocation lookup bypassed or timed out. Defaulting to null country. Details:', error);
     return { countryCode: null };
   }
 }
