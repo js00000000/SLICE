@@ -182,8 +182,13 @@
     "unmark_not_allowed": "只有主持人或建立此紀錄的人可以撤銷。"
   },
   "webview": {
-    "title": "建議用瀏覽器開啟",
-    "message": "在 App 內建瀏覽器中，Google 登入等功能無法正常使用。\n\n• LINE：點「⋯」→「以瀏覽器開啟」\n• Facebook / Instagram：點「⋯」→「以 Safari 開啟」\n• 其他 App：找分享或「⋯」圖示"
+    "title": "不支援內建瀏覽器",
+    "subtitle": "為保障安全與穩定性，Google 登入等核心功能無法在 App 內建瀏覽器（如 LINE、Facebook、Instagram、Threads、X/Twitter、Messenger、微信等）中正常運作。",
+    "instruction_title": "如何用外部瀏覽器開啟？",
+    "step_1": "點選畫面角落的選單圖示（⋯）或分享按鈕（📤）。",
+    "step_2": "選擇「以外部瀏覽器開啟」、「以 Safari 開啟」或「在瀏覽器中開啟」。",
+    "copy_btn": "複製網址",
+    "copied_toast": "網址已複製！請用 Safari 或 Chrome 瀏覽器貼上開啟。"
   },
   "sponsor": {
     "title": "支持 SLICE 繼續營運",

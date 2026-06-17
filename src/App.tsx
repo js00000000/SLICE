@@ -25,8 +25,8 @@ import { LegalPage } from './pages/LegalPage';
 // Import Hooks
 import { useAuth } from './contexts/AuthContext';
 import { useGroup } from './contexts/GroupContext';
-import { useDialog } from './contexts/DialogContext';
 import { isWebview } from './utils/webview';
+import { WebviewBlocker } from './components/WebviewBlocker';
 
 const isValidRoute = (pathname: string): boolean => {
   if (pathname === '/' || pathname === '') return true;
@@ -39,12 +39,9 @@ const isValidRoute = (pathname: string): boolean => {
   return false;
 };
 
-const WEBVIEW_WARNED_KEY = 'slice_webview_warned';
-
 export default function App() {
   const { t, i18n } = useTranslation();
   const location = useLocation();
-  const { alert } = useDialog();
   const {
     user, authLoading, googleLoading, guestLoading, isSoftLoggedOut,
     handleGoogleLogin, handleGuestLogin, handleQuickStart
@@ -53,14 +50,6 @@ export default function App() {
 
   const [invalidUrlGroup, setInvalidUrlGroup] = useState<string | null>(null);
   const [checkingUrlGroup, setCheckingUrlGroup] = useState(false);
-
-  useEffect(() => {
-    if (!isWebview()) return;
-    if (sessionStorage.getItem(WEBVIEW_WARNED_KEY)) return;
-    sessionStorage.setItem(WEBVIEW_WARNED_KEY, '1');
-    alert(t('webview.message'), { title: t('webview.title'), confirmLabel: t('common.confirm') });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Check if a group exists before letting unauthenticated users stay on protected URLs.
   // For /join/:joinId we resolve the public join token. For /group/:groupId we still
@@ -136,6 +125,11 @@ export default function App() {
   // Legal pages render regardless of auth state, ahead of the loading gate.
   if (location.pathname === '/privacy') return <LegalPage kind="privacy" />;
   if (location.pathname === '/terms') return <LegalPage kind="terms" />;
+
+  // Prevent users from using the app within in-app webviews (LINE, Facebook, etc.)
+  if (isWebview()) {
+    return <WebviewBlocker />;
+  }
 
   if (authLoading || checkingUrlGroup) return (
     <div className="mobile-container">

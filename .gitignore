@@ -34,3 +34,6 @@ dist-ssr
 
 # Local Firebase folder
 .firebase
+
+# Remotion render output
+video
