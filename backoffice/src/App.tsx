@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { 
   onAuthStateChanged, 
   signInWithPopup, 
@@ -338,10 +339,10 @@ export default function App() {
       // Refresh list
       await fetchData();
       
-      alert("群組及其所有子資料已成功刪除！");
+      toast.success("群組及其所有子資料已成功刪除！");
     } catch (error) {
       console.error("Error deleting group:", error);
-      alert("刪除群組失敗，請檢查權限或控制台日誌。");
+      toast.error("刪除群組失敗，請檢查權限或控制台日誌。");
     } finally {
       setIsDeletingGroup(false);
     }
@@ -426,10 +427,10 @@ export default function App() {
       // Refresh list
       await fetchData();
 
-      alert("使用者及其建立的相關群組已成功刪除！");
+      toast.success("使用者及其建立的相關群組已成功刪除！");
     } catch (error) {
       console.error("Error deleting user:", error);
-      alert("刪除使用者失敗，請檢查權限或控制台日誌。");
+      toast.error("刪除使用者失敗，請檢查權限或控制台日誌。");
     } finally {
       setIsDeletingUser(false);
     }
