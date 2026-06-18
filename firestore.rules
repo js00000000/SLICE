@@ -25,7 +25,7 @@ service cloud.firestore {
     // User Settings
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
-      allow write: if isOwner(userId);
+      allow write: if isOwner(userId) || isAdmin();
     }
 
     // Groups
@@ -40,37 +40,47 @@ service cloud.firestore {
         && request.resource.data.name is string
         && request.resource.data.name.size() <= 50;
       
-      // Only host (creator) can update or delete the group.
+      // Only host (creator) or admin can update or delete the group.
       // This includes renaming the group, settling up (setting settledAt/settledBy), and unsettling up (deleting settledAt/settledBy).
-      allow update: if isAuthenticated() 
+      allow update: if isAdmin() || (
+        isAuthenticated() 
         && resource.data.createdBy == request.auth.uid
         && (
           // Defense-in-depth: If settling up, ensure settledBy matches the host/auth UID
           (!request.resource.data.keys().hasAll(['settledAt', 'settledBy']) || request.resource.data.settledBy == request.auth.uid)
-        );
+        )
+      );
       
-      allow delete: if isAuthenticated() 
-        && resource.data.createdBy == request.auth.uid;
+      allow delete: if isAdmin() || (
+        isAuthenticated() 
+        && resource.data.createdBy == request.auth.uid
+      );
 
       // Members subcollection
       match /members/{memberId} {
         allow read: if isAuthenticated();
         
-        // Host can create members, or a user can claim a member
-        allow create: if isAuthenticated() 
+        // Host or admin can create members, or a user can claim a member
+        allow create: if isAdmin() || (
+          isAuthenticated() 
           && (get(/databases/$(database)/documents/groups/$(groupId)).data.createdBy == request.auth.uid
-              || request.resource.data.userId == request.auth.uid);
+              || request.resource.data.userId == request.auth.uid)
+        );
         
-        // Host can update any member, or a user can update their own claimed profile
+        // Host or admin can update any member, or a user can update their own claimed profile
         // Also allow a user to claim an unclaimed member (userId is null)
-        allow update: if isAuthenticated() 
+        allow update: if isAdmin() || (
+          isAuthenticated() 
           && (get(/databases/$(database)/documents/groups/$(groupId)).data.createdBy == request.auth.uid
               || resource.data.userId == request.auth.uid
-              || (resource.data.userId == null && request.resource.data.userId == request.auth.uid));
+              || (resource.data.userId == null && request.resource.data.userId == request.auth.uid))
+        );
               
-        // Only host can delete members
-        allow delete: if isAuthenticated() 
-          && get(/databases/$(database)/documents/groups/$(groupId)).data.createdBy == request.auth.uid;
+        // Only host or admin can delete members
+        allow delete: if isAdmin() || (
+          isAuthenticated() 
+          && get(/databases/$(database)/documents/groups/$(groupId)).data.createdBy == request.auth.uid
+        );
       }
 
       // Expenses subcollection
@@ -106,10 +116,12 @@ service cloud.firestore {
         // Records are append-only. Use delete + create to "edit".
         allow update: if false;
 
-        // The person who recorded the payment, or the group host, can undo it.
-        allow delete: if isAuthenticated()
+        // The person who recorded the payment, the group host, or an admin can undo it.
+        allow delete: if isAdmin() || (
+          isAuthenticated()
           && (resource.data.completedBy == request.auth.uid
-              || get(/databases/$(database)/documents/groups/$(groupId)).data.createdBy == request.auth.uid);
+              || get(/databases/$(database)/documents/groups/$(groupId)).data.createdBy == request.auth.uid)
+        );
       }
     }
   }
