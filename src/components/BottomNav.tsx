@@ -144,7 +144,7 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
   return (
     <>
       <div className="fixed-in-container bottom-0 z-20 p-4 pb-[calc(env(safe-area-inset-bottom)+16px)] pt-2 select-none w-full max-w-[480px] pointer-events-none">
-        <div className={`relative bg-white/70 backdrop-blur-xl border-3 border-main-text shadow-[0_8px_32px_rgba(26,26,46,0.12),inset_0_2px_4px_rgba(255,255,255,0.8),inset_0_-1px_2px_rgba(26,26,46,0.05),4px_4px_0px_#1A1A2E] px-0 py-2.5 grid grid-cols-5 items-center rounded-[30px] overflow-visible transition-all duration-300 ease-out origin-center ${
+        <div className={`relative bg-white/70 backdrop-blur-xl border-3 border-main-text shadow-[0_8px_32px_rgba(26,26,46,0.08),inset_0_2px_4px_rgba(255,255,255,0.8),inset_0_-1px_2px_rgba(26,26,46,0.05)] px-0 py-2.5 grid grid-cols-5 items-center rounded-[30px] overflow-visible transition-all duration-300 ease-out origin-center ${
           isScrollingDown 
             ? 'scale-[0.90] opacity-80 hover:scale-100 hover:opacity-100' 
             : 'scale-100 opacity-100'
@@ -162,7 +162,7 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
                 width: '20%'
               }}
             >
-              <div className="mx-1.5 h-full rounded-[22px] bg-brand-light/95 border-2 border-main-text shadow-[2px_2px_0px_#1A1A2E]" />
+              <div className="mx-1.5 h-full rounded-[22px] bg-brand-light/95 border-2 border-main-text" />
             </div>
           )}
 
@@ -208,10 +208,10 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
               onClick={handleAddClick}
               disabled={addDisabled}
               title={isSettled ? t('settle.locked_msg') : undefined}
-              className={`flex flex-col items-center -mt-9 p-3.5 rounded-[22px] border-3 border-main-text shadow-[inset_0_2px_4px_rgba(255,255,255,0.45),inset_0_-1px_2px_rgba(0,0,0,0.15),4px_4px_0px_#1A1A2E] transition-all duration-150 cursor-pointer ${
+              className={`flex flex-col items-center -mt-9 p-3.5 rounded-[22px] border-3 border-main-text shadow-[inset_0_2px_4px_rgba(255,255,255,0.45),inset_0_-1px_2px_rgba(0,0,0,0.15)] transition-all duration-150 cursor-pointer ${
                 addDisabled 
                   ? 'bg-gray-200 text-gray-400 cursor-not-allowed grayscale shadow-none' 
-                  : 'bg-accent-orange text-white hover:bg-[#ff7b4b] hover:scale-105 active:scale-90 active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_#1A1A2E]'
+                  : 'bg-accent-orange text-white hover:bg-[#ff7b4b] hover:scale-105 active:scale-90'
               }`}
             >
               {isSettled ? <Lock className="w-7 h-7 stroke-[3]" /> : <Plus className="w-7 h-7 stroke-[3]" />}
