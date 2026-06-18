@@ -98,13 +98,13 @@ export function AppHeader({
           ) : (
             <button
               onClick={() => navigate('/')}
-              className="flex items-center gap-2 hover:opacity-90 transition-opacity cursor-pointer group"
+              className="flex items-center gap-2.5 hover:opacity-90 transition-opacity cursor-pointer group"
             >
               {/* Mini Brand Sliced Logo */}
-              <div className="w-8 h-8 bg-accent-orange text-white rounded-[10px] border-2 border-main-text flex items-center justify-center font-nunito font-black text-sm relative rotate-[-4deg] group-hover:rotate-[4deg] transition-transform duration-200">
+              <div className="w-[38px] h-[38px] bg-accent-orange text-white rounded-[12px] border-2 border-main-text flex items-center justify-center font-nunito font-black text-base relative rotate-[-4deg] group-hover:rotate-[4deg] transition-transform duration-200">
                 <span className="scale-95 italic">S/</span>
               </div>
-              <span className="font-nunito font-black text-xl tracking-tight text-main-text">
+              <span className="font-nunito font-black text-2xl tracking-tight text-main-text">
                 {APP_NAME}
               </span>
             </button>
@@ -123,7 +123,7 @@ export function AppHeader({
                 : 'border-transparent hover:text-accent-orange hover:bg-brand-light hover:border-main-text'
             }`}
           >
-            <Menu className="w-5 h-5 stroke-[2.5]" />
+            <Menu className="w-6 h-6 stroke-[2.5]" />
           </button>
 
           {menuOpen && (
