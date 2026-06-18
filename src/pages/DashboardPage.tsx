@@ -290,6 +290,7 @@ export function DashboardPage() {
             } else {
               await handleAddExpense(data);
               toast.success(t('expenses.added'));
+              navigate(`/group/${groupId}/expenses`);
             }
             setIsExpenseModalOpen(false);
           }}

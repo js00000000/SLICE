@@ -281,6 +281,7 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
             await handleAddExpense(data);
             toast.success(t('expenses.added'));
             setIsAddModalOpen(false);
+            navigate(`/group/${groupId}/expenses`);
           }}
         />
       )}
