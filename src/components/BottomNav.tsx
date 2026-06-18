@@ -128,7 +128,7 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
           <button
             onClick={() => handleTabClick('dashboard')}
             disabled={!groupId}
-            className={`relative z-10 flex flex-col items-center justify-center gap-1 p-2 h-12 transition-all duration-150 btn-bounce cursor-pointer ${
+            className={`relative z-10 flex flex-col items-center justify-center gap-1 p-2 h-12 transition-all duration-150 btn-bounce cursor-pointer active:scale-90 ${
               !groupId ? 'opacity-30 cursor-not-allowed' :
               activeTab === 'dashboard' 
                 ? 'text-accent-orange scale-105' 
@@ -146,7 +146,7 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
           <button
             onClick={() => handleTabClick('settlements')}
             disabled={!groupId}
-            className={`relative z-10 flex flex-col items-center justify-center gap-1 p-2 h-12 transition-all duration-150 btn-bounce cursor-pointer ${
+            className={`relative z-10 flex flex-col items-center justify-center gap-1 p-2 h-12 transition-all duration-150 btn-bounce cursor-pointer active:scale-90 ${
               !groupId ? 'opacity-30 cursor-not-allowed' : 
               activeTab === 'settlements' 
                 ? 'text-accent-orange scale-105' 
@@ -169,7 +169,7 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
               className={`flex flex-col items-center -mt-9 p-3.5 rounded-[22px] border-3 border-main-text shadow-[inset_0_2px_4px_rgba(255,255,255,0.45),inset_0_-1px_2px_rgba(0,0,0,0.15),4px_4px_0px_#1A1A2E] transition-all duration-150 cursor-pointer ${
                 addDisabled 
                   ? 'bg-gray-200 text-gray-400 cursor-not-allowed grayscale shadow-none' 
-                  : 'bg-accent-orange text-white hover:bg-[#ff7b4b] hover:scale-105 active:scale-95 active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_#1A1A2E]'
+                  : 'bg-accent-orange text-white hover:bg-[#ff7b4b] hover:scale-105 active:scale-90 active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_#1A1A2E]'
               }`}
             >
               {isSettled ? <Lock className="w-7 h-7 stroke-[3]" /> : <Plus className="w-7 h-7 stroke-[3]" />}
@@ -180,7 +180,7 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
           <button
             onClick={() => handleTabClick('expenses')}
             disabled={!groupId}
-            className={`relative z-10 flex flex-col items-center justify-center gap-1 p-2 h-12 transition-all duration-150 btn-bounce cursor-pointer ${
+            className={`relative z-10 flex flex-col items-center justify-center gap-1 p-2 h-12 transition-all duration-150 btn-bounce cursor-pointer active:scale-90 ${
               !groupId ? 'opacity-30 cursor-not-allowed' :
               activeTab === 'expenses' 
                 ? 'text-accent-orange scale-105' 
@@ -198,7 +198,7 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
           <button
             onClick={() => handleTabClick('members')}
             disabled={!groupId}
-            className={`relative z-10 flex flex-col items-center justify-center gap-1 p-2 h-12 transition-all duration-150 btn-bounce cursor-pointer ${
+            className={`relative z-10 flex flex-col items-center justify-center gap-1 p-2 h-12 transition-all duration-150 btn-bounce cursor-pointer active:scale-90 ${
               !groupId ? 'opacity-30 cursor-not-allowed' :
               activeTab === 'members' 
                 ? 'text-accent-orange scale-105' 
