@@ -185,7 +185,7 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
           <button
             onClick={() => handleTabClick('dashboard')}
             disabled={!groupId}
-            className={`relative z-10 flex flex-col items-center justify-center gap-1 p-2 h-12 transition-all duration-150 btn-bounce cursor-pointer active:scale-90 focus:outline-none focus-visible:outline-none ${
+            className={`relative z-10 flex flex-col items-center justify-center gap-1 px-1 py-2 h-12 transition-all duration-150 btn-bounce cursor-pointer active:scale-90 focus:outline-none focus-visible:outline-none ${
               !groupId ? 'opacity-30 cursor-not-allowed' :
               activeTab === 'dashboard' 
                 ? 'text-accent-orange scale-105' 
@@ -193,7 +193,7 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
             }`}
           >
             <LayoutDashboard className="w-5.5 h-5.5 stroke-[2.5]" />
-            <span className="text-[10px] font-black tracking-tight truncate w-full text-center font-display">{t('common.dashboard')}</span>
+            <span className="text-[9px] sm:text-[10px] font-black tracking-tighter truncate w-full text-center font-display">{t('common.dashboard')}</span>
             <span className={`absolute bottom-0 w-2.5 h-1 bg-accent-orange rounded-full transition-all duration-300 ${
               activeTab === 'dashboard' ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
             }`} />
@@ -203,7 +203,7 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
           <button
             onClick={() => handleTabClick('settlements')}
             disabled={!groupId}
-            className={`relative z-10 flex flex-col items-center justify-center gap-1 p-2 h-12 transition-all duration-150 btn-bounce cursor-pointer active:scale-90 focus:outline-none focus-visible:outline-none ${
+            className={`relative z-10 flex flex-col items-center justify-center gap-1 px-1 py-2 h-12 transition-all duration-150 btn-bounce cursor-pointer active:scale-90 focus:outline-none focus-visible:outline-none ${
               !groupId ? 'opacity-30 cursor-not-allowed' : 
               activeTab === 'settlements' 
                 ? 'text-accent-orange scale-105' 
@@ -211,7 +211,7 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
             }`}
           >
             <DollarSign className="w-5.5 h-5.5 stroke-[2.5]" />
-            <span className="text-[10px] font-black tracking-tight truncate w-full text-center font-display">{t('balances.title')}</span>
+            <span className="text-[9px] sm:text-[10px] font-black tracking-tighter truncate w-full text-center font-display">{t('balances.title')}</span>
             <span className={`absolute bottom-0 w-2.5 h-1 bg-accent-orange rounded-full transition-all duration-300 ${
               activeTab === 'settlements' ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
             }`} />
@@ -237,7 +237,7 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
           <button
             onClick={() => handleTabClick('expenses')}
             disabled={!groupId}
-            className={`relative z-10 flex flex-col items-center justify-center gap-1 p-2 h-12 transition-all duration-150 btn-bounce cursor-pointer active:scale-90 focus:outline-none focus-visible:outline-none ${
+            className={`relative z-10 flex flex-col items-center justify-center gap-1 px-1 py-2 h-12 transition-all duration-150 btn-bounce cursor-pointer active:scale-90 focus:outline-none focus-visible:outline-none ${
               !groupId ? 'opacity-30 cursor-not-allowed' :
               activeTab === 'expenses' 
                 ? 'text-accent-orange scale-105' 
@@ -245,7 +245,7 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
             }`}
           >
             <Receipt className="w-5.5 h-5.5 stroke-[2.5]" />
-            <span className="text-[10px] font-black tracking-tight truncate w-full text-center font-display">{t('expenses.title')}</span>
+            <span className="text-[9px] sm:text-[10px] font-black tracking-tighter truncate w-full text-center font-display">{t('expenses.title')}</span>
             <span className={`absolute bottom-0 w-2.5 h-1 bg-accent-orange rounded-full transition-all duration-300 ${
               activeTab === 'expenses' ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
             }`} />
@@ -255,7 +255,7 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
           <button
             onClick={() => handleTabClick('members')}
             disabled={!groupId}
-            className={`relative z-10 flex flex-col items-center justify-center gap-1 p-2 h-12 transition-all duration-150 btn-bounce cursor-pointer active:scale-90 focus:outline-none focus-visible:outline-none ${
+            className={`relative z-10 flex flex-col items-center justify-center gap-1 px-1 py-2 h-12 transition-all duration-150 btn-bounce cursor-pointer active:scale-90 focus:outline-none focus-visible:outline-none ${
               !groupId ? 'opacity-30 cursor-not-allowed' :
               activeTab === 'members' 
                 ? 'text-accent-orange scale-105' 
@@ -263,7 +263,7 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
             }`}
           >
             <Users className="w-5.5 h-5.5 stroke-[2.5]" />
-            <span className="text-[10px] font-black tracking-tight truncate w-full text-center font-display">{t('common.settings')}</span>
+            <span className="text-[9px] sm:text-[10px] font-black tracking-tighter truncate w-full text-center font-display">{t('common.settings')}</span>
             <span className={`absolute bottom-0 w-2.5 h-1 bg-accent-orange rounded-full transition-all duration-300 ${
               activeTab === 'members' ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
             }`} />
