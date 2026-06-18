@@ -40,6 +40,44 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
     return activeTab;
   });
 
+  // Track scroll direction to make bottom nav smaller/compact when scrolling down
+  const [isScrollingDown, setIsScrollingDown] = useState(false);
+
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+    let ticking = false;
+
+    const updateScrollDirection = () => {
+      const scrollY = window.scrollY;
+
+      // Avoid shrinking at the very top of the page (first 40px)
+      if (scrollY > 40) {
+        if (scrollY > lastScrollY) {
+          setIsScrollingDown(true);
+        } else if (scrollY < lastScrollY - 15) {
+          // 15px threshold of scrolling up before expanding back, to prevent flickering
+          setIsScrollingDown(false);
+        }
+      } else {
+        setIsScrollingDown(false);
+      }
+      lastScrollY = scrollY <= 0 ? 0 : scrollY;
+      ticking = false;
+    };
+
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updateScrollDirection);
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, []);
+
   useEffect(() => {
     // Save the activeTab so the next page knows where we navigated from
     sessionStorage.setItem('slice-last-tab', activeTab);
@@ -106,7 +144,11 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
   return (
     <>
       <div className="fixed-in-container bottom-0 z-20 p-4 pb-[calc(env(safe-area-inset-bottom)+16px)] pt-2 select-none w-full max-w-[480px] pointer-events-none">
-        <div className="relative bg-white/70 backdrop-blur-xl border-3 border-main-text shadow-[0_8px_32px_rgba(26,26,46,0.12),inset_0_2px_4px_rgba(255,255,255,0.8),inset_0_-1px_2px_rgba(26,26,46,0.05),4px_4px_0px_#1A1A2E] px-0 py-2.5 grid grid-cols-5 items-center rounded-[30px] overflow-visible">
+        <div className={`relative bg-white/70 backdrop-blur-xl border-3 border-main-text shadow-[0_8px_32px_rgba(26,26,46,0.12),inset_0_2px_4px_rgba(255,255,255,0.8),inset_0_-1px_2px_rgba(26,26,46,0.05),4px_4px_0px_#1A1A2E] px-0 grid grid-cols-5 items-center rounded-[30px] overflow-visible transition-all duration-300 ease-out ${
+          isScrollingDown 
+            ? 'py-1.5 scale-[0.91] translate-y-4 opacity-80 hover:py-2.5 hover:scale-100 hover:translate-y-0 hover:opacity-100' 
+            : 'py-2.5 scale-100 translate-y-0 opacity-100'
+        } ${isSettled ? '' : 'pointer-events-auto'}`}>
           
           {/* Glass reflection gloss overlay */}
           <div className="absolute inset-0 rounded-[27px] bg-gradient-to-b from-white/35 via-white/5 to-transparent pointer-events-none z-0" />
