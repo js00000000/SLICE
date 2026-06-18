@@ -153,7 +153,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
+    // Fallback: in some environments (in-app webviews with storage/cookies
+    // blocked, flaky init) onAuthStateChanged may never fire, which would leave
+    // the app stuck on the loading spinner forever. After a short timeout we
+    // stop blocking and fall through to the login UI so the user can act. If
+    // the listener fires later, it still sets state normally.
+    let authResolved = false;
+    const authTimeout = window.setTimeout(() => {
+      if (!authResolved) {
+        console.warn("Auth state did not resolve in time; releasing loading gate.");
+        setAuthLoading(false);
+      }
+    }, 2500);
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      authResolved = true;
+      window.clearTimeout(authTimeout);
       setUser(currentUser);
       if (currentUser) {
         ensureUserDocumentExists(currentUser);
@@ -165,7 +180,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       setAuthLoading(false);
     });
-    return () => unsubscribe();
+    return () => {
+      window.clearTimeout(authTimeout);
+      unsubscribe();
+    };
   }, [t]);
 
   const cleanupUserData = async (uid: string) => {
