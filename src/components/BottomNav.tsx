@@ -46,6 +46,7 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
   useEffect(() => {
     let lastScrollY = window.scrollY;
     let ticking = false;
+    let scrollTimeout: any = null;
 
     const updateScrollDirection = () => {
       const scrollY = window.scrollY;
@@ -63,6 +64,14 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
       }
       lastScrollY = scrollY <= 0 ? 0 : scrollY;
       ticking = false;
+
+      // Reset to normal size once scrolling stops (idle for 250ms)
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+      scrollTimeout = setTimeout(() => {
+        setIsScrollingDown(false);
+      }, 250);
     };
 
     const onScroll = () => {
@@ -75,6 +84,9 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => {
       window.removeEventListener('scroll', onScroll);
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
     };
   }, []);
 
