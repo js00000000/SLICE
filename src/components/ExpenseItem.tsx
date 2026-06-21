@@ -43,6 +43,7 @@ export function ExpenseItem({
   };
 
   const myShare = currentMemberId ? (shareFor(currentMemberId) ?? 0) : null;
+  const showShare = myShare !== null && myShare > 0;
 
   // Normalize payers across the legacy single-payer and v2 multi-payer shapes.
   const payers = exp.payments && exp.payments.length > 0
@@ -95,16 +96,16 @@ export function ExpenseItem({
           </div>
 
           <div className="flex items-center gap-1.5 mt-2 flex-wrap text-xs">
+            {showShare && (
+              <span className="inline-flex items-baseline gap-1 font-black text-accent-orange bg-brand-light px-2 py-0.5 rounded-full border border-accent-orange/30 whitespace-nowrap">
+                <span>{t('expenses.my_share') || 'My Share'}</span>
+                <span className="font-nunito">{formatCurrency(myShare ?? 0)}</span>
+              </span>
+            )}
             {iAmPayer && (
               <span className="inline-flex items-baseline gap-1 font-bold bg-page-bg text-main-text/60 px-2 py-0.5 rounded-full border border-main-text/10 whitespace-nowrap">
                 <span className="capitalize">{t('expenses.paid_action')}</span>
                 <span className="font-nunito font-black text-main-text">{formatCurrency(myPaidAmount)}</span>
-              </span>
-            )}
-            {myShare !== null && myShare > 0 && (
-              <span className="inline-flex items-baseline gap-1 font-black text-accent-orange bg-brand-light px-2 py-0.5 rounded-full border border-accent-orange/30 whitespace-nowrap">
-                <span>{t('expenses.my_share') || 'My Share'}</span>
-                <span className="font-nunito">{formatCurrency(myShare)}</span>
               </span>
             )}
           </div>
