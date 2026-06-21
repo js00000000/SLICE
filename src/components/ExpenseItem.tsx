@@ -1,4 +1,4 @@
-import { Edit2, Trash2, ChevronDown, ChevronUp, Lock } from 'lucide-react';
+import { Edit2, Trash2, ChevronDown, ChevronUp, Lock, Calendar } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Member, Expense } from '../types';
 import { formatDate, formatCurrency } from '../utils/format';
@@ -85,35 +85,12 @@ export function ExpenseItem({
       {/* Main Row Content */}
       <div
         onClick={() => onToggleExpand(exp.id)}
-        className="p-5 flex items-start justify-between gap-3 active:scale-[0.99] transition-transform"
+        className="p-5 active:scale-[0.99] transition-transform"
       >
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 min-h-[44px]">
-            <h3 className="font-nunito font-black text-md text-main-text truncate">{exp.description}</h3>
-            <span className="text-[10px] bg-page-bg text-main-text/50 font-bold px-2 py-0.5 rounded-full border border-main-text/10 shrink-0">
-              {formatDate(exp.createdAt, i18n.language)}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1.5 mt-2 flex-wrap text-xs">
-            {showShare && (
-              <span className="inline-flex items-baseline gap-1 font-black text-accent-orange bg-brand-light px-2 py-0.5 rounded-full border border-accent-orange/30 whitespace-nowrap">
-                <span>{t('expenses.my_share') || 'My Share'}</span>
-                <span className="font-nunito">{formatCurrency(myShare ?? 0)}</span>
-              </span>
-            )}
-            {iAmPayer && (
-              <span className="inline-flex items-baseline gap-1 font-bold bg-page-bg text-main-text/60 px-2 py-0.5 rounded-full border border-main-text/10 whitespace-nowrap">
-                <span className="capitalize">{t('expenses.paid_action')}</span>
-                <span className="font-nunito font-black text-main-text">{formatCurrency(myPaidAmount)}</span>
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Actions & total cost */}
-        <div className="flex flex-col items-end gap-2 shrink-0">
-          <div className="flex items-center gap-0.5">
+        {/* Row 1: title + actions */}
+        <div className="flex items-center justify-between gap-3 min-h-[44px]">
+          <h3 className="font-nunito font-black text-md text-main-text truncate">{exp.description}</h3>
+          <div className="flex items-center gap-0.5 shrink-0">
             {isSettled ? (
               <span
                 className="text-main-text/40 flex items-center justify-center min-w-[44px] min-h-[44px] rounded-lg border border-transparent"
@@ -149,26 +126,40 @@ export function ExpenseItem({
               {isExpanded ? <ChevronUp className="w-5 h-5 stroke-[2.5]" /> : <ChevronDown className="w-5 h-5 stroke-[2.5]" />}
             </span>
           </div>
+        </div>
 
-          <div className="font-nunito font-black text-main-text whitespace-nowrap bg-brand-light px-2 py-0.5 rounded border border-main-text/10">
+        {/* Row 2: pills + total cost, vertically centered together */}
+        <div className="flex items-center justify-between gap-3 mt-2">
+          <div className="flex items-center gap-1.5 flex-wrap text-xs min-w-0">
+            {showShare && (
+              <span className="inline-flex items-baseline gap-1 font-black text-accent-orange bg-brand-light px-2 py-0.5 rounded-full border border-accent-orange/30 whitespace-nowrap">
+                <span>{t('expenses.my_share') || 'My Share'}</span>
+                <span className="font-nunito">{formatCurrency(myShare ?? 0)}</span>
+              </span>
+            )}
+            {iAmPayer && (
+              <span className="inline-flex items-baseline gap-1 font-bold bg-page-bg text-main-text/60 px-2 py-0.5 rounded-full border border-main-text/10 whitespace-nowrap">
+                <span className="capitalize">{t('expenses.paid_action')}</span>
+                <span className="font-nunito font-black text-main-text">{formatCurrency(myPaidAmount)}</span>
+              </span>
+            )}
+          </div>
+
+          <div className="font-nunito font-black text-main-text whitespace-nowrap bg-brand-light px-2 py-0.5 rounded border border-main-text/10 shrink-0">
             {formatCurrency(exp.amount)}
           </div>
+        </div>
+
+        {/* Row 3: date */}
+        <div className="flex items-center gap-1 mt-2 text-xs text-main-text/40 font-bold">
+          <Calendar className="w-3 h-3 stroke-[2.5]" />
+          {formatDate(exp.createdAt, i18n.language)}
         </div>
       </div>
 
       {/* Slices Concept: Diagonal Separator Detail inside Expanded Detail Box */}
       {isExpanded && (
         <div className="@container bg-brand-light/40 px-5 py-4 border-t-2 border-dashed border-main-text/20 animate-in fade-in slide-in-from-top-1 duration-200 space-y-4">
-          {/* Total cost */}
-          <div className="flex items-center justify-between pb-3 border-b border-dashed border-main-text/15">
-            <span className="text-xs font-black font-nunito text-main-text uppercase tracking-wider">
-              {t('expenses.amount') || 'Total'}
-            </span>
-            <span className="font-nunito font-black text-base text-main-text bg-brand-light px-3 py-1 rounded-lg border border-main-text/10">
-              {formatCurrency(amountNum)}
-            </span>
-          </div>
-
           {payers.length > 0 && (
             <div>
               <div className="flex items-center gap-1 mb-2">
