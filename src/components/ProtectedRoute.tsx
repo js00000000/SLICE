@@ -2,6 +2,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useGroup } from '../contexts/GroupContext';
 import { LoadingView } from './LoadingView';
+import { AppSkeleton } from './AppSkeleton';
 
 /**
  * Ensures user is authenticated.
@@ -21,7 +22,7 @@ export function AuthGuard() {
 export function GroupMemberGuard() {
   const { isLoading } = useGroup();
 
-  if (isLoading) return <LoadingView />;
-  
+  if (isLoading) return <AppSkeleton />;
+
   return <Outlet />;
 }

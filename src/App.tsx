@@ -7,6 +7,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from './lib/firebase';
 import { firebaseService } from './lib/firebaseService';
 import { LoadingView } from './components/LoadingView';
+import { AppSkeleton } from './components/AppSkeleton';
 import { LoginView } from './components/LoginView';
 import { AuthGuard } from './components/ProtectedRoute';
 import { APP_NAME } from './constants';
@@ -229,7 +230,7 @@ export default function App() {
       )}
       
       {isLoading ? (
-        <LoadingView />
+        <AppSkeleton />
       ) : (
         <Routes>
           <Route element={<AuthGuard />}>
