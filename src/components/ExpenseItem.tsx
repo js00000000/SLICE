@@ -51,6 +51,11 @@ export function ExpenseItem({
       ? [{ memberId: exp.paidBy, amount: amountNum }]
       : [];
 
+  const myPaidAmount = currentMemberId
+    ? payers.find(p => p.memberId === currentMemberId)?.amount ?? 0
+    : 0;
+  const iAmPayer = myPaidAmount > 0;
+
   // Shared row used by both the "Paid By" and "Split Details" breakdowns.
   const memberRow = (memberId: string, amount: number) => {
     const isMe = memberId === currentMemberId;
@@ -82,46 +87,30 @@ export function ExpenseItem({
         className="p-5 flex items-start justify-between gap-3 active:scale-[0.99] transition-transform"
       >
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-h-[44px]">
             <h3 className="font-nunito font-black text-md text-main-text truncate">{exp.description}</h3>
             <span className="text-[10px] bg-page-bg text-main-text/50 font-bold px-2 py-0.5 rounded-full border border-main-text/10 shrink-0">
               {formatDate(exp.createdAt, i18n.language)}
             </span>
           </div>
 
-          <div className="text-sm text-main-text/60 mt-1 space-y-0.5 font-medium">
-            <div className="flex items-center gap-1 flex-wrap">
-              {exp.payments && exp.payments.length > 1 ? (
-                <>
-                  {exp.payments.map((p, pIdx, arr) => (
-                    <span key={p.memberId} className="whitespace-nowrap">
-                      <span className={`font-bold ${p.memberId === currentMemberId ? 'text-accent-orange font-black' : 'text-main-text'}`}>
-                        {getMemberName(p.memberId)}
-                      </span>
-                      {pIdx < arr.length - 1 && <span className="mr-1">,</span>}
-                    </span>
-                  ))}
-                  <span className="text-main-text/50 text-xs">{t('expenses.paid_action')}</span>
-                  <span className="font-nunito font-black text-main-text whitespace-nowrap bg-brand-light px-2 py-0.5 rounded border border-main-text/10">
-                    {formatCurrency(exp.amount)}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <span className={`font-bold ${exp.paidBy === currentMemberId ? 'text-accent-orange font-black' : 'text-main-text'}`}>
-                    {getMemberName(exp.paidBy)}
-                  </span>
-                  <span className="text-main-text/50 text-xs">{t('expenses.paid_action')}</span>
-                  <span className="font-nunito font-black text-main-text whitespace-nowrap bg-brand-light px-2 py-0.5 rounded border border-main-text/10">
-                    {formatCurrency(exp.amount)}
-                  </span>
-                </>
-              )}
-            </div>
+          <div className="flex items-center gap-1.5 mt-2 flex-wrap text-xs">
+            {iAmPayer && (
+              <span className="inline-flex items-baseline gap-1 font-bold bg-page-bg text-main-text/60 px-2 py-0.5 rounded-full border border-main-text/10 whitespace-nowrap">
+                <span className="capitalize">{t('expenses.paid_action')}</span>
+                <span className="font-nunito font-black text-main-text">{formatCurrency(myPaidAmount)}</span>
+              </span>
+            )}
+            {myShare !== null && myShare > 0 && (
+              <span className="inline-flex items-baseline gap-1 font-black text-accent-orange bg-brand-light px-2 py-0.5 rounded-full border border-accent-orange/30 whitespace-nowrap">
+                <span>{t('expenses.my_share') || 'My Share'}</span>
+                <span className="font-nunito">{formatCurrency(myShare)}</span>
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Actions & Share displaying with custom animation */}
+        {/* Actions & total cost */}
         <div className="flex flex-col items-end gap-2 shrink-0">
           <div className="flex items-center gap-0.5">
             {isSettled ? (
@@ -160,11 +149,9 @@ export function ExpenseItem({
             </span>
           </div>
 
-          {myShare !== null && myShare > 0 && (
-            <div className="text-xs font-black text-accent-orange font-nunito bg-brand-light px-2 py-0.5 rounded-full border border-accent-orange/30">
-              {t('expenses.my_share') || 'My Share'}: <span className="font-black">{formatCurrency(myShare)}</span>
-            </div>
-          )}
+          <div className="font-nunito font-black text-main-text whitespace-nowrap bg-brand-light px-2 py-0.5 rounded border border-main-text/10">
+            {formatCurrency(exp.amount)}
+          </div>
         </div>
       </div>
 
