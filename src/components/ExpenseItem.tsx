@@ -44,6 +44,13 @@ export function ExpenseItem({
 
   const myShare = currentMemberId ? (shareFor(currentMemberId) ?? 0) : null;
 
+  // Normalize payers across the legacy single-payer and v2 multi-payer shapes.
+  const payers = exp.payments && exp.payments.length > 0
+    ? exp.payments
+    : exp.paidBy
+      ? [{ memberId: exp.paidBy, amount: amountNum }]
+      : [];
+
   // Shared row used by both the "Paid By" and "Split Details" breakdowns.
   const memberRow = (memberId: string, amount: number) => {
     const isMe = memberId === currentMemberId;
@@ -91,7 +98,6 @@ export function ExpenseItem({
                       <span className={`font-bold ${p.memberId === currentMemberId ? 'text-accent-orange font-black' : 'text-main-text'}`}>
                         {getMemberName(p.memberId)}
                       </span>
-                      <span className="text-main-text/50 text-[10px] ml-0.5 font-nunito font-bold">({formatCurrency(p.amount)})</span>
                       {pIdx < arr.length - 1 && <span className="mr-1">,</span>}
                     </span>
                   ))}
@@ -165,7 +171,17 @@ export function ExpenseItem({
       {/* Slices Concept: Diagonal Separator Detail inside Expanded Detail Box */}
       {isExpanded && (
         <div className="@container bg-brand-light/40 px-5 py-4 border-t-2 border-dashed border-main-text/20 animate-in fade-in slide-in-from-top-1 duration-200 space-y-4">
-          {exp.payments && exp.payments.length > 1 && (
+          {/* Total cost */}
+          <div className="flex items-center justify-between pb-3 border-b border-dashed border-main-text/15">
+            <span className="text-xs font-black font-nunito text-main-text uppercase tracking-wider">
+              {t('expenses.amount') || 'Total'}
+            </span>
+            <span className="font-nunito font-black text-base text-main-text bg-brand-light px-3 py-1 rounded-lg border border-main-text/10">
+              {formatCurrency(amountNum)}
+            </span>
+          </div>
+
+          {payers.length > 0 && (
             <div>
               <div className="flex items-center gap-1 mb-2">
                 <div className="w-1.5 h-3 bg-accent-orange rotate-[15deg] rounded-sm" />
@@ -174,7 +190,7 @@ export function ExpenseItem({
                 </h4>
               </div>
               <div className="grid grid-cols-1 @sm:grid-cols-2 gap-2 text-xs">
-                {exp.payments.map((p) => memberRow(p.memberId, p.amount))}
+                {payers.map((p) => memberRow(p.memberId, p.amount))}
               </div>
             </div>
           )}
