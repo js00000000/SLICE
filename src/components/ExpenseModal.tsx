@@ -167,7 +167,7 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
         
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b-3 border-main-text shrink-0 bg-brand-light">
-          <h2 className="text-xl font-nunito font-black text-main-text">
+          <h2 className="text-2xl font-nunito font-black text-main-text">
             {isEditing ? t('expenses.edit') : t('expenses.add_new')}
           </h2>
           <button 
@@ -175,7 +175,7 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
             onClick={onClose} 
             className="text-main-text hover:text-accent-orange p-1.5 rounded-lg border-2 border-transparent hover:border-main-text hover:bg-white transition-all cursor-pointer"
           >
-            <X className="w-5 h-5 stroke-[2.5]" />
+            <X className="w-6 h-6 stroke-[2.5]" />
           </button>
         </div>
 

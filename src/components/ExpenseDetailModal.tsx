@@ -73,7 +73,7 @@ export function ExpenseDetailModal({
         {/* Modal Header */}
         <div className="flex items-start justify-between gap-3 px-6 py-4 border-b-3 border-main-text shrink-0 bg-brand-light">
           <div className="min-w-0 flex-1">
-            <h2 className="text-xl font-nunito font-black text-main-text truncate">{exp.description}</h2>
+            <h2 className="text-2xl font-nunito font-black text-main-text truncate">{exp.description}</h2>
             <div className="flex items-center gap-1 mt-1 text-xs text-main-text/50 font-bold">
               <Calendar className="w-3.5 h-3.5 stroke-[2.5]" />
               {formatDate(exp.createdAt, i18n.language)}
@@ -84,7 +84,7 @@ export function ExpenseDetailModal({
             onClick={onClose}
             className="text-main-text hover:text-accent-orange p-1.5 rounded-lg border-2 border-transparent hover:border-main-text hover:bg-white transition-all cursor-pointer shrink-0"
           >
-            <X className="w-5 h-5 stroke-[2.5]" />
+            <X className="w-6 h-6 stroke-[2.5]" />
           </button>
         </div>
 
