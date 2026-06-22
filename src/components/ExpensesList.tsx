@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import type { Member, Expense } from '../types';
 import { useGroup } from '../contexts/GroupContext';
 import { ExpenseItem } from './ExpenseItem';
+import { ExpenseDetailModal } from './ExpenseDetailModal';
 
 interface ExpensesListProps {
   expenses: Expense[];
@@ -18,16 +19,12 @@ interface ExpensesListProps {
 export function ExpensesList({ expenses, members, onEdit, onDelete, filterPaidBy, onFilterChange }: ExpensesListProps) {
   const { t } = useTranslation();
   const { currentMemberId, isSettled } = useGroup();
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [viewingExpense, setViewingExpense] = useState<Expense | null>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [panelPos, setPanelPos] = useState<{ top: number; right: number } | null>(null);
   const filterRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-
-  const toggleExpand = (id: string) => {
-    setExpandedId(prev => (prev === id ? null : id));
-  };
 
   useLayoutEffect(() => {
     if (!isFilterOpen) return;
@@ -151,15 +148,24 @@ export function ExpensesList({ expenses, members, onEdit, onDelete, filterPaidBy
               expense={exp}
               members={members}
               currentMemberId={currentMemberId}
-              isSettled={isSettled}
-              isExpanded={expandedId === exp.id}
-              onToggleExpand={toggleExpand}
-              onEdit={onEdit}
-              onDelete={onDelete}
+              filterPaidBy={filterPaidBy}
+              onView={setViewingExpense}
               animationDelay={idx * 60}
             />
           ))}
         </div>
+      )}
+
+      {viewingExpense && (
+        <ExpenseDetailModal
+          expense={viewingExpense}
+          members={members}
+          currentMemberId={currentMemberId}
+          isSettled={isSettled}
+          onClose={() => setViewingExpense(null)}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
       )}
     </div>
   );
