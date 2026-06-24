@@ -219,7 +219,7 @@ export function LandingPage({
               {isZh ? (
                 <>
                   輕鬆計算每一分錢，<br />
-                  朋友出遊 <span className="text-accent-orange underline decoration-wavy decoration-3 underline-offset-8">不再尷尬</span>。
+                  朋友出遊 <span className="text-accent-orange underline decoration-wavy decoration-3 underline-offset-8">更加痛快</span>。
                 </>
               ) : (
                 <>
