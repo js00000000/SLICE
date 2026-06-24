@@ -42,3 +42,4 @@ video
 
 # vite-plugin-pwa dev service worker output
 dev-dist
+brag-output/
