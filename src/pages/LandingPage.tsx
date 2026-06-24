@@ -287,7 +287,7 @@ export function LandingPage({
                   {isZh ? '最佳建議結帳關係：' : 'Optimal Settlement Link:'}
                 </span>
                 <span className="text-xs font-bold text-main-text bg-white border border-main-text/10 px-2 py-0.5 rounded-md font-nunito">
-                  Jason ➔ Zayn $400
+                  Jason ➔ Zayn $800
                 </span>
               </div>
             </div>
