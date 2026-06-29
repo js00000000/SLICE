@@ -52,6 +52,39 @@ interface GroupContextType {
 
 const GroupContext = createContext<GroupContextType | undefined>(undefined);
 
+// Groups the user has opened via a join link but not yet actually joined (they
+// still need to claim or create a member). Kept in sessionStorage so the
+// membership gate lets them reach the member-selection screen and a page reload
+// during selection doesn't bounce them. The real join — writing joinedGroupIds —
+// happens when they claim/create a member.
+const PENDING_JOINS_KEY = 'slice:pendingJoins';
+
+function readPendingJoins(): string[] {
+  try {
+    return JSON.parse(sessionStorage.getItem(PENDING_JOINS_KEY) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+function hasPendingJoin(groupId: string): boolean {
+  return readPendingJoins().includes(groupId);
+}
+
+function addPendingJoin(groupId: string) {
+  const ids = readPendingJoins();
+  if (!ids.includes(groupId)) {
+    sessionStorage.setItem(PENDING_JOINS_KEY, JSON.stringify([...ids, groupId]));
+  }
+}
+
+function clearPendingJoin(groupId: string) {
+  sessionStorage.setItem(
+    PENDING_JOINS_KEY,
+    JSON.stringify(readPendingJoins().filter(id => id !== groupId))
+  );
+}
+
 export function GroupProvider({ children }: { children: ReactNode }) {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
@@ -125,6 +158,14 @@ export function GroupProvider({ children }: { children: ReactNode }) {
   const joinedGroupIdsRef = useRef<string[]>(joinedGroupIds);
   joinedGroupIdsRef.current = joinedGroupIds;
 
+  // Groups joined during this session. Held in a ref that the /users/{uid}
+  // snapshot never resets — unlike joinedGroupIds, which is briefly set to []
+  // when the snapshot for a fresh (e.g. just-signed-in anonymous) user fires
+  // before the join write has propagated. The membership gate consults this so
+  // a group we just joined is always allowed through regardless of snapshot
+  // timing.
+  const recentlyJoinedRef = useRef<Set<string>>(new Set());
+
   // Group Data Hook
   useEffect(() => {
     if (!user || !groupId) {
@@ -147,7 +188,15 @@ export function GroupProvider({ children }: { children: ReactNode }) {
 
     // Block non-members: only users whose joinedGroupIds includes this group
     // may access /group/:groupId. Joining must go through /join/:joinId.
-    if (!joinedGroupIdsRef.current.includes(groupId)) {
+    // - recentlyJoinedRef covers groups joined this session whose membership the
+    //   snapshot hasn't surfaced (or has momentarily reset) yet.
+    // - hasPendingJoin covers users who opened a join link but haven't claimed a
+    //   member yet — they're allowed to reach the member-selection screen.
+    if (
+      !joinedGroupIdsRef.current.includes(groupId) &&
+      !recentlyJoinedRef.current.has(groupId) &&
+      !hasPendingJoin(groupId)
+    ) {
       toast.error(t('common.error_group_not_found'));
       navigate('/', { replace: true });
       return;
@@ -227,16 +276,10 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       if (!resolvedGroupId) {
         throw new Error('group_not_found');
       }
-      await firebaseService.joinGroup(user.uid, resolvedGroupId);
-      // Optimistically mark membership locally so the Group Data Hook's gate
-      // (which reads joinedGroupIdsRef) doesn't race the /users/{uid} snapshot
-      // and bounce the user right after a successful join.
-      joinedGroupIdsRef.current = joinedGroupIdsRef.current.includes(resolvedGroupId)
-        ? joinedGroupIdsRef.current
-        : [...joinedGroupIdsRef.current, resolvedGroupId];
-      setJoinedGroupIds(prev =>
-        prev.includes(resolvedGroupId) ? prev : [...prev, resolvedGroupId]
-      );
+      // Don't auto-join. Mark a pending join so the membership gate lets the
+      // user reach the member-selection screen; the actual join (writing
+      // joinedGroupIds) happens when they claim or create a member.
+      addPendingJoin(resolvedGroupId);
       navigate(`/group/${resolvedGroupId}`);
     } catch (error) {
       console.error("Join group error:", error);
@@ -320,19 +363,41 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Claiming or creating a member is the moment the user actually joins: persist
+  // membership (joinedGroupIds) so the group shows in their list and survives
+  // reloads, and drop the pending-join marker. recentlyJoinedRef keeps the gate
+  // open across the /users/{uid} snapshot reset that follows the write.
+  const finalizeJoin = async (gid: string) => {
+    recentlyJoinedRef.current.add(gid);
+    await firebaseService.joinGroup(user!.uid, gid);
+    clearPendingJoin(gid);
+  };
+
   const handleSelectMember = async (memberId: string) => {
     if (!user || !groupId) return;
     const member = members.find(m => m.id === memberId);
-    if (member && member.userId && member.userId !== user.uid) { 
-      toast.error(t('members.claimed')); 
-      return; 
+    if (member && member.userId && member.userId !== user.uid) {
+      toast.error(t('members.claimed'));
+      return;
     }
-    await firebaseService.claimMember(groupId, memberId, user.uid);
+    try {
+      await firebaseService.claimMember(groupId, memberId, user.uid);
+      await finalizeJoin(groupId);
+    } catch (error) {
+      console.error("Select member error:", error);
+      toast.error(t('common.error'));
+    }
   };
 
   const handleCreateMember = async (name: string) => {
     if (!user || !groupId || !name.trim()) return;
-    await firebaseService.createMember(groupId, name, user.uid);
+    try {
+      await firebaseService.createMember(groupId, name, user.uid);
+      await finalizeJoin(groupId);
+    } catch (error) {
+      console.error("Create member error:", error);
+      toast.error(t('common.error'));
+    }
   };
 
   const handleCreateMemberByHost = async (name: string) => {

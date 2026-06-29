@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
@@ -53,6 +53,13 @@ export default function App() {
   const [checkingUrlGroup, setCheckingUrlGroup] = useState(false);
   const [showWebviewBanner, setShowWebviewBanner] = useState(false);
 
+  // Latest auth snapshot, read inside the async existence check below so it can
+  // bail out if the user signed in (e.g. anonymously) while the check was in
+  // flight — otherwise a stale resolve could fire a "group not found" toast
+  // even though the join is succeeding.
+  const authStateRef = useRef({ user, isSoftLoggedOut, guestLoading, googleLoading });
+  authStateRef.current = { user, isSoftLoggedOut, guestLoading, googleLoading };
+
   useEffect(() => {
     if (isWebview()) {
       const isDismissed = sessionStorage.getItem('webview-warning-dismissed') === 'true';
@@ -98,13 +105,20 @@ export default function App() {
           const docSnap = await getDoc(doc(db, 'groups', urlToken));
           exists = docSnap.exists();
         }
-        if (isMounted) {
+        // If a sign-in happened (or is happening) while this resolved, the
+        // authenticated join flow now owns the outcome — don't surface a stale
+        // "not found" toast.
+        const auth = authStateRef.current;
+        const authProgressed = (auth.user && !auth.isSoftLoggedOut) || auth.guestLoading || auth.googleLoading;
+        if (isMounted && !authProgressed) {
           if (!exists) {
             setInvalidUrlGroup(urlToken);
             toast.error(t('common.error_group_not_found'));
           } else {
             setInvalidUrlGroup(null);
           }
+          setCheckingUrlGroup(false);
+        } else if (isMounted) {
           setCheckingUrlGroup(false);
         }
       } catch (err) {
