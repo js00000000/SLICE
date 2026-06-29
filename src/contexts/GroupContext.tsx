@@ -228,6 +228,15 @@ export function GroupProvider({ children }: { children: ReactNode }) {
         throw new Error('group_not_found');
       }
       await firebaseService.joinGroup(user.uid, resolvedGroupId);
+      // Optimistically mark membership locally so the Group Data Hook's gate
+      // (which reads joinedGroupIdsRef) doesn't race the /users/{uid} snapshot
+      // and bounce the user right after a successful join.
+      joinedGroupIdsRef.current = joinedGroupIdsRef.current.includes(resolvedGroupId)
+        ? joinedGroupIdsRef.current
+        : [...joinedGroupIdsRef.current, resolvedGroupId];
+      setJoinedGroupIds(prev =>
+        prev.includes(resolvedGroupId) ? prev : [...prev, resolvedGroupId]
+      );
       navigate(`/group/${resolvedGroupId}`);
     } catch (error) {
       console.error("Join group error:", error);
