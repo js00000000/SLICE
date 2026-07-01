@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Share2, Plus, DollarSign, Receipt, ArrowRight, Lock } from 'lucide-react';
+import { Share2, Plus, DollarSign, Receipt, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
@@ -13,11 +13,11 @@ import { useGroup } from '../contexts/GroupContext';
 import { useAuth } from '../contexts/AuthContext';
 import { calculateBalancesAndSettlements } from '../lib/settlement';
 import { CountUp } from '../components/CountUp';
-import { formatDate, formatCurrency } from '../utils/format';
+import { formatCurrency } from '../utils/format';
 
 export function DashboardPage() {
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { handleDeleteAccount } = useAuth();
   const {
     groupId,
@@ -69,6 +69,34 @@ export function DashboardPage() {
         totals[exp.paidBy] += amount;
       }
     });
+    return totals;
+  }, [members, expenses]);
+
+  // Each member's total expense (their share of what was consumed), computed in
+  // cents to stay penny-accurate and mirror the split logic in settlement.ts.
+  const memberExpenseTotals = useMemo(() => {
+    const cents: Record<string, number> = {};
+    members.forEach(m => cents[m.id] = 0);
+    expenses.forEach(exp => {
+      const totalCents = Math.round(parseFloat(exp.amount.toString()) * 100);
+      if (exp.splits && exp.splits.length > 0) {
+        exp.splits.forEach(s => {
+          if (cents[s.memberId] !== undefined) {
+            cents[s.memberId] += Math.round(parseFloat(s.amount.toString()) * 100);
+          }
+        });
+      } else if (exp.splitAmong && exp.splitAmong.length > 0) {
+        const count = exp.splitAmong.length;
+        const baseCents = Math.floor(totalCents / count);
+        const remainderCents = totalCents % count;
+        exp.splitAmong.forEach((mId, index) => {
+          const shareCents = baseCents + (index < remainderCents ? 1 : 0);
+          if (cents[mId] !== undefined) cents[mId] += shareCents;
+        });
+      }
+    });
+    const totals: Record<string, number> = {};
+    Object.entries(cents).forEach(([id, c]) => { totals[id] = c / 100; });
     return totals;
   }, [members, expenses]);
 
@@ -220,51 +248,47 @@ export function DashboardPage() {
             </div>
           </div>
 
-          {/* Recent Expenses Preview */}
+          {/* Member Expense Breakdown — each member's total share of expenses */}
           <div className="stagger-item bg-white rounded-[24px] border-3 border-main-text p-5 shadow-[4px_4px_0px_#1A1A2E] space-y-4" style={{ animationDelay: '240ms' }}>
-            <div className="flex items-center justify-between border-b-2 border-dashed border-main-text/10 pb-2.5">
-              <div className="flex items-center gap-1.5">
-                <span className="w-1.5 h-3 bg-accent-orange rotate-[15deg] rounded-sm" />
-                <h2 className="font-nunito font-black text-sm text-main-text uppercase tracking-wider">
-                  {t('common.recent_expenses')}
-                </h2>
-              </div>
-              {expenses.length > 3 && (
-                <button
-                  onClick={() => navigate(`/group/${groupId}/expenses`)}
-                  className="text-xs font-black font-nunito uppercase tracking-wider text-accent-orange hover:underline cursor-pointer flex items-center gap-0.5"
-                >
-                  {t('common.view_all')}
-                  <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
-                </button>
+            <div className="flex items-center gap-1.5 border-b-2 border-dashed border-main-text/10 pb-2.5">
+              <span className="w-1.5 h-3 bg-accent-orange rotate-[15deg] rounded-sm" />
+              <h2 className="font-nunito font-black text-sm text-main-text uppercase tracking-wider">
+                {t('common.member_expenses')}
+              </h2>
+            </div>
+            <div className="space-y-3">
+              {members.filter(member => (memberExpenseTotals[member.id] || 0) > 0).length === 0 ? (
+                <div className="py-6 text-center">
+                  <div className="w-14 h-14 bg-brand-light border-2 border-main-text rounded-2xl flex items-center justify-center mx-auto mb-3 rotate-[-6deg] shadow-[2px_2px_0px_#1A1A2E]">
+                    <Receipt className="w-7 h-7 text-accent-orange stroke-[2.5]" />
+                  </div>
+                  <p className="text-sm font-bold font-nunito text-main-text/80">{t('expenses.no_expenses_recorded')}</p>
+                  <p className="text-xs text-main-text/50 font-medium mt-1">{t('expenses.no_expenses_hint_dashboard')}</p>
+                </div>
+              ) : (
+                members
+                  .filter(member => (memberExpenseTotals[member.id] || 0) > 0)
+                  .map(member => {
+                    const share = memberExpenseTotals[member.id] || 0;
+                    return (
+                      <div key={member.id} className="flex items-center justify-between p-3.5 border-2 border-main-text rounded-xl hover:bg-page-bg/40 transition-colors">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="font-nunito font-black text-sm text-main-text truncate">{member.name}</span>
+                          {member.id === currentGroup?.createdBy && (
+                            <span className="text-[9px] bg-brand-light text-accent-orange border border-accent-orange/20 font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider font-nunito">{t('common.host')}</span>
+                          )}
+                          {member.id === currentMemberId && (
+                            <span className="text-[9px] bg-success-light text-success-green border border-success-green/20 font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider font-nunito">{t('common.me')}</span>
+                          )}
+                        </div>
+                        <span className="font-nunito font-black text-sm text-main-text bg-brand-light border border-main-text/10 px-2.5 py-1 rounded-lg shrink-0">
+                          {formatCurrency(share)}
+                        </span>
+                      </div>
+                    );
+                  })
               )}
             </div>
-            
-            {expenses.length === 0 ? (
-              <div className="py-6 text-center">
-                <div className="w-14 h-14 bg-brand-light border-2 border-main-text rounded-2xl flex items-center justify-center mx-auto mb-3 rotate-[-6deg] shadow-[2px_2px_0px_#1A1A2E]">
-                  <Receipt className="w-7 h-7 text-accent-orange stroke-[2.5]" />
-                </div>
-                <p className="text-sm font-bold font-nunito text-main-text/80">{t('expenses.no_expenses_recorded')}</p>
-                <p className="text-xs text-main-text/50 font-medium mt-1">{t('expenses.no_expenses_hint_dashboard')}</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {expenses.slice(0, 3).map(exp => (
-                  <div key={exp.id} className="flex items-center justify-between p-3.5 border-2 border-main-text rounded-xl hover:bg-page-bg/40 transition-colors">
-                    <div className="min-w-0 pr-2">
-                      <span className="font-nunito font-black text-sm text-main-text truncate block leading-tight">{exp.description}</span>
-                      <span className="text-[10px] text-gray-400 font-bold mt-1 block">
-                        {formatDate(exp.createdAt, i18n.language)}
-                      </span>
-                    </div>
-                    <span className="font-nunito font-black text-sm text-main-text bg-brand-light border border-main-text/10 px-2.5 py-1 rounded-lg shrink-0">
-                      {formatCurrency(exp.amount)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       </main>
