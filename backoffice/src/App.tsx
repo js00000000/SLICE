@@ -43,7 +43,8 @@ import {
   Trash2,
   AlertTriangle,
   UserX,
-  FolderX
+  FolderX,
+  Menu
 } from "lucide-react";
 
 // Types matching SLICE schema
@@ -100,6 +101,7 @@ export default function App() {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"dashboard" | "users" | "groups">("dashboard");
+  const [menuOpen, setMenuOpen] = useState(false);
   
   // Data States
   const [usersList, setUsersList] = useState<UserSettings[]>([]);
@@ -674,87 +676,102 @@ export default function App() {
 
   // 3. Authorized Main Dashboard View
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-page-bg text-main-text font-plus-jakarta">
-      
-      {/* Sidebar navigation */}
-      <aside className="w-full md:w-64 bg-white border-b-3 md:border-b-0 md:border-r-3 border-main-text p-6 flex flex-col justify-between shrink-0">
-        <div>
-          <div className="flex items-center gap-2 mb-8">
-            <span className="bg-accent-orange text-white text-xl font-black font-nunito py-1 px-3 border-2 border-main-text rounded-lg shadow-[2px_2px_0px_#1A1A2E]">
-              SLICE
-            </span>
-            <span className="font-nunito font-black text-md tracking-wider opacity-80">BACKOFFICE</span>
-          </div>
+    <div className="flex flex-col min-h-screen bg-page-bg text-main-text font-plus-jakarta">
 
-          <nav className="space-y-3">
-            <button
-              onClick={() => setActiveTab("dashboard")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 font-nunito font-black text-left transition-all cursor-pointer ${
-                activeTab === "dashboard"
-                  ? "bg-brand-light border-main-text text-accent-orange shadow-[2px_2px_0px_#1A1A2E]"
-                  : "bg-white border-transparent text-main-text hover:bg-gray-50"
-              }`}
-            >
-              <LayoutDashboard className="w-5 h-5" />
-              主控台首頁
-            </button>
-
-            <button
-              onClick={() => setActiveTab("users")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 font-nunito font-black text-left transition-all cursor-pointer ${
-                activeTab === "users"
-                  ? "bg-brand-light border-main-text text-accent-orange shadow-[2px_2px_0px_#1A1A2E]"
-                  : "bg-white border-transparent text-main-text hover:bg-gray-50"
-              }`}
-            >
-              <Users className="w-5 h-5" />
-              使用者管理 ({totalUsersCount})
-            </button>
-
-            <button
-              onClick={() => setActiveTab("groups")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 font-nunito font-black text-left transition-all cursor-pointer ${
-                activeTab === "groups"
-                  ? "bg-brand-light border-main-text text-accent-orange shadow-[2px_2px_0px_#1A1A2E]"
-                  : "bg-white border-transparent text-main-text hover:bg-gray-50"
-              }`}
-            >
-              <Folder className="w-5 h-5" />
-              群組管理 ({totalGroupsCount})
-            </button>
-          </nav>
+      {/* Top menu bar */}
+      <header className="sticky top-0 z-40 bg-white border-b-3 border-main-text px-4 sm:px-6 py-3 flex items-center justify-between gap-4 shrink-0">
+        {/* Logo */}
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="bg-accent-orange text-white text-xl font-black font-nunito py-1 px-3 border-2 border-main-text rounded-lg shadow-[2px_2px_0px_#1A1A2E]">
+            SLICE
+          </span>
+          <span className="hidden sm:inline font-nunito font-black text-md tracking-wider opacity-80">BACKOFFICE</span>
         </div>
 
-        {/* User Info & Logout */}
-        <div className="mt-8 pt-6 border-t-2 border-dashed border-gray-200">
-          <div className="flex items-center gap-3 mb-4">
-            {user.photoURL ? (
-              <img src={user.photoURL} alt="Avatar" className="w-10 h-10 rounded-full border-2 border-main-text" />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-accent-orange border-2 border-main-text flex items-center justify-center text-white font-nunito font-black">
-                A
+        {/* Hamburger */}
+        <button
+          onClick={() => setMenuOpen(o => !o)}
+          aria-label="開啟選單"
+          className="flex items-center justify-center bg-white hover:bg-gray-50 text-main-text p-2 border-2 border-main-text rounded-xl shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] btn-bounce cursor-pointer shrink-0"
+        >
+          {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+
+        {/* Dropdown menu */}
+        {menuOpen && (
+          <>
+            {/* Click-away backdrop */}
+            <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+            <nav className="absolute right-4 top-full mt-2 z-50 w-64 bg-white border-3 border-main-text rounded-2xl shadow-[6px_6px_0px_#1A1A2E] p-3 flex flex-col gap-2 animate-fadeIn">
+              {/* Signed-in admin */}
+              <div className="flex items-center gap-2 px-1 pb-3 mb-1 border-b-2 border-dashed border-gray-200">
+                {user.photoURL ? (
+                  <img src={user.photoURL} alt="Avatar" className="w-9 h-9 rounded-full border-2 border-main-text shrink-0" />
+                ) : (
+                  <div className="w-9 h-9 rounded-full bg-accent-orange border-2 border-main-text flex items-center justify-center text-white font-nunito font-black shrink-0">
+                    A
+                  </div>
+                )}
+                <div className="overflow-hidden">
+                  <p className="text-xs font-bold text-gray-500 truncate">{user.email}</p>
+                  <span className="inline-flex items-center gap-1 text-[10px] bg-success-light text-success-green font-bold px-1.5 py-0.5 rounded-md border border-success-green/20">
+                    <UserCheck className="w-2.5 h-2.5" />
+                    最高管理員
+                  </span>
+                </div>
               </div>
-            )}
-            <div className="overflow-hidden">
-              <p className="text-xs font-bold text-gray-500 truncate">{user.email}</p>
-              <span className="inline-flex items-center gap-1 text-[10px] bg-success-light text-success-green font-bold px-1.5 py-0.5 rounded-md border border-success-green/20">
-                <UserCheck className="w-2.5 h-2.5" />
-                最高管理員
-              </span>
-            </div>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 bg-white hover:bg-red-50 text-red-500 font-nunito font-black text-sm py-2 px-4 border-2 border-main-text rounded-xl shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] btn-bounce cursor-pointer"
-          >
-            <LogOut className="w-4 h-4" />
-            系統登出
-          </button>
-        </div>
-      </aside>
+
+              <button
+                onClick={() => { setActiveTab("dashboard"); setMenuOpen(false); }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 font-nunito font-black text-left transition-all cursor-pointer ${
+                  activeTab === "dashboard"
+                    ? "bg-brand-light border-main-text text-accent-orange shadow-[2px_2px_0px_#1A1A2E]"
+                    : "bg-white border-transparent text-main-text hover:bg-gray-50"
+                }`}
+              >
+                <LayoutDashboard className="w-5 h-5 shrink-0" />
+                主控台首頁
+              </button>
+
+              <button
+                onClick={() => { setActiveTab("users"); setMenuOpen(false); }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 font-nunito font-black text-left transition-all cursor-pointer ${
+                  activeTab === "users"
+                    ? "bg-brand-light border-main-text text-accent-orange shadow-[2px_2px_0px_#1A1A2E]"
+                    : "bg-white border-transparent text-main-text hover:bg-gray-50"
+                }`}
+              >
+                <Users className="w-5 h-5 shrink-0" />
+                使用者管理 ({totalUsersCount})
+              </button>
+
+              <button
+                onClick={() => { setActiveTab("groups"); setMenuOpen(false); }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 font-nunito font-black text-left transition-all cursor-pointer ${
+                  activeTab === "groups"
+                    ? "bg-brand-light border-main-text text-accent-orange shadow-[2px_2px_0px_#1A1A2E]"
+                    : "bg-white border-transparent text-main-text hover:bg-gray-50"
+                }`}
+              >
+                <Folder className="w-5 h-5 shrink-0" />
+                群組管理 ({totalGroupsCount})
+              </button>
+
+              {/* Logout */}
+              <button
+                onClick={() => { setMenuOpen(false); handleLogout(); }}
+                className="w-full flex items-center gap-3 px-4 py-3 mt-1 border-t-2 border-dashed border-gray-200 pt-3 rounded-b-xl font-nunito font-black text-left text-red-500 hover:bg-red-50 transition-all cursor-pointer"
+              >
+                <LogOut className="w-5 h-5 shrink-0" />
+                系統登出
+              </button>
+            </nav>
+          </>
+        )}
+      </header>
 
       {/* Main Content Pane */}
-      <main className="flex-1 p-6 md:p-10 overflow-y-auto max-h-screen">
+      <main className="flex-1 p-6 md:p-10">
         
         {/* Header bar */}
         <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
