@@ -296,6 +296,19 @@ export default function App() {
     fetchGroupDetails(group);
   };
 
+  // Jump from the group detail modal into a bound member's user detail view
+  const handleViewUserFromGroup = (userId: string | undefined) => {
+    if (!userId) return;
+    const target = usersList.find(u => u.id === userId);
+    if (!target) {
+      toast.error("找不到對應的使用者資料（可能已被刪除）。");
+      return;
+    }
+    setSelectedGroup(null);
+    setActiveTab("users");
+    setSelectedUser(target);
+  };
+
   const handleLogin = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
@@ -1166,21 +1179,45 @@ export default function App() {
                               成員名單 ({selectedGroupMembers.length})
                             </h3>
                             <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-                              {selectedGroupMembers.map(m => (
-                                <div key={m.id} className="flex items-center justify-between bg-gray-50 px-3 py-2 border border-gray-200 rounded-lg">
-                                  <div>
-                                    <span className="font-bold text-sm block">{m.name}</span>
-                                    <span className="text-[10px] text-gray-400 font-mono block">
-                                      {m.userId ? `綁定UID: ${m.userId.substring(0, 8)}...` : "未綁定 (虛擬成員)"}
-                                    </span>
+                              {selectedGroupMembers.map(m => {
+                                const bound = !!m.userId;
+                                return bound ? (
+                                  <button
+                                    key={m.id}
+                                    onClick={() => handleViewUserFromGroup(m.userId)}
+                                    className="w-full text-left flex items-center justify-between bg-gray-50 hover:bg-brand-light px-3 py-2 border-2 border-main-text rounded-lg shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] btn-bounce cursor-pointer transition-colors"
+                                  >
+                                    <div className="min-w-0">
+                                      <span className="font-bold text-sm block truncate">{m.name}</span>
+                                      <span className="text-[10px] text-gray-400 font-mono block truncate">
+                                        綁定UID: {m.userId!.substring(0, 8)}...
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                      {m.isHost && (
+                                        <span className="bg-brand-light text-accent-orange border border-accent-orange/20 text-[10px] font-extrabold px-1.5 py-0.5 rounded">
+                                          主辦人
+                                        </span>
+                                      )}
+                                      <ArrowRight className="w-4 h-4 text-gray-400" />
+                                    </div>
+                                  </button>
+                                ) : (
+                                  <div key={m.id} className="flex items-center justify-between bg-gray-50 px-3 py-2 border border-gray-200 rounded-lg">
+                                    <div>
+                                      <span className="font-bold text-sm block">{m.name}</span>
+                                      <span className="text-[10px] text-gray-400 font-mono block">
+                                        未綁定 (虛擬成員)
+                                      </span>
+                                    </div>
+                                    {m.isHost && (
+                                      <span className="bg-brand-light text-accent-orange border border-accent-orange/20 text-[10px] font-extrabold px-1.5 py-0.5 rounded">
+                                        主辦人
+                                      </span>
+                                    )}
                                   </div>
-                                  {m.isHost && (
-                                    <span className="bg-brand-light text-accent-orange border border-accent-orange/20 text-[10px] font-extrabold px-1.5 py-0.5 rounded">
-                                      主辦人
-                                    </span>
-                                  )}
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           </div>
 
