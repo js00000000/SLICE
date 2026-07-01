@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Share2, Plus, DollarSign, Receipt, Lock } from 'lucide-react';
+import { Share2, DollarSign, Receipt } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
@@ -178,31 +178,6 @@ export function DashboardPage() {
                 </span>
                 <CountUp value={Math.abs(currentMemberBalance)} formatter={formatCurrency} className={`text-2.5xl font-nunito font-black block mt-1.5 leading-none ${currentMemberBalance > 0 ? 'text-success-green' : currentMemberBalance < 0 ? 'text-accent-orange' : 'text-main-text'}`} />
               </div>
-            </div>
-          </div>
-
-          {/* Quick Actions Card */}
-          <div className="stagger-item bg-white rounded-[24px] border-3 border-main-text p-5 shadow-[4px_4px_0px_#1A1A2E] space-y-3.5" style={{ animationDelay: '120ms' }}>
-            <h2 className="text-xs font-black font-nunito uppercase tracking-wider text-main-text/60 flex items-center gap-1.5 px-1">
-              {t('common.quick_actions')}
-            </h2>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={openAddModal}
-                disabled={isSettled}
-                title={isSettled ? t('settle.locked_msg') : undefined}
-                className="py-3 bg-accent-orange text-white border-2 border-main-text rounded-xl font-nunito font-black text-sm shadow-[3px_3px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] cursor-pointer hover:bg-[#ff7b4b] transition-all flex items-center justify-center gap-2 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:hover:bg-gray-200"
-              >
-                {isSettled ? <Lock className="w-4 h-4 stroke-[3]" /> : <Plus className="w-4 h-4 stroke-[3]" />}
-                {isSettled ? t('settle.locked_short') : t('expenses.add_new')}
-              </button>
-              <button
-                onClick={() => navigate(`/group/${groupId}/settlements`)}
-                className="py-3 bg-brand-light text-accent-orange border-2 border-main-text rounded-xl font-nunito font-black text-sm shadow-[3px_3px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] cursor-pointer hover:bg-white transition-all flex items-center justify-center gap-2"
-              >
-                <DollarSign className="w-4 h-4 stroke-[3]" />
-                {t('balances.title')}
-              </button>
             </div>
           </div>
 
