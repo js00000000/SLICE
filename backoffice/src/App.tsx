@@ -116,6 +116,9 @@ export default function App() {
   const [groupSortField, setGroupSortField] = useState<"createdAt" | "name" | "settled" | "createdBy">("createdAt");
   const [groupSortOrder, setGroupSortOrder] = useState<"asc" | "desc">("desc");
 
+  // Detailed view of a user
+  const [selectedUser, setSelectedUser] = useState<UserSettings | null>(null);
+
   // Detailed view of a group
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [selectedGroupMembers, setSelectedGroupMembers] = useState<Member[]>([]);
@@ -266,6 +269,31 @@ export default function App() {
     } finally {
       setDetailsLoading(false);
     }
+  };
+
+  // Groups related to a given user: ones they created + ones they joined
+  const getRelatedGroups = (u: UserSettings) => {
+    const createdSet = new Set<string>();
+    const created = groupsList.filter(g => {
+      if (g.createdBy === u.id) {
+        createdSet.add(g.id);
+        return true;
+      }
+      return false;
+    });
+    const joinedIds = new Set<string>([
+      ...(u.joinedGroupIds || []),
+      ...(u.lastGroupId ? [u.lastGroupId] : []),
+    ]);
+    const joined = groupsList.filter(g => joinedIds.has(g.id) && !createdSet.has(g.id));
+    return { created, joined };
+  };
+
+  // Jump from the user detail modal into a group's detail view
+  const handleViewGroupFromUser = (group: Group) => {
+    setSelectedUser(null);
+    setActiveTab("groups");
+    fetchGroupDetails(group);
   };
 
   const handleLogin = async () => {
@@ -919,13 +947,22 @@ export default function App() {
                             {u.joinedGroupIds?.length || 0}
                           </td>
                           <td className="p-4">
-                            <button
-                              onClick={() => setUserToDelete(u)}
-                              className="bg-white hover:bg-red-50 text-red-500 text-xs font-bold py-1.5 px-3 border-2 border-main-text rounded-lg shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] btn-bounce cursor-pointer flex items-center gap-1.5"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              刪除用戶
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => setSelectedUser(u)}
+                                className="bg-white hover:bg-gray-50 text-main-text text-xs font-bold py-1.5 px-3 border-2 border-main-text rounded-lg shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] btn-bounce cursor-pointer flex items-center gap-1 whitespace-nowrap"
+                              >
+                                查看明細
+                                <ArrowRight className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => setUserToDelete(u)}
+                                className="bg-white hover:bg-red-50 text-red-500 text-xs font-bold py-1.5 px-3 border-2 border-main-text rounded-lg shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] btn-bounce cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                刪除用戶
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -1246,6 +1283,144 @@ export default function App() {
 
           </div>
         )}
+
+        {/* USER DETAIL MODAL */}
+        {selectedUser && (() => {
+          const { created, joined } = getRelatedGroups(selectedUser);
+          return (
+            <div className="fixed inset-0 bg-[#1A1A2E]/50 flex items-center justify-center p-4 z-50 overflow-y-auto font-plus-jakarta">
+              <div className="bg-white border-3 border-main-text rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-[8px_8px_0px_#1A1A2E] flex flex-col animate-fadeIn">
+
+                {/* Modal Header */}
+                <div className="bg-brand-light border-b-3 border-main-text p-6 flex justify-between items-center shrink-0">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="bg-accent-orange p-2 rounded-lg border-2 border-main-text shrink-0">
+                      <UserCheck className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="min-w-0">
+                      <h2 className="text-xl font-nunito font-black text-main-text">使用者明細</h2>
+                      <p className="text-xs text-gray-500 font-mono mt-1 truncate">UID: {selectedUser.id}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedUser(null)}
+                    className="bg-white hover:bg-gray-50 text-main-text p-1.5 border-2 border-main-text rounded-xl shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] btn-bounce cursor-pointer shrink-0"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Modal Body */}
+                <div className="p-6 overflow-y-auto flex-1 space-y-6">
+                  {/* User Info Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <div className="bg-gray-50 border-2 border-main-text rounded-xl p-3">
+                      <span className="text-xs font-bold text-gray-500 block mb-1">登入管道</span>
+                      <span className="text-sm font-nunito font-black text-main-text">
+                        {selectedUser.isAnonymous ? "訪客 (Guest)" : "Google Auth"}
+                      </span>
+                    </div>
+                    <div className="bg-gray-50 border-2 border-main-text rounded-xl p-3">
+                      <span className="text-xs font-bold text-gray-500 block mb-1">來源地區</span>
+                      <span className="text-sm font-nunito font-black text-main-text">{getCountryDisplay(selectedUser.country)}</span>
+                    </div>
+                    <div className="bg-gray-50 border-2 border-main-text rounded-xl p-3">
+                      <span className="text-xs font-bold text-gray-500 block mb-1">加入群組數</span>
+                      <span className="text-sm font-nunito font-black text-accent-orange">{selectedUser.joinedGroupIds?.length || 0}</span>
+                    </div>
+                    <div className="bg-gray-50 border-2 border-main-text rounded-xl p-3">
+                      <span className="text-xs font-bold text-gray-500 block mb-1">註冊時間</span>
+                      <span className="text-xs font-bold text-main-text">{formatDate(selectedUser.createdOn)}</span>
+                    </div>
+                    <div className="bg-gray-50 border-2 border-main-text rounded-xl p-3">
+                      <span className="text-xs font-bold text-gray-500 block mb-1">最後登入</span>
+                      <span className="text-xs font-bold text-main-text">{formatDate(selectedUser.lastLoginOn)}</span>
+                    </div>
+                  </div>
+
+                  {/* Groups created by user */}
+                  <div className="bg-white border-2 border-main-text rounded-xl p-5 shadow-[3px_3px_0px_#1A1A2E]">
+                    <h3 className="text-base font-nunito font-black mb-3 border-b-2 border-gray-100 pb-2 flex items-center gap-2">
+                      <Folder className="w-4 h-4 text-accent-orange" />
+                      建立的群組 ({created.length})
+                    </h3>
+                    <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                      {created.length > 0 ? (
+                        created.map(g => (
+                          <button
+                            key={g.id}
+                            onClick={() => handleViewGroupFromUser(g)}
+                            className="w-full text-left flex items-center justify-between bg-gray-50 hover:bg-brand-light px-3 py-2 border-2 border-main-text rounded-lg shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] btn-bounce cursor-pointer transition-colors"
+                          >
+                            <div className="min-w-0">
+                              <span className="font-bold text-sm block truncate">{g.name}</span>
+                              <span className="text-[10px] text-gray-400 font-mono block truncate">ID: {g.id}</span>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              {g.settledAt ? (
+                                <span className="bg-success-light text-success-green border border-success-green/20 text-[10px] font-bold px-1.5 py-0.5 rounded">已結清</span>
+                              ) : (
+                                <span className="bg-orange-50 text-accent-orange border border-accent-orange/20 text-[10px] font-bold px-1.5 py-0.5 rounded">進行中</span>
+                              )}
+                              <ArrowRight className="w-4 h-4 text-gray-400" />
+                            </div>
+                          </button>
+                        ))
+                      ) : (
+                        <p className="text-center text-xs font-semibold text-gray-400 py-4">未建立任何群組</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Groups joined but not created */}
+                  <div className="bg-white border-2 border-main-text rounded-xl p-5 shadow-[3px_3px_0px_#1A1A2E]">
+                    <h3 className="text-base font-nunito font-black mb-3 border-b-2 border-gray-100 pb-2 flex items-center gap-2">
+                      <Users className="w-4 h-4 text-accent-orange" />
+                      加入的其他群組 ({joined.length})
+                    </h3>
+                    <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                      {joined.length > 0 ? (
+                        joined.map(g => (
+                          <button
+                            key={g.id}
+                            onClick={() => handleViewGroupFromUser(g)}
+                            className="w-full text-left flex items-center justify-between bg-gray-50 hover:bg-brand-light px-3 py-2 border-2 border-main-text rounded-lg shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] btn-bounce cursor-pointer transition-colors"
+                          >
+                            <div className="min-w-0">
+                              <span className="font-bold text-sm block truncate">{g.name}</span>
+                              <span className="text-[10px] text-gray-400 font-mono block truncate">ID: {g.id}</span>
+                            </div>
+                            <ArrowRight className="w-4 h-4 text-gray-400 shrink-0" />
+                          </button>
+                        ))
+                      ) : (
+                        <p className="text-center text-xs font-semibold text-gray-400 py-4">未加入其他群組</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Modal Footer */}
+                <div className="bg-gray-50 border-t-3 border-main-text p-4 flex justify-between items-center shrink-0">
+                  <button
+                    onClick={() => { const u = selectedUser; setSelectedUser(null); setUserToDelete(u); }}
+                    className="bg-white hover:bg-red-50 text-red-500 font-nunito font-black text-sm py-2 px-5 border-2 border-main-text rounded-xl shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] btn-bounce cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    刪除此用戶
+                  </button>
+                  <button
+                    onClick={() => setSelectedUser(null)}
+                    className="bg-white hover:bg-gray-100 text-main-text font-nunito font-black text-sm py-2 px-5 border-2 border-main-text rounded-xl shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] btn-bounce cursor-pointer"
+                  >
+                    關閉明細窗口
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          );
+        })()}
 
         {/* USER DELETE CONFIRMATION MODAL */}
         {userToDelete && (
