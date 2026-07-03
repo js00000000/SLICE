@@ -525,7 +525,9 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const markingSettlementRef = useRef(false);
   const handleMarkSettlementPaid = async (settlement: { from: string; to: string; amount: number }) => {
+    if (markingSettlementRef.current) return;
     if (!user || !groupId || !currentMemberId) return;
     if (settlement.from !== currentMemberId && settlement.to !== currentMemberId) {
       toast.error(t('settle.mark_paid_not_party'));
@@ -546,6 +548,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       },
     );
     if (!isConfirmed) return;
+    markingSettlementRef.current = true;
     try {
       await firebaseService.markSettlementPaid(groupId, {
         from: settlement.from,
@@ -558,6 +561,8 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Mark settlement paid error:', error);
       toast.error(t('common.error'));
+    } finally {
+      markingSettlementRef.current = false;
     }
   };
 
