@@ -18,7 +18,8 @@ service cloud.firestore {
 
     // Admins metadata
     match /admins/{adminId} {
-      allow read: if isAuthenticated();
+      allow get: if isOwner(adminId) || isAdmin();
+      allow list: if false;
       allow write: if false; // Only write manually in Firebase console
     }
 
