@@ -30,9 +30,9 @@ service cloud.firestore {
 
     // Groups
     match /groups/{groupId} {
-      // Allow anyone with the link (groupId) to read for joining
-      // In a production app, you might want to restrict this to members only
-      allow read: if true;
+      // Any authenticated user (including anonymous) can read a group by its ID.
+      // Knowing the groupId (shared via link) is the join mechanism.
+      allow read: if isAuthenticated();
       
       // Creating a group
       allow create: if isAuthenticated() 
@@ -43,8 +43,10 @@ service cloud.firestore {
       // Only host (creator) or admin can update or delete the group.
       // This includes renaming the group, settling up (setting settledAt/settledBy), and unsettling up (deleting settledAt/settledBy).
       allow update: if isAdmin() || (
-        isAuthenticated() 
+        isAuthenticated()
         && resource.data.createdBy == request.auth.uid
+        && request.resource.data.name is string
+        && request.resource.data.name.size() <= 50
         && (
           // Defense-in-depth: If settling up, ensure settledBy matches the host/auth UID
           (!request.resource.data.keys().hasAll(['settledAt', 'settledBy']) || request.resource.data.settledBy == request.auth.uid)
@@ -62,17 +64,23 @@ service cloud.firestore {
         
         // Host or admin can create members, or a user can claim a member
         allow create: if isAdmin() || (
-          isAuthenticated() 
+          isAuthenticated()
+          && request.resource.data.name is string
+          && request.resource.data.name.size() <= 50
           && (get(/databases/$(database)/documents/groups/$(groupId)).data.createdBy == request.auth.uid
               || request.resource.data.userId == request.auth.uid)
         );
         
         // Host or admin can update any member, or a user can update their own claimed profile
-        // Also allow a user to claim an unclaimed member (userId is null)
+        // Also allow a user to claim an unclaimed member (userId is null).
+        // A claimed member may set their userId back to null (leave/unclaim) but not to another user's UID.
         allow update: if isAdmin() || (
-          isAuthenticated() 
+          isAuthenticated()
+          && request.resource.data.name is string
+          && request.resource.data.name.size() <= 50
           && (get(/databases/$(database)/documents/groups/$(groupId)).data.createdBy == request.auth.uid
-              || resource.data.userId == request.auth.uid
+              || (resource.data.userId == request.auth.uid
+                  && (request.resource.data.userId == request.auth.uid || request.resource.data.userId == null))
               || (resource.data.userId == null && request.resource.data.userId == request.auth.uid))
         );
               
@@ -91,9 +99,17 @@ service cloud.firestore {
         // We validate that the createdBy matches the current member link
         allow create: if isAuthenticated()
           && request.resource.data.amount is number
+          && request.resource.data.amount > 0
+          && request.resource.data.description is string
           && request.resource.data.description.size() <= 100;
 
-        allow update, delete: if isAuthenticated();
+        allow update: if isAuthenticated()
+          && request.resource.data.amount is number
+          && request.resource.data.amount > 0
+          && request.resource.data.description is string
+          && request.resource.data.description.size() <= 100;
+
+        allow delete: if isAuthenticated();
       }
 
       // Manual settlement records subcollection
@@ -109,8 +125,11 @@ service cloud.firestore {
           && request.resource.data.completedBy == request.auth.uid
           && request.resource.data.amount is number
           && request.resource.data.amount > 0
+          && request.resource.data.from != request.resource.data.to
           && (request.resource.data.completedByMemberId == request.resource.data.from
               || request.resource.data.completedByMemberId == request.resource.data.to)
+          && exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.resource.data.from))
+          && exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.resource.data.to))
           && get(/databases/$(database)/documents/groups/$(groupId)/members/$(request.resource.data.completedByMemberId)).data.userId == request.auth.uid;
 
         // Records are append-only. Use delete + create to "edit".
