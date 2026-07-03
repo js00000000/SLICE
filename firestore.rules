@@ -125,6 +125,7 @@ service cloud.firestore {
           && request.resource.data.completedBy == request.auth.uid
           && request.resource.data.amount is number
           && request.resource.data.amount > 0
+          && request.resource.data.amount <= 1000000
           && request.resource.data.from != request.resource.data.to
           && (request.resource.data.completedByMemberId == request.resource.data.from
               || request.resource.data.completedByMemberId == request.resource.data.to)
