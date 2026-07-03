@@ -21,6 +21,31 @@ import type { Member, Expense } from '../types';
 
 export type ExpenseInput = Omit<Expense, 'id' | 'createdBy' | 'createdAt' | 'updatedAt'>;
 
+function validateExpenseArrays(data: Partial<ExpenseInput>) {
+  const toCents = (n: number) => Math.round(n * 100);
+  const amountCents = data.amount !== undefined ? toCents(data.amount) : null;
+
+  if (data.splits && data.splits.length > 0) {
+    if (data.splits.some(s => s.amount < 0))
+      throw new Error('Split amounts must be non-negative');
+    if (amountCents !== null) {
+      const sum = data.splits.reduce((acc, s) => acc + toCents(s.amount), 0);
+      if (Math.abs(sum - amountCents) > 1)
+        throw new Error('Splits must sum to expense amount');
+    }
+  }
+
+  if (data.payments && data.payments.length > 0) {
+    if (data.payments.some(p => p.amount < 0))
+      throw new Error('Payment amounts must be non-negative');
+    if (amountCents !== null) {
+      const sum = data.payments.reduce((acc, p) => acc + toCents(p.amount), 0);
+      if (Math.abs(sum - amountCents) > 1)
+        throw new Error('Payments must sum to expense amount');
+    }
+  }
+}
+
 // Random invite token for /join/:joinId URLs. Excludes visually ambiguous
 // characters (0/O/1/I/l) so it's safer to read off a screen.
 const JOIN_ID_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
@@ -247,6 +272,7 @@ export const firebaseService = {
   },
 
   async addExpense(groupId: string, memberId: string, expenseData: ExpenseInput) {
+    validateExpenseArrays(expenseData);
     const data: any = {
       ...expenseData,
       createdBy: memberId,
@@ -264,6 +290,7 @@ export const firebaseService = {
   },
 
   async updateExpense(groupId: string, expenseId: string, expenseData: Partial<ExpenseInput>) {
+    validateExpenseArrays(expenseData);
     const data: any = {
       ...expenseData,
       updatedAt: serverTimestamp(),
