@@ -479,12 +479,20 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       setMembershipReady(false);
       return;
     }
+    // Re-arm the gate for this group. Resetting to false synchronously here (not
+    // just in the guard above) is what makes the expenses/settlements effect tear
+    // down and re-subscribe once THIS group's index entry is confirmed. Without
+    // it, navigating directly A→B keeps a stale membershipReady=true and a
+    // permission-denied listener from the racing subscription never retries.
+    setMembershipReady(false);
+    let cancelled = false;
     firebaseService.ensureGroupMembership(groupId, currentMemberId, user.uid)
-      .then(() => setMembershipReady(true))
+      .then(() => { if (!cancelled) setMembershipReady(true); })
       .catch(err => {
         console.error("Backfill claimedUserIds error:", err);
-        setMembershipReady(true); // still attempt subscription — rule may already pass
+        if (!cancelled) setMembershipReady(true); // still attempt subscription — rule may already pass
       });
+    return () => { cancelled = true; };
   }, [user, groupId, currentMemberId]);
   const isSettled = !!currentGroup?.settledAt;
 
