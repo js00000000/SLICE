@@ -208,11 +208,12 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
               </label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-main-text font-nunito font-black text-lg">$</span>
-                <input 
-                  type="number" 
-                  min="0" 
-                  step="any" 
-                  value={amount} 
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="any"
+                  value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
                   className="w-full text-base font-nunito font-black text-main-text pl-8 pr-4 py-3 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none placeholder-gray-400 bg-white transition-all"
@@ -266,6 +267,7 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
                           <input
                             ref={index === 0 ? firstPayerAmountRef : undefined}
                             type="number"
+                            inputMode="decimal"
                             step="any"
                             value={p.amount || ''}
                             onChange={(e) => updatePayer(index, { amount: parseFloat(e.target.value) || 0 })}
@@ -346,6 +348,7 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-main-text font-nunito font-black">$</span>
                           <input
                             type="number"
+                            inputMode="decimal"
                             step="any"
                             value={split.amount || ''}
                             onChange={(e) => updateSplitAmount(m.id, parseFloat(e.target.value) || 0)}
