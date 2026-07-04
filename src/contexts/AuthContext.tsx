@@ -206,7 +206,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await deleteDoc(memberDoc.ref);
           const memberUserId = memberDoc.data().userId as string | null | undefined;
           if (memberUserId) {
-            await deleteDoc(doc(db, 'groups', gid, 'memberUids', memberUserId));
+            await deleteDoc(doc(db, 'groups', gid, 'claimedUserIds', memberUserId));
           }
         }
         // Finally delete the group document
@@ -234,7 +234,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           for (const memberDoc of membersSnap.docs) {
             await updateDoc(memberDoc.ref, { userId: null });
           }
-          await deleteDoc(doc(db, 'groups', gid, 'memberUids', uid));
+          await deleteDoc(doc(db, 'groups', gid, 'claimedUserIds', uid));
         } catch (err) {
           console.error(`Error clearing userId in group ${gid}:`, err);
         }

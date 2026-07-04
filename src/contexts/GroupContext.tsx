@@ -242,7 +242,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
   }, [user, groupId, userSettingsLoaded, navigate, t]);
 
   // Expenses and settlements subscriptions — only start after membershipReady is true.
-  // This ensures the /memberUids/{uid} index entry exists before subscribing,
+  // This ensures the /claimedUserIds/{uid} index entry exists before subscribing,
   // preventing a permission-denied error on first load for existing members.
   useEffect(() => {
     if (!membershipReady || !groupId) {
@@ -470,7 +470,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     });
   }, [currentGroup, isHost]);
 
-  // Ensure the /memberUids/{uid} index entry exists before subscribing to expenses
+  // Ensure the /claimedUserIds/{uid} index entry exists before subscribing to expenses
   // and settlements. For existing members this is a backfill (idempotent setDoc);
   // for new members the entry already exists from the claimMember batch.
   // membershipReady gates the expenses/settlements subscriptions below.
@@ -482,7 +482,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     firebaseService.ensureGroupMembership(groupId, currentMemberId, user.uid)
       .then(() => setMembershipReady(true))
       .catch(err => {
-        console.error("Backfill memberUids error:", err);
+        console.error("Backfill claimedUserIds error:", err);
         setMembershipReady(true); // still attempt subscription — rule may already pass
       });
   }, [user, groupId, currentMemberId]);

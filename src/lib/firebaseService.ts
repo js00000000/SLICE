@@ -85,7 +85,7 @@ export const firebaseService = {
     });
 
     // 3. Register host UID in the membership index (enables isGroupMember() in rules)
-    batch.set(doc(db, 'groups', groupId, 'memberUids', userId), { memberId: memberRef.id });
+    batch.set(doc(db, 'groups', groupId, 'claimedUserIds', userId), { memberId: memberRef.id });
 
     // 4. Update User Settings
     const userRef = doc(db, 'users', userId);
@@ -168,7 +168,7 @@ export const firebaseService = {
     });
 
     // 2. Remove from membership index
-    batch.delete(doc(db, 'groups', groupId, 'memberUids', userId));
+    batch.delete(doc(db, 'groups', groupId, 'claimedUserIds', userId));
 
     // 3. Remove group from user's joined list
     batch.set(doc(db, 'users', userId), {
@@ -206,7 +206,7 @@ export const firebaseService = {
 
     // 4. Delete membership index entries
     for (const uid of claimedUserIds) {
-      batch.delete(doc(db, 'groups', groupId, 'memberUids', uid));
+      batch.delete(doc(db, 'groups', groupId, 'claimedUserIds', uid));
     }
 
     // 5. Delete group itself
@@ -229,7 +229,7 @@ export const firebaseService = {
       updatedAt: serverTimestamp(),
     });
     // Register in membership index (getAfter in rules verifies the member write above)
-    batch.set(doc(db, 'groups', groupId, 'memberUids', userId), { memberId });
+    batch.set(doc(db, 'groups', groupId, 'claimedUserIds', userId), { memberId });
     // Ensure the group appears in "My Groups"
     batch.set(doc(db, 'users', userId), {
       lastGroupId: groupId,
@@ -249,7 +249,7 @@ export const firebaseService = {
     });
     if (userId) {
       // Register in membership index (getAfter in rules verifies the member write above)
-      batch.set(doc(db, 'groups', groupId, 'memberUids', userId), { memberId: memberRef.id });
+      batch.set(doc(db, 'groups', groupId, 'claimedUserIds', userId), { memberId: memberRef.id });
       // Ensure the group appears in "My Groups"
       batch.set(doc(db, 'users', userId), {
         lastGroupId: groupId,
@@ -264,18 +264,18 @@ export const firebaseService = {
     if (userId) {
       const batch = writeBatch(db);
       batch.delete(doc(db, 'groups', groupId, 'members', memberId));
-      batch.delete(doc(db, 'groups', groupId, 'memberUids', userId));
+      batch.delete(doc(db, 'groups', groupId, 'claimedUserIds', userId));
       await batch.commit();
     } else {
       await deleteDoc(doc(db, 'groups', groupId, 'members', memberId));
     }
   },
 
-  // Ensures the /memberUids/{uid} index entry exists for a user who already has a
+  // Ensures the /claimedUserIds/{uid} index entry exists for a user who already has a
   // claimed member slot. Called on group load to backfill entries for users who
   // joined before this index was introduced.
   async ensureGroupMembership(groupId: string, memberId: string, userId: string) {
-    await setDoc(doc(db, 'groups', groupId, 'memberUids', userId), { memberId });
+    await setDoc(doc(db, 'groups', groupId, 'claimedUserIds', userId), { memberId });
   },
 
   async updateMember(groupId: string, memberId: string, data: Partial<Member>) {
