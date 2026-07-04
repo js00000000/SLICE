@@ -2,18 +2,25 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
     // Helper functions
     function isAuthenticated() {
       return request.auth != null;
     }
-    
+
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
     function isAdmin() {
       return isAuthenticated() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Returns true if the current user has a claimed member slot in this group.
+    // Backed by the /memberUids/{uid} subcollection — an index maintained by
+    // firebaseService on every claim/leave/delete operation.
+    function isGroupMember(groupId) {
+      return isAuthenticated() && exists(/databases/$(database)/documents/groups/$(groupId)/memberUids/$(request.auth.uid));
     }
 
     // Admins metadata
@@ -31,16 +38,16 @@ service cloud.firestore {
 
     // Groups
     match /groups/{groupId} {
-      // Any authenticated user (including anonymous) can read a group by its ID.
-      // Knowing the groupId (shared via link) is the join mechanism.
+      // Any authenticated user can read a group doc (name, joinId) to support the join flow.
+      // Expense and settlement reads are gated on isGroupMember() at the subcollection level.
       allow read: if isAuthenticated();
-      
+
       // Creating a group
-      allow create: if isAuthenticated() 
+      allow create: if isAuthenticated()
         && request.resource.data.createdBy == request.auth.uid
         && request.resource.data.name is string
         && request.resource.data.name.size() <= 50;
-      
+
       // Only host (creator) or admin can update or delete the group.
       // This includes renaming the group, settling up (setting settledAt/settledBy), and unsettling up (deleting settledAt/settledBy).
       allow update: if isAdmin() || (
@@ -53,16 +60,36 @@ service cloud.firestore {
           (!request.resource.data.keys().hasAll(['settledAt', 'settledBy']) || request.resource.data.settledBy == request.auth.uid)
         )
       );
-      
+
       allow delete: if isAdmin() || (
-        isAuthenticated() 
+        isAuthenticated()
         && resource.data.createdBy == request.auth.uid
       );
+
+      // Membership index — document ID is the Firebase Auth UID.
+      // Used by isGroupMember() to gate expense and settlement access.
+      match /memberUids/{uid} {
+        allow get: if false; // exists() in security rules works without client get access
+        allow list: if false;
+        // User can create/update their own entry when they have (or are acquiring in
+        // this same batch) a member slot with userId == request.auth.uid.
+        // getAfter() reads the projected post-batch state, allowing atomic
+        // claim + index writes in a single writeBatch.
+        allow create: if uid == request.auth.uid
+          && getAfter(/databases/$(database)/documents/groups/$(groupId)/members/$(request.resource.data.memberId)).data.userId == request.auth.uid;
+        allow update: if uid == request.auth.uid
+          && getAfter(/databases/$(database)/documents/groups/$(groupId)/members/$(request.resource.data.memberId)).data.userId == request.auth.uid;
+        // User can remove their own entry (leave), or the host can remove any entry (member deletion).
+        allow delete: if isAuthenticated() && (
+          uid == request.auth.uid
+          || get(/databases/$(database)/documents/groups/$(groupId)).data.createdBy == request.auth.uid
+        );
+      }
 
       // Members subcollection
       match /members/{memberId} {
         allow read: if isAuthenticated();
-        
+
         // Host or admin can create members, or a user can claim a member
         allow create: if isAdmin() || (
           isAuthenticated()
@@ -71,7 +98,7 @@ service cloud.firestore {
           && (get(/databases/$(database)/documents/groups/$(groupId)).data.createdBy == request.auth.uid
               || request.resource.data.userId == request.auth.uid)
         );
-        
+
         // Host or admin can update any member, or a user can update their own claimed profile
         // Also allow a user to claim an unclaimed member (userId is null).
         // A claimed member may set their userId back to null (leave/unclaim) but not to another user's UID.
@@ -84,45 +111,44 @@ service cloud.firestore {
                   && (request.resource.data.userId == request.auth.uid || request.resource.data.userId == null))
               || (resource.data.userId == null && request.resource.data.userId == request.auth.uid))
         );
-              
+
         // Only host or admin can delete members
         allow delete: if isAdmin() || (
-          isAuthenticated() 
+          isAuthenticated()
           && get(/databases/$(database)/documents/groups/$(groupId)).data.createdBy == request.auth.uid
         );
       }
 
-      // Expenses subcollection
+      // Expenses subcollection — gated on group membership to prevent data leaks
+      // and unauthorized writes by users who are not part of this group.
       match /expenses/{expenseId} {
-        allow read: if isAuthenticated();
+        allow read: if isGroupMember(groupId);
 
-        // Any authenticated user (ideally limited to members) can create/edit expenses
-        // We validate that the createdBy matches the current member link
-        allow create: if isAuthenticated()
+        allow create: if isGroupMember(groupId)
           && request.resource.data.amount is number
           && request.resource.data.amount > 0
           && request.resource.data.description is string
           && request.resource.data.description.size() <= 100;
 
-        allow update: if isAuthenticated()
+        allow update: if isGroupMember(groupId)
           && request.resource.data.amount is number
           && request.resource.data.amount > 0
           && request.resource.data.description is string
           && request.resource.data.description.size() <= 100;
 
-        allow delete: if isAuthenticated();
+        allow delete: if isGroupMember(groupId);
       }
 
       // Manual settlement records subcollection
       // Each record represents an out-of-band money transfer that one party has
       // confirmed completing (e.g. "Alice paid Bob $50 via Venmo").
       match /settlements/{settlementId} {
-        allow read: if isAuthenticated();
+        allow read: if isGroupMember(groupId);
 
         // Only the payer or receiver can mark a payment complete.
         // The marker must be authenticated as the member referenced by
         // `completedByMemberId`, and that member must be either `from` or `to`.
-        allow create: if isAuthenticated()
+        allow create: if isGroupMember(groupId)
           && request.resource.data.completedBy == request.auth.uid
           && request.resource.data.amount is number
           && request.resource.data.amount > 0

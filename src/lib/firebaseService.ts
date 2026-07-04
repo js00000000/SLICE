@@ -84,7 +84,10 @@ export const firebaseService = {
       createdAt: serverTimestamp(),
     });
 
-    // 3. Update User Settings
+    // 3. Register host UID in the membership index (enables isGroupMember() in rules)
+    batch.set(doc(db, 'groups', groupId, 'memberUids', userId), { memberId: memberRef.id });
+
+    // 4. Update User Settings
     const userRef = doc(db, 'users', userId);
     batch.set(userRef, {
       lastGroupId: groupId,
@@ -164,7 +167,10 @@ export const firebaseService = {
       updatedAt: serverTimestamp(),
     });
 
-    // 2. Remove group from user's joined list
+    // 2. Remove from membership index
+    batch.delete(doc(db, 'groups', groupId, 'memberUids', userId));
+
+    // 3. Remove group from user's joined list
     batch.set(doc(db, 'users', userId), {
       lastGroupId: null,
       joinedGroupIds: arrayRemove(groupId),
@@ -179,6 +185,7 @@ export const firebaseService = {
     expenseIds: string[],
     memberIds: string[],
     settlementIds: string[] = [],
+    claimedUserIds: string[] = [],
   ) {
     const batch = writeBatch(db);
 
@@ -197,10 +204,15 @@ export const firebaseService = {
       batch.delete(doc(db, 'groups', groupId, 'settlements', id));
     }
 
-    // 4. Delete group itself
+    // 4. Delete membership index entries
+    for (const uid of claimedUserIds) {
+      batch.delete(doc(db, 'groups', groupId, 'memberUids', uid));
+    }
+
+    // 5. Delete group itself
     batch.delete(doc(db, 'groups', groupId));
 
-    // 5. Update user settings (remove from joined lists)
+    // 6. Update user settings (remove from joined lists)
     batch.set(doc(db, 'users', userId), {
       lastGroupId: null,
       joinedGroupIds: arrayRemove(groupId),
@@ -210,35 +222,60 @@ export const firebaseService = {
   },
 
   async claimMember(groupId: string, memberId: string, userId: string) {
-    await updateDoc(doc(db, 'groups', groupId, 'members', memberId), {
+    const batch = writeBatch(db);
+    // Claim the member slot
+    batch.update(doc(db, 'groups', groupId, 'members', memberId), {
       userId,
       updatedAt: serverTimestamp(),
     });
+    // Register in membership index (getAfter in rules verifies the member write above)
+    batch.set(doc(db, 'groups', groupId, 'memberUids', userId), { memberId });
     // Ensure the group appears in "My Groups"
-    await setDoc(doc(db, 'users', userId), {
+    batch.set(doc(db, 'users', userId), {
       lastGroupId: groupId,
       joinedGroupIds: arrayUnion(groupId),
     }, { merge: true });
+    await batch.commit();
   },
 
   async createMember(groupId: string, name: string, userId: string | null = null) {
-    const memberRef = await addDoc(collection(db, 'groups', groupId, 'members'), {
+    // Generate ID client-side so it can be referenced in the same batch
+    const memberRef = doc(collection(db, 'groups', groupId, 'members'));
+    const batch = writeBatch(db);
+    batch.set(memberRef, {
       name: name.trim(),
       userId,
       createdAt: serverTimestamp(),
     });
-    // Ensure the group appears in "My Groups" (only for real users, not host-created placeholders)
     if (userId) {
-      await setDoc(doc(db, 'users', userId), {
+      // Register in membership index (getAfter in rules verifies the member write above)
+      batch.set(doc(db, 'groups', groupId, 'memberUids', userId), { memberId: memberRef.id });
+      // Ensure the group appears in "My Groups"
+      batch.set(doc(db, 'users', userId), {
         lastGroupId: groupId,
         joinedGroupIds: arrayUnion(groupId),
       }, { merge: true });
     }
+    await batch.commit();
     return memberRef;
   },
 
-  async deleteMember(groupId: string, memberId: string) {
-    await deleteDoc(doc(db, 'groups', groupId, 'members', memberId));
+  async deleteMember(groupId: string, memberId: string, userId?: string | null) {
+    if (userId) {
+      const batch = writeBatch(db);
+      batch.delete(doc(db, 'groups', groupId, 'members', memberId));
+      batch.delete(doc(db, 'groups', groupId, 'memberUids', userId));
+      await batch.commit();
+    } else {
+      await deleteDoc(doc(db, 'groups', groupId, 'members', memberId));
+    }
+  },
+
+  // Ensures the /memberUids/{uid} index entry exists for a user who already has a
+  // claimed member slot. Called on group load to backfill entries for users who
+  // joined before this index was introduced.
+  async ensureGroupMembership(groupId: string, memberId: string, userId: string) {
+    await setDoc(doc(db, 'groups', groupId, 'memberUids', userId), { memberId });
   },
 
   async updateMember(groupId: string, memberId: string, data: Partial<Member>) {

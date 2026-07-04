@@ -352,6 +352,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
           expenses.map(e => e.id),
           members.map(m => m.id),
           completedSettlements.map(s => s.id),
+          members.filter(m => m.userId != null).map(m => m.userId as string),
         );
         toast.success(t('groups.delete_group_success'));
       } catch (error) {
@@ -417,7 +418,8 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       toast.error(t('common.error_host_only'));
       return;
     }
-    await firebaseService.deleteMember(groupId, memberId);
+    const memberToDelete = members.find(m => m.id === memberId);
+    await firebaseService.deleteMember(groupId, memberId, memberToDelete?.userId);
   };
 
   const handleUpdateProfile = async (data: Partial<Member>) => {
@@ -448,6 +450,19 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       console.error("Backfill joinId error:", err);
     });
   }, [currentGroup, isHost]);
+
+  // Backfill: ensure this user has a /memberUids/{uid} index entry for groups they
+  // joined before the index was introduced. Idempotent — safe to run every session.
+  const membershipBackfilledRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!user || !groupId || !currentMemberId) return;
+    const key = `${groupId}:${user.uid}`;
+    if (membershipBackfilledRef.current === key) return;
+    membershipBackfilledRef.current = key;
+    firebaseService.ensureGroupMembership(groupId, currentMemberId, user.uid).catch(err => {
+      console.error("Backfill memberUids error:", err);
+    });
+  }, [user, groupId, currentMemberId]);
   const isSettled = !!currentGroup?.settledAt;
 
   const handleAddExpense = async (expenseData: ExpenseInput) => {
