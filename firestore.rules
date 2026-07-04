@@ -69,7 +69,10 @@ service cloud.firestore {
       // Membership index — document ID is the Firebase Auth UID.
       // Used by isGroupMember() to gate expense and settlement access.
       match /claimedUserIds/{uid} {
-        allow get: if false; // exists() in security rules works without client get access
+        // A user may read their own membership marker (only reveals their own
+        // memberId) so the client can skip a redundant backfill write when the
+        // entry already exists. exists() in rules works regardless of this.
+        allow get: if uid == request.auth.uid;
         allow list: if false;
         // User can create/update their own entry when they have (or are acquiring in
         // this same batch) a member slot with userId == request.auth.uid.

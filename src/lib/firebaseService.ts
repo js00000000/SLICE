@@ -287,7 +287,13 @@ export const firebaseService = {
   // claimed member slot. Called on group load to backfill entries for users who
   // joined before this index was introduced.
   async ensureGroupMembership(groupId: string, memberId: string, userId: string) {
-    await setDoc(doc(db, 'groups', groupId, 'claimedUserIds', userId), { memberId });
+    const ref = doc(db, 'groups', groupId, 'claimedUserIds', userId);
+    // Steady-state members already have the entry (created on claim/join), so a
+    // read-then-skip avoids a redundant write on every group open. Only legacy
+    // members missing the index actually incur the write.
+    const snap = await getDoc(ref);
+    if (snap.exists()) return;
+    await setDoc(ref, { memberId });
   },
 
   async updateMember(groupId: string, memberId: string, data: Partial<Member>) {
