@@ -21,28 +21,40 @@ import type { Member, Expense } from '../types';
 
 export type ExpenseInput = Omit<Expense, 'id' | 'createdBy' | 'createdAt' | 'updatedAt'>;
 
+// Group and member names are capped at 50 chars by firestore.rules. Clamp here so
+// auto-derived names (e.g. a long Google displayName used as the host member name)
+// can't silently fail the write and abort group creation.
+function clampName(name: string) {
+  return name.trim().slice(0, 50);
+}
+
 function validateExpenseArrays(data: Partial<ExpenseInput>) {
   const toCents = (n: number) => Math.round(n * 100);
   const amountCents = data.amount !== undefined ? toCents(data.amount) : null;
 
-  if (data.splits && data.splits.length > 0) {
-    if (data.splits.some(s => s.amount < 0))
+  // If custom splits/payments are being written, the expense amount must be
+  // present so their sum can be verified. On a partial update that changes the
+  // arrays without resending amount, we'd otherwise skip the check and let a
+  // mismatched split set through, skewing settlement math.
+  const hasSplits = !!data.splits && data.splits.length > 0;
+  const hasPayments = !!data.payments && data.payments.length > 0;
+  if ((hasSplits || hasPayments) && amountCents === null)
+    throw new Error('Expense amount is required to validate splits/payments');
+
+  if (hasSplits) {
+    if (data.splits!.some(s => s.amount < 0))
       throw new Error('Split amounts must be non-negative');
-    if (amountCents !== null) {
-      const sum = data.splits.reduce((acc, s) => acc + toCents(s.amount), 0);
-      if (Math.abs(sum - amountCents) > 1)
-        throw new Error('Splits must sum to expense amount');
-    }
+    const sum = data.splits!.reduce((acc, s) => acc + toCents(s.amount), 0);
+    if (Math.abs(sum - amountCents!) > 1)
+      throw new Error('Splits must sum to expense amount');
   }
 
-  if (data.payments && data.payments.length > 0) {
-    if (data.payments.some(p => p.amount < 0))
+  if (hasPayments) {
+    if (data.payments!.some(p => p.amount < 0))
       throw new Error('Payment amounts must be non-negative');
-    if (amountCents !== null) {
-      const sum = data.payments.reduce((acc, p) => acc + toCents(p.amount), 0);
-      if (Math.abs(sum - amountCents) > 1)
-        throw new Error('Payments must sum to expense amount');
-    }
+    const sum = data.payments!.reduce((acc, p) => acc + toCents(p.amount), 0);
+    if (Math.abs(sum - amountCents!) > 1)
+      throw new Error('Payments must sum to expense amount');
   }
 }
 
@@ -69,7 +81,7 @@ export const firebaseService = {
 
     // 1. Create Group
     batch.set(groupRef, {
-      name: groupName.trim(),
+      name: clampName(groupName),
       createdBy: userId,
       joinId,
       createdAt: serverTimestamp(),
@@ -78,7 +90,7 @@ export const firebaseService = {
     // 2. Create Host Member
     const memberRef = doc(collection(db, 'groups', groupId, 'members'));
     batch.set(memberRef, {
-      name: hostName,
+      name: clampName(hostName),
       userId: userId,
       isHost: true,
       createdAt: serverTimestamp(),
@@ -243,7 +255,7 @@ export const firebaseService = {
     const memberRef = doc(collection(db, 'groups', groupId, 'members'));
     const batch = writeBatch(db);
     batch.set(memberRef, {
-      name: name.trim(),
+      name: clampName(name),
       userId,
       createdAt: serverTimestamp(),
     });
@@ -279,15 +291,17 @@ export const firebaseService = {
   },
 
   async updateMember(groupId: string, memberId: string, data: Partial<Member>) {
+    const payload: Partial<Member> = { ...data };
+    if (typeof payload.name === 'string') payload.name = clampName(payload.name);
     await updateDoc(doc(db, 'groups', groupId, 'members', memberId), {
-      ...data,
+      ...payload,
       updatedAt: serverTimestamp(),
     });
   },
 
   async updateGroupName(groupId: string, newName: string) {
     await updateDoc(doc(db, 'groups', groupId), {
-      name: newName.trim(),
+      name: clampName(newName),
       updatedAt: serverTimestamp(),
     });
   },
