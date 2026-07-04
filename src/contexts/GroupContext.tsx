@@ -98,6 +98,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [completedSettlements, setCompletedSettlements] = useState<SettlementRecord[]>([]);
   const [currentMemberId, setCurrentMemberId] = useState<string | null>(null);
+  const [membershipReady, setMembershipReady] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [joinedGroupIds, setJoinedGroupIds] = useState<string[]>([]);
   const [userSettingsLoaded, setUserSettingsLoaded] = useState(false);
@@ -234,25 +235,43 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     });
 
+    return () => {
+      unsubGroup();
+      unsubMembers();
+    };
+  }, [user, groupId, userSettingsLoaded, navigate, t]);
+
+  // Expenses and settlements subscriptions — only start after membershipReady is true.
+  // This ensures the /memberUids/{uid} index entry exists before subscribing,
+  // preventing a permission-denied error on first load for existing members.
+  useEffect(() => {
+    if (!membershipReady || !groupId) {
+      setExpenses([]);
+      setCompletedSettlements([]);
+      return;
+    }
+
     const unsubExpenses = onSnapshot(collection(db, 'groups', groupId, 'expenses'), (snapshot) => {
       const expensesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
       expensesData.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
       setExpenses(expensesData);
+    }, (error) => {
+      console.error("Expenses fetch error:", error);
     });
 
     const unsubSettlements = onSnapshot(collection(db, 'groups', groupId, 'settlements'), (snapshot) => {
       const settlementsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SettlementRecord));
       settlementsData.sort((a, b) => (b.completedAt?.toMillis() || 0) - (a.completedAt?.toMillis() || 0));
       setCompletedSettlements(settlementsData);
+    }, (error) => {
+      console.error("Settlements fetch error:", error);
     });
 
     return () => {
-      unsubGroup();
-      unsubMembers();
       unsubExpenses();
       unsubSettlements();
     };
-  }, [user, groupId, userSettingsLoaded, navigate, t]);
+  }, [membershipReady, groupId]);
 
   const handleCreateGroup = async (name: string) => {
     if (!user || !name.trim()) return;
@@ -451,17 +470,21 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     });
   }, [currentGroup, isHost]);
 
-  // Backfill: ensure this user has a /memberUids/{uid} index entry for groups they
-  // joined before the index was introduced. Idempotent — safe to run every session.
-  const membershipBackfilledRef = useRef<string | null>(null);
+  // Ensure the /memberUids/{uid} index entry exists before subscribing to expenses
+  // and settlements. For existing members this is a backfill (idempotent setDoc);
+  // for new members the entry already exists from the claimMember batch.
+  // membershipReady gates the expenses/settlements subscriptions below.
   useEffect(() => {
-    if (!user || !groupId || !currentMemberId) return;
-    const key = `${groupId}:${user.uid}`;
-    if (membershipBackfilledRef.current === key) return;
-    membershipBackfilledRef.current = key;
-    firebaseService.ensureGroupMembership(groupId, currentMemberId, user.uid).catch(err => {
-      console.error("Backfill memberUids error:", err);
-    });
+    if (!user || !groupId || !currentMemberId) {
+      setMembershipReady(false);
+      return;
+    }
+    firebaseService.ensureGroupMembership(groupId, currentMemberId, user.uid)
+      .then(() => setMembershipReady(true))
+      .catch(err => {
+        console.error("Backfill memberUids error:", err);
+        setMembershipReady(true); // still attempt subscription — rule may already pass
+      });
   }, [user, groupId, currentMemberId]);
   const isSettled = !!currentGroup?.settledAt;
 
