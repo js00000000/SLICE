@@ -1,6 +1,4 @@
-/// <reference types="vitest/config" />
-import { defineConfig } from 'vite'
-import { configDefaults } from 'vitest/config'
+import { defineConfig, configDefaults } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
@@ -106,6 +104,6 @@ export default defineConfig({
   // Playwright specs under e2e/. Keep the unit runner (vitest) and the e2e
   // runner (playwright) strictly separate.
   test: {
-    exclude: [...configDefaults.exclude, 'e2e/**'],
+    exclude: [...configDefaults.exclude, 'e2e/**', 'e2e-dev/**'],
   },
 })

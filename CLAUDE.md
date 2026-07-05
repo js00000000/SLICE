@@ -12,14 +12,18 @@ npm run lint         # eslint .
 npm test             # vitest run  (unit tests; excludes e2e/)
 npx vitest run path/to/file.test.ts        # single test file
 npx vitest run -t "name of test"           # single test by name
-npm run test:e2e     # playwright test  (boots its own vite dev server)
+npm run test:e2e     # playwright test  (signed-out suite; boots its own vite dev server)
 npm run test:e2e:ui  # playwright test --ui
 npx playwright test e2e/landing.spec.ts    # single e2e spec
+npm run test:e2e:dev # authenticated suite against the DEV Firebase project (needs .env.local)
 ```
 
 There is no separate typecheck script; `npm run build` runs `tsc -b` first and is the canonical pre-commit gate.
 
-Playwright e2e specs live in `e2e/` (config: `playwright.config.ts`) and cover the **unauthenticated, deterministic surface only** — landing page, legal pages, client-side routing, i18n. These render without any Firebase round-trip, so they're stable even with the dummy `VITE_FIREBASE_*` values used in CI and never write test data into the real Firebase project. Authenticated flows (Quick Start / Google login) are deliberately out of scope; cover them with the Firebase emulator suite if it's added. Vitest excludes `e2e/**` (see `vite.config.ts` `test.exclude`), so keep unit tests as `*.test.ts` and e2e as `*.spec.ts`.
+There are **two** Playwright suites; Vitest excludes both dirs (see `vite.config.ts` `test.exclude`), so keep unit tests as `*.test.ts` and e2e as `*.spec.ts`.
+
+- **`e2e/`** (config `playwright.config.ts`) — the **unauthenticated, deterministic surface**: landing page, legal pages, client-side routing, i18n. Renders with no Firebase round-trip, so it's stable even with the dummy `VITE_FIREBASE_*` values used in CI and never writes to Firebase. This is the suite wired into CI.
+- **`e2e-dev/`** (config `playwright.dev.config.ts`, run via `npm run test:e2e:dev`) — **authenticated flows** (Quick Start anonymous auth, adding expenses) driven against the real **dev** project (`easy-split-dev-1cfa3`). The dev server runs with no env override so Vite loads `.env.local`. These write throwaway anonymous users + groups and clean up after themselves via the app's Delete Account flow (`cleanupCurrentAccount` in `e2e-dev/helpers.ts`, best-effort in `afterEach`). Runs serially on port 5174; deliberately **not** in the default CI push (it writes to shared dev). Requires a populated `.env.local`.
 
 ## Architecture
 
