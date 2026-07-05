@@ -46,7 +46,7 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
   useEffect(() => {
     let lastScrollY = window.scrollY;
     let ticking = false;
-    let scrollTimeout: any = null;
+    let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
 
     const updateScrollDirection = () => {
       const scrollY = window.scrollY;

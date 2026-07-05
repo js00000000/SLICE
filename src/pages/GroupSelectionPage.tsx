@@ -136,7 +136,7 @@ export function GroupSelectionPage() {
                 onClick={async () => {
                   try {
                     await handleJoinGroup(joinCode);
-                  } catch (err) {
+                  } catch {
                     // Handled and toasted inside GroupContext
                   }
                 }}

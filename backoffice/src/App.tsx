@@ -362,7 +362,7 @@ export default function App() {
 
       for (const u of usersToUpdate) {
         const userRef = doc(db, "users", u.id);
-        const updates: any = {};
+        const updates: Record<string, unknown> = {};
         if (u.lastGroupId === groupId) {
           updates.lastGroupId = null;
         }
@@ -426,7 +426,7 @@ export default function App() {
 
         for (const u of usersToUpdate) {
           const otherUserRef = doc(db, "users", u.id);
-          const updates: any = {};
+          const updates: Record<string, unknown> = {};
           if (u.lastGroupId === g.id) {
             updates.lastGroupId = null;
           }
@@ -904,7 +904,10 @@ export default function App() {
                 <select
                   value={`${userSortField}-${userSortOrder}`}
                   onChange={(e) => {
-                    const [field, order] = e.target.value.split("-") as [any, any];
+                    const [field, order] = e.target.value.split("-") as [
+                      "createdOn" | "lastLoginOn" | "joinedGroups" | "id",
+                      "asc" | "desc",
+                    ];
                     setUserSortField(field);
                     setUserSortOrder(order);
                   }}
@@ -1036,7 +1039,10 @@ export default function App() {
                 <select
                   value={`${groupSortField}-${groupSortOrder}`}
                   onChange={(e) => {
-                    const [field, order] = e.target.value.split("-") as [any, any];
+                    const [field, order] = e.target.value.split("-") as [
+                      "createdAt" | "name" | "settled" | "createdBy",
+                      "asc" | "desc",
+                    ];
                     setGroupSortField(field);
                     setGroupSortOrder(order);
                   }}

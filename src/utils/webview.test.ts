@@ -8,7 +8,7 @@ describe('isWebview', () => {
   beforeEach(() => {
     if (typeof globalThis.navigator === 'undefined') {
       hadNavigator = false;
-      (globalThis as any).navigator = { userAgent: '' };
+      (globalThis as { navigator?: unknown }).navigator = { userAgent: '' };
     }
     originalUserAgent = globalThis.navigator?.userAgent;
   });
@@ -21,13 +21,13 @@ describe('isWebview', () => {
         configurable: true,
       });
     } else {
-      delete (globalThis as any).navigator;
+      delete (globalThis as { navigator?: unknown }).navigator;
     }
   });
 
   const setUserAgent = (ua: string) => {
     if (typeof globalThis.navigator === 'undefined') {
-      (globalThis as any).navigator = { userAgent: '' };
+      (globalThis as { navigator?: unknown }).navigator = { userAgent: '' };
     }
     Object.defineProperty(globalThis.navigator, 'userAgent', {
       value: ua,

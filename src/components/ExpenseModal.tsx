@@ -60,12 +60,17 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
 
   useEffect(() => {
     if (!isMultiplePayers) {
+      // Keep the single-payer entry synced to the selected payer/amount.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPayments([{ memberId: paidBy, amount: parseFloat(amount) || 0 }]);
     }
   }, [paidBy, amount, isMultiplePayers]);
 
   useEffect(() => {
     if (isCustomSplit) {
+      // Reconcile custom-split rows with the current participant list,
+      // preserving any amounts the user has already entered.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSplits(prev => {
         const newSplits = splitAmong.map(id => {
           const existing = prev.find(p => p.memberId === id);

@@ -766,11 +766,11 @@ describe('Settlement Logic', () => {
       // Bob: -$33.33 (display rounded to -$34)
       // Charlie: -$33.33 (display rounded to -$33)
       // Alice: +$66.66 (display rounded to +$67)
-      let expenses: Expense[] = [
+      const expenses: Expense[] = [
         { id: 'e1', description: 'Uneven Dinner', amount: 100, paidBy: '1', splitAmong: ['1', '2', '3'] },
       ];
 
-      let completedSettlements: CompletedSettlement[] = [];
+      const completedSettlements: CompletedSettlement[] = [];
 
       let result = calculateBalancesAndSettlements(members, expenses, completedSettlements);
       expect(result.balances['2']).toBe(-34); // Bob owes 34

@@ -50,7 +50,7 @@ function roundBalancesToWholeDollars(balancesCents: Record<string, number>): Rec
   const targetSum = Math.round(totalCentsSum / 100);
   const roundedSum = Object.values(rounded).reduce((a, b) => a + b, 0);
 
-  let diff = roundedSum - targetSum;
+  const diff = roundedSum - targetSum;
   if (diff === 0) return rounded;
 
   if (diff > 0) {

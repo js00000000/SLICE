@@ -48,6 +48,9 @@ export function ExpensesPage() {
   useEffect(() => {
     if (location.state?.openAddModal) {
       if (!isSettled) {
+        // Reacting to a one-shot navigation signal (router location.state),
+        // not derivable during render.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsExpenseModalOpen(true);
         setExpenseToEdit(null);
       }

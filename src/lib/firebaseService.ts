@@ -330,7 +330,7 @@ export const firebaseService = {
 
   async addExpense(groupId: string, memberId: string, expenseData: ExpenseInput) {
     validateExpenseArrays(expenseData);
-    const data: any = {
+    const data: Record<string, unknown> = {
       ...expenseData,
       createdBy: memberId,
       createdAt: serverTimestamp(),
@@ -348,7 +348,7 @@ export const firebaseService = {
 
   async updateExpense(groupId: string, expenseId: string, expenseData: Partial<ExpenseInput>) {
     validateExpenseArrays(expenseData);
-    const data: any = {
+    const data: Record<string, unknown> = {
       ...expenseData,
       updatedAt: serverTimestamp(),
     };

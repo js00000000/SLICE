@@ -58,11 +58,15 @@ export default function App() {
   // flight — otherwise a stale resolve could fire a "group not found" toast
   // even though the join is succeeding.
   const authStateRef = useRef({ user, isSoftLoggedOut, guestLoading, googleLoading });
-  authStateRef.current = { user, isSoftLoggedOut, guestLoading, googleLoading };
+  useEffect(() => {
+    authStateRef.current = { user, isSoftLoggedOut, guestLoading, googleLoading };
+  });
 
   useEffect(() => {
     if (isWebview()) {
       const isDismissed = sessionStorage.getItem('webview-warning-dismissed') === 'true';
+      // Syncing from external state (UA + sessionStorage) on mount.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowWebviewBanner(!isDismissed);
     }
   }, []);
@@ -76,6 +80,9 @@ export default function App() {
     // early-return path below would leave `checkingUrlGroup` stuck at true.
     if (authLoading) return;
 
+    // These synchronous updates reset the loading/validation state that this
+    // effect owns before kicking off the async existence check below.
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (user && !isSoftLoggedOut) {
       setInvalidUrlGroup(null);
       setCheckingUrlGroup(false);
@@ -94,6 +101,7 @@ export default function App() {
 
     let isMounted = true;
     setCheckingUrlGroup(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
 
     const checkGroup = async () => {
       try {
