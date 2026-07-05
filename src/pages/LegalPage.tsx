@@ -56,7 +56,7 @@ export function LegalPage({ kind }: LegalPageProps) {
     <div className="min-h-screen bg-page-bg text-main-text font-plus-jakarta">
       <Helmet>
         <html lang={lang} />
-        <title>{content.title} — {APP_NAME}</title>
+        <title>{`${content.title} — ${APP_NAME}`}</title>
         <meta name="description" content={content.description} />
         <link rel="canonical" href={url} />
         <meta property="og:title" content={`${content.title} — ${APP_NAME}`} />

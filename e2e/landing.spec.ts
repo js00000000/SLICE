@@ -57,15 +57,13 @@ test.describe('Landing page', () => {
   test('opens and closes the sponsor modal', async ({ page }) => {
     await page.getByRole('button', { name: /Sponsor/ }).click();
 
-    // Modal mounts with sponsor-specific content (the contact email is unique
-    // to this modal).
-    const email = page.getByText('fusion.labs.tw@gmail.com');
-    await expect(email).toBeVisible();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toContainText('fusion.labs.tw@gmail.com');
 
-    // The modal closes on backdrop click; the top-left corner is over the
-    // backdrop overlay, clear of the centered card.
-    await page.mouse.click(5, 5);
-    await expect(email).toBeHidden();
+    // Closes on Escape (keyboard parity with backdrop click).
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
   });
 
   test('footer links route to legal pages', async ({ page }) => {

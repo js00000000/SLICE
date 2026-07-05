@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { X, CreditCard, Mail, Heart } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useScrollLock } from '../hooks/useScrollLock';
@@ -10,21 +11,36 @@ export function SponsorModal({ onClose }: SponsorModalProps) {
   useScrollLock();
   const { t } = useTranslation();
 
+  // Close on Escape for keyboard/a11y parity with the backdrop click.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [onClose]);
+
   return (
     <div className="fixed inset-0 bg-main-text/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200 select-none font-plus-jakarta">
       {/* Backdrop click to close */}
       <div className="absolute inset-0" onClick={onClose} />
 
-      <div className="bg-white w-full max-w-md rounded-[24px] border-3 border-main-text shadow-[8px_8px_0px_#1A1A2E] z-10 flex flex-col overflow-hidden max-h-[90vh] animate-in zoom-in-95 duration-200">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="sponsor-modal-title"
+        className="bg-white w-full max-w-md rounded-[24px] border-3 border-main-text shadow-[8px_8px_0px_#1A1A2E] z-10 flex flex-col overflow-hidden max-h-[90vh] animate-in zoom-in-95 duration-200"
+      >
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b-3 border-main-text shrink-0 bg-brand-light">
           <div className="flex items-center gap-2">
             <Heart className="w-5 h-5 text-accent-orange fill-accent-orange/10 animate-pulse" />
-            <h2 className="text-2xl font-nunito font-black text-main-text">{t('sponsor.title')}</h2>
+            <h2 id="sponsor-modal-title" className="text-2xl font-nunito font-black text-main-text">{t('sponsor.title')}</h2>
           </div>
           <button
             onClick={onClose}
+            aria-label={t('common.close')}
             className="text-main-text hover:text-accent-orange p-1.5 rounded-lg border-2 border-transparent hover:border-main-text hover:bg-white transition-all cursor-pointer"
           >
             <X className="w-6 h-6 stroke-[2.5]" />

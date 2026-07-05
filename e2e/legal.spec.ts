@@ -7,10 +7,7 @@ test.describe('Legal pages', () => {
     await page.goto('/privacy');
 
     await expect(page.getByRole('heading', { level: 1, name: 'Privacy Policy' })).toBeVisible();
-    // NOTE: the document <title> is intentionally not asserted here. App.tsx
-    // runs a `document.title = seo_title` effect for signed-out users that fires
-    // even on the early-returned legal routes, clobbering LegalPage's Helmet
-    // <title>. The visible <h1> is the reliable signal for these pages.
+    await expect(page).toHaveTitle(/Privacy Policy/);
 
     await page.getByRole('link', { name: 'Back to home' }).click();
     await expect(page).toHaveURL(/\/$/);
@@ -21,6 +18,7 @@ test.describe('Legal pages', () => {
     await page.goto('/terms');
 
     await expect(page.getByRole('heading', { level: 1, name: 'Terms of Service' })).toBeVisible();
+    await expect(page).toHaveTitle(/Terms of Service/);
   });
 
   test('emits BreadcrumbList JSON-LD', async ({ page }) => {

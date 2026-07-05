@@ -136,14 +136,17 @@ export default function App() {
     };
   }, [location.pathname, user, isSoftLoggedOut, authLoading, t]);
 
-  // Manual title fallback for login and loading states
+  // Manual title fallback for login and loading states. Legal pages are
+  // returned early below and own their own <title> via Helmet, so skip them
+  // here — otherwise this effect (which still runs) would clobber it.
   useEffect(() => {
+    if (location.pathname === '/privacy' || location.pathname === '/terms') return;
     if (authLoading) {
       document.title = APP_NAME;
     } else if (!user || isSoftLoggedOut) {
       document.title = t('common.seo_title') || APP_NAME;
     }
-  }, [user, isSoftLoggedOut, authLoading, t]);
+  }, [user, isSoftLoggedOut, authLoading, t, location.pathname]);
 
   // Legal pages render regardless of auth state, ahead of the loading gate.
   if (location.pathname === '/privacy') return <LegalPage kind="privacy" />;
