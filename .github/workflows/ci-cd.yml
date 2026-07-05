@@ -80,6 +80,24 @@ jobs:
           VITE_FIREBASE_APP_ID: ci-dummy
           VITE_FIREBASE_MEASUREMENT_ID: ci-dummy
 
+      # Playwright e2e covers the unauthenticated, deterministic surface
+      # (landing, legal, routing, i18n). The dev server is booted by
+      # playwright.config.ts with dummy VITE_FIREBASE_* values, so no Firebase
+      # secrets are required and no real project data is touched.
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run e2e tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
   deploy-test:
     name: Deploy to test
     needs: [changes, test]

@@ -9,12 +9,17 @@ npm run dev          # Vite dev server
 npm run build        # tsc -b && vite build  (REQUIRED before committing — see GEMINI.md)
 npm run build:dev    # build with --mode local
 npm run lint         # eslint .
-npm test             # vitest run
+npm test             # vitest run  (unit tests; excludes e2e/)
 npx vitest run path/to/file.test.ts        # single test file
 npx vitest run -t "name of test"           # single test by name
+npm run test:e2e     # playwright test  (boots its own vite dev server)
+npm run test:e2e:ui  # playwright test --ui
+npx playwright test e2e/landing.spec.ts    # single e2e spec
 ```
 
 There is no separate typecheck script; `npm run build` runs `tsc -b` first and is the canonical pre-commit gate.
+
+Playwright e2e specs live in `e2e/` (config: `playwright.config.ts`) and cover the **unauthenticated, deterministic surface only** — landing page, legal pages, client-side routing, i18n. These render without any Firebase round-trip, so they're stable even with the dummy `VITE_FIREBASE_*` values used in CI and never write test data into the real Firebase project. Authenticated flows (Quick Start / Google login) are deliberately out of scope; cover them with the Firebase emulator suite if it's added. Vitest excludes `e2e/**` (see `vite.config.ts` `test.exclude`), so keep unit tests as `*.test.ts` and e2e as `*.spec.ts`.
 
 ## Architecture
 
