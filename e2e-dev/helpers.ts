@@ -23,13 +23,46 @@ export async function addExpense(
   page: Page,
   { description, amount }: { description: string; amount: string }
 ): Promise<void> {
-  await page.getByRole('button', { name: 'Add Expense' }).click();
+  const descField = page.getByPlaceholder('e.g. Dinner, Taxi');
 
-  await page.getByPlaceholder('e.g. Dinner, Taxi').fill(description);
+  // Open the expense modal via the bottom-nav "+" (aria-label "Add Expense").
+  // Right after a navigation the button can be tapped before the page has wired
+  // up its handler, so the first click is occasionally swallowed and the modal
+  // never opens — re-click until the description field appears.
+  await expect(async () => {
+    if (!(await descField.isVisible())) {
+      await page.getByRole('button', { name: 'Add Expense' }).click();
+    }
+    await expect(descField).toBeVisible({ timeout: 3_000 });
+  }).toPass({ timeout: 20_000 });
+
+  await descField.fill(description);
   await page.getByPlaceholder('0.00').fill(amount);
   await page.getByRole('button', { name: 'Select All' }).click();
 
   await page.getByRole('button', { name: 'Confirm' }).click();
+}
+
+/**
+ * Add a member to the current group from the Group Settings (members) page.
+ * Only the host can do this, which is the case for a Quick Start group.
+ */
+export async function addMemberByHost(page: Page, name: string): Promise<void> {
+  await page.getByPlaceholder('Enter member name').fill(name);
+  await page.locator('section').filter({ hasText: 'Member List' }).getByRole('button', { name: 'Add' }).click();
+}
+
+/**
+ * Confirm the app's shared confirmation dialog (DialogContext). It renders at the
+ * top of the stack (z-[100]) with the primary "confirm" button first in DOM
+ * order (the footer is flex-row-reverse), so we click the first button inside it
+ * rather than relying on the label — which is Chinese by default and varies per
+ * caller (Settle Up, Mark Paid, …).
+ */
+export async function confirmDialog(page: Page): Promise<void> {
+  const overlay = page.locator('.z-\\[100\\]');
+  await overlay.waitFor({ state: 'visible', timeout: 10_000 });
+  await overlay.getByRole('button').first().click();
 }
 
 /**

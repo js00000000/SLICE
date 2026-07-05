@@ -5,7 +5,7 @@ import { defineConfig, devices, type PlaywrightTestConfig } from '@playwright/te
  *
  * Two run modes:
  *
- *  1. Local (default) — boots `npm run dev` on port 5174 with NO Firebase env
+ *  1. Local (default) — boots `npm run dev` on port 5173 with NO Firebase env
  *     override, so Vite loads the real dev credentials from .env.local. Requires
  *     a populated .env.local (dev project, easy-split-dev-1cfa3).
  *
@@ -20,7 +20,7 @@ import { defineConfig, devices, type PlaywrightTestConfig } from '@playwright/te
  */
 
 const remoteBaseURL = process.env.E2E_BASE_URL;
-const PORT = 5174;
+const PORT = 5173;
 const baseURL = remoteBaseURL ?? `http://localhost:${PORT}`;
 
 const config: PlaywrightTestConfig = {
@@ -32,6 +32,10 @@ const config: PlaywrightTestConfig = {
   // These flows hit the real dev Firebase over the network (sign-in, writes,
   // account deletion in teardown), so allow more than the 30s default.
   timeout: 60_000,
+  // Post-mutation assertions wait on a Firestore snapshot round-trip (e.g. an
+  // expense/member disappearing after a delete), which can exceed the default
+  // 5s. Bump the expect timeout to match the network reality of this suite.
+  expect: { timeout: 15_000 },
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL,
