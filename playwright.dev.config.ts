@@ -1,24 +1,29 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices, type PlaywrightTestConfig } from '@playwright/test';
 
 /**
  * Playwright config for the authenticated e2e suite (under e2e-dev/).
  *
- * Unlike the default config — which serves the app with dummy Firebase values
- * and only covers the signed-out surface — this one runs `npm run dev` with NO
- * Firebase env override, so Vite loads the real credentials from .env.local
- * (the dev project, easy-split-dev-1cfa3). That lets the tests exercise real
- * anonymous Auth + Firestore flows (Quick Start, adding expenses).
+ * Two run modes:
  *
- * NOTE: these tests write to the shared dev Firebase project — they create
- * throwaway anonymous users and groups. Keep them serial and prefer running
- * them deliberately (npm run test:e2e:dev) rather than on every CI push.
- * Requires a populated .env.local (dev credentials) to be present.
+ *  1. Local (default) — boots `npm run dev` on port 5174 with NO Firebase env
+ *     override, so Vite loads the real dev credentials from .env.local. Requires
+ *     a populated .env.local (dev project, easy-split-dev-1cfa3).
+ *
+ *  2. Remote — when E2E_BASE_URL is set (e.g. in CI after the dev deploy), the
+ *     tests run against that already-deployed URL and no local server is
+ *     started. The deployed dev site is already built against the dev Firebase
+ *     project, so the authenticated flows work the same way.
+ *
+ * Either way these tests write to the shared dev Firebase project (throwaway
+ * anonymous users + groups) and clean up after themselves via the app's Delete
+ * Account flow. They run serially.
  */
 
+const remoteBaseURL = process.env.E2E_BASE_URL;
 const PORT = 5174;
-const baseURL = `http://localhost:${PORT}`;
+const baseURL = remoteBaseURL ?? `http://localhost:${PORT}`;
 
-export default defineConfig({
+const config: PlaywrightTestConfig = {
   testDir: './e2e-dev',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
@@ -39,12 +44,17 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  webServer: {
-    // No `env` override: Vite dev loads .env.local (real dev Firebase config).
-    // Dedicated port so it never collides with the signed-out suite on 5173.
+};
+
+// Only manage a local dev server when targeting localhost. Against a deployed
+// URL there is nothing to start.
+if (!remoteBaseURL) {
+  config.webServer = {
     command: `npm run dev -- --port ${PORT}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
-  },
-});
+  };
+}
+
+export default defineConfig(config);

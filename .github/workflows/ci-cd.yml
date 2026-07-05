@@ -140,6 +140,52 @@ jobs:
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
 
+  e2e-dev:
+    name: E2E on dev (post-deploy)
+    needs: [changes, deploy-test]
+    if: ${{ needs.changes.outputs.app == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      # Cloudflare Pages can take a few seconds to serve the new deployment at
+      # the alias URL; poll until it responds before running the suite.
+      - name: Wait for dev site to be reachable
+        run: |
+          for i in $(seq 1 24); do
+            if curl -sfo /dev/null "$E2E_BASE_URL"; then echo "dev site is up"; exit 0; fi
+            echo "waiting for dev site ($i)..."; sleep 5
+          done
+          echo "dev site did not become reachable" >&2; exit 1
+        env:
+          E2E_BASE_URL: https://slice-test.pages.dev
+
+      # Runs the authenticated suite against the just-deployed dev site (which is
+      # built against the dev Firebase project). Tests create throwaway anonymous
+      # users + groups and delete them via the app's Delete Account flow.
+      - name: Run authenticated e2e against dev URL
+        run: npm run test:e2e:dev
+        env:
+          E2E_BASE_URL: https://slice-test.pages.dev
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-dev-report
+          path: playwright-report/
+          retention-days: 7
+
   deploy-production:
     name: Deploy to production (manual)
     needs: [changes, test]
