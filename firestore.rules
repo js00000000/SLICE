@@ -120,7 +120,8 @@ service cloud.firestore {
           && request.resource.data.name is string
           && request.resource.data.name.size() <= 50
           && (get(/databases/$(database)/documents/groups/$(groupId)).data.createdBy == request.auth.uid
-              || request.resource.data.userId == request.auth.uid)
+              || (request.resource.data.userId == request.auth.uid
+                  && (!('isHost' in request.resource.data) || request.resource.data.isHost == false)))
         );
 
         // Host or admin can update any member, or a user can update their own claimed profile
@@ -132,8 +133,10 @@ service cloud.firestore {
           && request.resource.data.name.size() <= 50
           && (get(/databases/$(database)/documents/groups/$(groupId)).data.createdBy == request.auth.uid
               || (resource.data.userId == request.auth.uid
-                  && (request.resource.data.userId == request.auth.uid || request.resource.data.userId == null))
-              || (resource.data.userId == null && request.resource.data.userId == request.auth.uid))
+                  && (request.resource.data.userId == request.auth.uid || request.resource.data.userId == null)
+                  && (!('isHost' in request.resource.data) || request.resource.data.isHost == resource.data.isHost))
+              || (resource.data.userId == null && request.resource.data.userId == request.auth.uid
+                  && (!('isHost' in request.resource.data) || request.resource.data.isHost == resource.data.isHost)))
         );
 
         // Only host or admin can delete members
