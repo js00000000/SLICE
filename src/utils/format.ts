@@ -2,18 +2,25 @@ import type { Timestamp } from 'firebase/firestore';
 
 /**
  * Format a Firebase Timestamp or Date into a localized string.
+ * Pass `includeTime: false` for a date-only display (e.g. compact meta lines).
  */
-export function formatDate(date: Timestamp | Date | undefined, locale: string = 'en') {
+export function formatDate(
+  date: Timestamp | Date | undefined,
+  locale: string = 'en',
+  includeTime: boolean = true,
+) {
   if (!date) return '';
-  
+
   const d = date instanceof Date ? date : date.toDate();
-  
+
   return d.toLocaleString(locale, {
     month: 'numeric',
     day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
+    ...(includeTime && {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }),
   });
 }
 

@@ -96,32 +96,40 @@ export function MemberBreakdownModal({ member, mode, expenses, group = null, onC
             {rows.map(({ exp, amount, converted, foreign }, index) => (
               <div
                 key={exp.id}
-                className="stagger-item flex items-center justify-between gap-3 p-3.5 border-2 border-main-text rounded-xl bg-white"
+                className="stagger-item relative flex items-center justify-between gap-3 p-3.5 border-2 border-main-text rounded-xl bg-white"
                 style={{ animationDelay: `${index * 60}ms` }}
               >
+                {/* Left column: description, date, then the whole-expense
+                    total on its own line. Right column: the member's amount
+                    (with ≈ converted beneath for foreign currencies),
+                    vertically centered against the three-line left column so
+                    both row types read the same. Amounts never truncate —
+                    only the description text does. */}
                 <div className="min-w-0 flex-1">
                   <p className="font-nunito font-black text-sm text-main-text truncate">{exp.description}</p>
-                  <div className="flex items-center gap-1 mt-0.5 text-[11px] text-main-text/50 font-bold">
-                    <Calendar className="w-3 h-3 stroke-[2.5]" />
-                    {formatDate(exp.createdAt, i18n.language)}
-                    <span className="text-main-text/30">·</span>
+                  <div className="flex items-center gap-1 mt-1 text-[11px] text-main-text/50 font-bold whitespace-nowrap">
+                    <Calendar className="w-3 h-3 stroke-[2.5] shrink-0" />
+                    {formatDate(exp.createdAt, i18n.language, false)}
+                  </div>
+                  <div className="mt-0.5 text-[11px] text-main-text/50 font-bold whitespace-nowrap">
                     {formatCurrency(exp.amount, foreign ? exp.currency : undefined)}
                   </div>
                 </div>
-                {foreign ? (
-                  <div className="flex flex-col items-end gap-1 shrink-0">
-                    <span className="font-nunito font-black text-xl text-accent-orange whitespace-nowrap leading-none">
-                      {formatCurrency(amount, exp.currency)}
-                    </span>
-                    <span className="text-[11px] font-bold text-main-text/50 whitespace-nowrap">
+                {/* The big amount is what gets vertically centered (same
+                    position for default and foreign rows); the ≈ converted
+                    value is pinned to the bottom-right of the card, giving it
+                    the same bottom gap as the total line on the left, without
+                    affecting the centering. */}
+                <div className="shrink-0">
+                  <span className="font-nunito font-black text-xl text-accent-orange whitespace-nowrap leading-none">
+                    {formatCurrency(amount, foreign ? exp.currency : undefined)}
+                  </span>
+                  {foreign && (
+                    <span className="absolute bottom-3.5 right-3.5 text-[11px] font-bold text-main-text/50 whitespace-nowrap">
                       ≈ {formatCurrency(converted)}
                     </span>
-                  </div>
-                ) : (
-                  <span className="font-nunito font-black text-xl text-accent-orange whitespace-nowrap shrink-0 leading-none">
-                    {formatCurrency(amount)}
-                  </span>
-                )}
+                  )}
+                </div>
               </div>
             ))}
           </div>
