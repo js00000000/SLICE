@@ -805,19 +805,67 @@ export default function App() {
 
       {/* Top menu bar */}
       <header className="sticky top-0 z-40 bg-white border-b-3 border-main-text px-4 sm:px-6 py-3 flex items-center justify-between gap-4 shrink-0">
-        {/* Logo */}
-        <div className="flex items-center gap-2 shrink-0">
+        {/* Logo — click to go home (dashboard) */}
+        <button
+          onClick={() => { setActiveTab("dashboard"); setMenuOpen(false); }}
+          aria-label="回到主控台首頁"
+          className="flex items-center gap-2 shrink-0 cursor-pointer active:translate-x-[1px] active:translate-y-[1px] btn-bounce"
+        >
           <span className="bg-accent-orange text-white text-xl font-black font-nunito py-1 px-3 border-2 border-main-text rounded-lg shadow-[2px_2px_0px_#1A1A2E]">
             SLICE
           </span>
           <span className="hidden sm:inline font-nunito font-black text-md tracking-wider opacity-80">BACKOFFICE</span>
-        </div>
+        </button>
 
-        {/* Hamburger */}
+        {/* Desktop inline nav */}
+        <nav className="hidden sm:flex items-center gap-2">
+          <button
+            onClick={() => setActiveTab("dashboard")}
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 font-nunito font-black text-sm transition-all cursor-pointer ${
+              activeTab === "dashboard"
+                ? "bg-brand-light border-main-text text-accent-orange shadow-[2px_2px_0px_#1A1A2E]"
+                : "bg-white border-transparent text-main-text hover:bg-gray-50"
+            }`}
+          >
+            <LayoutDashboard className="w-4 h-4 shrink-0" />
+            主控台
+          </button>
+          <button
+            onClick={() => setActiveTab("users")}
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 font-nunito font-black text-sm transition-all cursor-pointer ${
+              activeTab === "users"
+                ? "bg-brand-light border-main-text text-accent-orange shadow-[2px_2px_0px_#1A1A2E]"
+                : "bg-white border-transparent text-main-text hover:bg-gray-50"
+            }`}
+          >
+            <Users className="w-4 h-4 shrink-0" />
+            使用者 ({totalUsersCount})
+          </button>
+          <button
+            onClick={() => setActiveTab("groups")}
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 font-nunito font-black text-sm transition-all cursor-pointer ${
+              activeTab === "groups"
+                ? "bg-brand-light border-main-text text-accent-orange shadow-[2px_2px_0px_#1A1A2E]"
+                : "bg-white border-transparent text-main-text hover:bg-gray-50"
+            }`}
+          >
+            <Folder className="w-4 h-4 shrink-0" />
+            群組 ({totalGroupsCount})
+          </button>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-3 py-2 ml-1 rounded-xl border-2 border-transparent font-nunito font-black text-sm text-red-500 hover:bg-red-50 transition-all cursor-pointer"
+          >
+            <LogOut className="w-4 h-4 shrink-0" />
+            登出
+          </button>
+        </nav>
+
+        {/* Hamburger — mobile only */}
         <button
           onClick={() => setMenuOpen(o => !o)}
           aria-label="開啟選單"
-          className="flex items-center justify-center bg-white hover:bg-gray-50 text-main-text p-2 border-2 border-main-text rounded-xl shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] btn-bounce cursor-pointer shrink-0"
+          className="sm:hidden flex items-center justify-center bg-white hover:bg-gray-50 text-main-text p-2 border-2 border-main-text rounded-xl shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] btn-bounce cursor-pointer shrink-0"
         >
           {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
@@ -826,8 +874,8 @@ export default function App() {
         {menuOpen && (
           <>
             {/* Click-away backdrop */}
-            <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-            <nav className="absolute right-4 top-full mt-2 z-50 w-64 bg-white border-3 border-main-text rounded-2xl shadow-[6px_6px_0px_#1A1A2E] p-3 flex flex-col gap-2 animate-fadeIn">
+            <div className="sm:hidden fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+            <nav className="sm:hidden absolute right-4 top-full mt-2 z-50 w-64 bg-white border-3 border-main-text rounded-2xl shadow-[6px_6px_0px_#1A1A2E] p-3 flex flex-col gap-2 animate-fadeIn">
               {/* Signed-in admin */}
               <div className="flex items-center gap-2 px-1 pb-3 mb-1 border-b-2 border-dashed border-gray-200">
                 {user.photoURL ? (
@@ -927,7 +975,11 @@ export default function App() {
           <div className="space-y-8 animate-fadeIn">
             {/* Stats grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white border-2 border-main-text rounded-2xl p-5 shadow-[4px_4px_0px_#1A1A2E]">
+              <button
+                type="button"
+                onClick={() => setActiveTab("users")}
+                className="text-left bg-white border-2 border-main-text rounded-2xl p-5 shadow-[4px_4px_0px_#1A1A2E] hover:bg-gray-50 active:translate-x-[1px] active:translate-y-[1px] active:shadow-[2px_2px_0px_#1A1A2E] btn-bounce cursor-pointer"
+              >
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-bold text-gray-500">總註冊用戶</span>
                   <span className="bg-brand-light p-2 rounded-xl border border-accent-orange/20">
@@ -944,9 +996,13 @@ export default function App() {
                     Guest: {anonymousUsersCount}
                   </span>
                 </div>
-              </div>
+              </button>
 
-              <div className="bg-white border-2 border-main-text rounded-2xl p-5 shadow-[4px_4px_0px_#1A1A2E]">
+              <button
+                type="button"
+                onClick={() => setActiveTab("groups")}
+                className="text-left bg-white border-2 border-main-text rounded-2xl p-5 shadow-[4px_4px_0px_#1A1A2E] hover:bg-gray-50 active:translate-x-[1px] active:translate-y-[1px] active:shadow-[2px_2px_0px_#1A1A2E] btn-bounce cursor-pointer"
+              >
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-bold text-gray-500">分帳群組數</span>
                   <span className="bg-[#eaf4fe] p-2 rounded-xl border border-blue-200">
@@ -957,7 +1013,7 @@ export default function App() {
                 <p className="text-xs text-gray-500 font-semibold mt-2">
                   平均每個用戶加入 {(totalUsersCount > 0 ? (totalGroupsCount / totalUsersCount).toFixed(1) : 0)} 個群組
                 </p>
-              </div>
+              </button>
 
               <div className="bg-white border-2 border-main-text rounded-2xl p-5 shadow-[4px_4px_0px_#1A1A2E]">
                 <div className="flex items-center justify-between mb-3">
