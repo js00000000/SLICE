@@ -95,7 +95,7 @@ export function MemberBreakdownModal({ member, mode, expenses, onClose }: Member
                     {formatCurrency(exp.amount)}
                   </div>
                 </div>
-                <span className="font-nunito font-black text-sm text-main-text bg-brand-light border border-main-text/10 px-2.5 py-1 rounded-lg shrink-0">
+                <span className="font-nunito font-black text-xl text-accent-orange whitespace-nowrap shrink-0 leading-none">
                   {formatCurrency(amount)}
                 </span>
               </div>

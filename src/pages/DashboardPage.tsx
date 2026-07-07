@@ -221,8 +221,8 @@ export function DashboardPage() {
                             <span className="text-[9px] bg-success-light text-success-green border border-success-green/20 font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider font-nunito">{t('common.me')}</span>
                           )}
                         </div>
-                        <span className="text-xs font-black font-nunito uppercase tracking-wider text-main-text/70 bg-brand-light border border-main-text/10 px-2.5 py-1 rounded-lg shrink-0">
-                          {t('expenses.paid_action')} {formatCurrency(paid)}
+                        <span className="font-nunito font-black text-2xl text-accent-orange whitespace-nowrap shrink-0 leading-none">
+                          {formatCurrency(paid)}
                         </span>
                       </button>
                     );
@@ -269,7 +269,7 @@ export function DashboardPage() {
                             <span className="text-[9px] bg-success-light text-success-green border border-success-green/20 font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider font-nunito">{t('common.me')}</span>
                           )}
                         </div>
-                        <span className="font-nunito font-black text-sm text-main-text bg-brand-light border border-main-text/10 px-2.5 py-1 rounded-lg shrink-0">
+                        <span className="font-nunito font-black text-2xl text-accent-orange whitespace-nowrap shrink-0 leading-none">
                           {formatCurrency(share)}
                         </span>
                       </button>
