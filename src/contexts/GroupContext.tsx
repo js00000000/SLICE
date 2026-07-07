@@ -153,6 +153,18 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     return () => unsubSettings();
   }, [user]);
 
+  // Keep the cached myGroups list in sync with the live group doc. myGroups is
+  // fetched once via getDocs off the user-settings snapshot, so a rename (which
+  // only touches /groups/{groupId}, not /users/{uid}) would otherwise leave a
+  // stale name in the group-selection list. currentGroup is driven by the group
+  // doc's onSnapshot, so patch the matching entry whenever it changes.
+  useEffect(() => {
+    if (!currentGroup) return;
+    setMyGroups(prev =>
+      prev.map(g => (g.id === currentGroup.id ? { ...g, ...currentGroup } : g))
+    );
+  }, [currentGroup]);
+
   // Keep latest joinedGroupIds accessible without re-subscribing the group
   // data effect every time the array reference changes (which would tear down
   // and re-create listeners on unrelated settings updates, and would also
