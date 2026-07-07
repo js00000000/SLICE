@@ -2,7 +2,6 @@ import { test, expect } from './fixtures';
 import {
   quickStart,
   addCurrency,
-  addExpense,
   openExpenseModal,
   confirmDialog,
 } from './helpers';
