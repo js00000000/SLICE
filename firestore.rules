@@ -114,12 +114,19 @@ service cloud.firestore {
       match /members/{memberId} {
         allow read: if isAuthenticated();
 
-        // Host or admin can create members, or a user can claim a member
+        // Host or admin can create members, or a user can claim a member.
+        // getAfter(): createGroup writes the group doc and its host member
+        // (isHost: true) in one atomic batch, and get() would read the
+        // pre-batch state where the group doesn't exist yet — the creator
+        // branch must see the projected post-batch group. No privilege is
+        // gained: becoming createdBy of that post-batch group requires either
+        // already owning it or creating it in this batch, and the group
+        // create rule pins createdBy to request.auth.uid.
         allow create: if isAdmin() || (
           isAuthenticated()
           && request.resource.data.name is string
           && request.resource.data.name.size() <= 50
-          && (get(/databases/$(database)/documents/groups/$(groupId)).data.createdBy == request.auth.uid
+          && (getAfter(/databases/$(database)/documents/groups/$(groupId)).data.createdBy == request.auth.uid
               || (request.resource.data.userId == request.auth.uid
                   && (!('isHost' in request.resource.data) || request.resource.data.isHost == false)))
         );
