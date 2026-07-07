@@ -1,11 +1,8 @@
-import { test, expect } from '@playwright/test';
-import { quickStart, addExpense, cleanupCurrentAccount } from './helpers';
+import { test, expect } from './fixtures';
+import { quickStart, addExpense } from './helpers';
 
-// Delete the throwaway anonymous account (and its group) from the dev project
-// after each test. Best-effort — never let cleanup failure fail the test.
-test.afterEach(async ({ page }) => {
-  await cleanupCurrentAccount(page).catch(() => {});
-});
+// Account is shared across the whole worker and deleted once at teardown (see
+// fixtures.ts). Each test creates its own fresh group via quickStart.
 
 test('edits an existing expense and persists the change', async ({ page }) => {
   const groupId = await quickStart(page);

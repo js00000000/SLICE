@@ -6,7 +6,24 @@ import { expect, type Page } from '@playwright/test';
  */
 export async function quickStart(page: Page): Promise<string> {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Start Directly (No Login)' }).click();
+
+  const startBtn = page.getByRole('button', { name: 'Start Directly (No Login)' });
+  const createInput = page.getByPlaceholder('Enter Group Name');
+
+  // The authenticated suite shares ONE anonymous account across the whole worker
+  // (see e2e-dev/fixtures.ts). So the first test lands on the signed-out landing
+  // page ("Start Directly", which signs in + auto-creates the group), while
+  // every later test is already authenticated and lands on GroupSelectionPage,
+  // where we create a fresh group via the "Create" form. Both paths leave us on
+  // a brand-new "Untitled Trip" dashboard, so the specs don't care which ran.
+  await expect(startBtn.or(createInput).first()).toBeVisible({ timeout: 15_000 });
+
+  if (await startBtn.isVisible()) {
+    await startBtn.click();
+  } else {
+    await createInput.fill('Untitled Trip');
+    await page.getByRole('button', { name: 'Create', exact: true }).click();
+  }
 
   await expect(page).toHaveURL(/\/group\/[^/]+$/, { timeout: 15_000 });
   await expect(page.getByRole('heading', { level: 1, name: 'Untitled Trip' })).toBeVisible();
@@ -75,8 +92,22 @@ export async function confirmDialog(page: Page): Promise<void> {
  * see the afterEach hooks in the specs.
  */
 export async function cleanupCurrentAccount(page: Page): Promise<void> {
-  const match = page.url().match(/\/group\/([^/]+)/);
-  if (!match) return; // Not inside a group — nothing reachable to delete.
+  // Every log line is prefixed so you can grep the Playwright output with
+  // `[e2e-cleanup]` to see exactly how far teardown got for each test.
+  const log = (msg: string) => console.log(`[e2e-cleanup] ${msg}`);
+
+  const url = page.url();
+  const match = url.match(/\/group\/([^/]+)/);
+  if (!match) {
+    // This is the #1 silent leak: the test didn't end inside a group (it failed
+    // early, or navigated away), so we never reach the delete button and the
+    // anon account + any group it created are left behind in the dev project.
+    log(`SKIPPED — not on a /group/ URL (was: ${url}). Account NOT deleted; this leaks.`);
+    return;
+  }
+
+  const groupId = match[1];
+  log(`starting for group ${groupId} (url: ${url})`);
 
   // Bounded timeout on every step: against the real dev project a step can be
   // slow or (if a prior test left odd state) never resolve. Bounding it means a
@@ -84,16 +115,60 @@ export async function cleanupCurrentAccount(page: Page): Promise<void> {
   // hanging until the whole test times out.
   const opts = { timeout: 10_000 };
 
-  await page.goto(`/group/${match[1]}`);
+  // Run one named step, logging when it starts, succeeds, or throws. On failure
+  // we log WHICH step broke (with the error message) and rethrow so the
+  // afterEach .catch() still keeps the test result honest — but now the leak is
+  // visible in the output instead of vanishing.
+  const step = async (name: string, fn: () => Promise<void>) => {
+    log(`→ ${name}`);
+    try {
+      await fn();
+      log(`  ✓ ${name}`);
+    } catch (err) {
+      const reason = err instanceof Error ? err.message.split('\n')[0] : String(err);
+      log(`  ✗ ${name} FAILED — ${reason}`);
+      log(`ACCOUNT NOT DELETED for group ${groupId} — leaked at step "${name}".`);
+      throw err;
+    }
+  };
 
   // Header overflow menu → Profile Settings → Delete Account → confirm.
   // Scope "Settings" to the <header> so it doesn't collide with the bottom-nav
   // "Settings" tab.
-  await page.locator('header').getByRole('button', { name: 'Settings' }).click(opts);
-  await page.getByRole('menuitem', { name: /Profile Settings/ }).click(opts);
-  await page.getByRole('button', { name: 'Delete Account' }).click(opts);
-  await page.getByRole('button', { name: 'Delete Permanently' }).click(opts);
+  await step('navigate to group', () => page.goto(`/group/${groupId}`).then(() => {}));
+
+  // Wait for the group dashboard to actually settle before touching the header
+  // menu. Opening it while Firestore snapshots are still streaming in triggers a
+  // mid-open re-render that detaches the animated "Profile Settings" item, so
+  // the click silently misses and times out (this was the observed leak). The
+  // header Settings button being visible is the signal the group loaded.
+  await step('wait for group dashboard to settle', () =>
+    page.locator('header').getByRole('button', { name: 'Settings' }).waitFor({ state: 'visible', ...opts }));
+
+  // Open the menu and click Profile Settings as one resilient unit: the menu has
+  // an open animation and can re-render, so the first Settings click is
+  // occasionally swallowed or the item detaches. Re-open until the item is
+  // actually clickable — same pattern as addExpense above.
+  await step('open Profile Settings from header menu', async () => {
+    const settingsBtn = page.locator('header').getByRole('button', { name: 'Settings' });
+    const profileItem = page.getByRole('menuitem', { name: /Profile Settings/ });
+    await expect(async () => {
+      if (!(await profileItem.isVisible())) {
+        await settingsBtn.click();
+      }
+      await expect(profileItem).toBeVisible({ timeout: 3_000 });
+    }).toPass({ timeout: 20_000 });
+    await profileItem.click(opts);
+  });
+
+  await step('click Delete Account', () =>
+    page.getByRole('button', { name: 'Delete Account' }).click(opts));
+  await step('click Delete Permanently', () =>
+    page.getByRole('button', { name: 'Delete Permanently' }).click(opts));
 
   // handleDeleteAccount signs out and returns to the landing page.
-  await page.waitForURL(/\/$/, { timeout: 15_000 });
+  await step('wait for redirect to landing (delete complete)', () =>
+    page.waitForURL(/\/$/, { timeout: 15_000 }));
+
+  log(`✓ DONE — account + group ${groupId} deleted.`);
 }

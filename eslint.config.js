@@ -20,4 +20,13 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    // Playwright suites are not React — the React Hooks / Fast Refresh rules
+    // don't apply and misfire on Playwright's `use` fixture callback.
+    files: ['e2e/**/*.ts', 'e2e-dev/**/*.ts'],
+    rules: {
+      'react-hooks/rules-of-hooks': 'off',
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])
