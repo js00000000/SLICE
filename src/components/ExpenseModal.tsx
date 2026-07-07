@@ -1,24 +1,35 @@
-import { useState, useEffect, useLayoutEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { X, CheckCircle2, Plus, Trash2, ChevronDown, Check } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { X, CheckCircle2, Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { Member, Expense, Payment } from '../types';
+import type { Member, Expense, Group, Payment } from '../types';
 import { calculateEvenSplit, isCustomSplit as detectCustomSplit } from '../utils/split';
+import { getDefaultCurrency, getGroupCurrencies, getExpenseRate, convertToDefault } from '../utils/currency';
+import { formatCurrency } from '../utils/format';
+import { OptionSelect } from './OptionSelect';
 import { useScrollLock } from '../hooks/useScrollLock';
 
 interface ExpenseModalProps {
   members: Member[];
   currentMemberId: string;
+  group?: Group | null;
   initialData: Expense | null;
   onClose: () => void;
   onSave: (data: Omit<Expense, 'id' | 'createdBy' | 'createdAt'>, id?: string) => void;
 }
 
-export function ExpenseModal({ members, currentMemberId, initialData, onClose, onSave }: ExpenseModalProps) {
+// Approximate display width of a currency code for input padding: CJK glyphs
+// are roughly twice as wide as latin characters.
+function codeDisplayWidth(code: string) {
+  return [...code].reduce((w, ch) => w + (ch.charCodeAt(0) > 255 ? 2 : 1), 0);
+}
+
+export function ExpenseModal({ members, currentMemberId, group = null, initialData, onClose, onSave }: ExpenseModalProps) {
   useScrollLock();
   const { t, i18n } = useTranslation();
   const [description, setDescription] = useState(initialData ? initialData.description : '');
   const [amount, setAmount] = useState(initialData ? initialData.amount.toString() : '');
+  const defaultCode = getDefaultCurrency(group);
+  const [currency, setCurrency] = useState(initialData?.currency ?? defaultCode);
   const [paidBy, setPaidBy] = useState(initialData ? initialData.paidBy : currentMemberId);
   const [splitAmong, setSplitAmong] = useState<string[]>(initialData ? initialData.splitAmong : []);
   
@@ -40,6 +51,22 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
 
   const isEditing = !!initialData;
   const isAllSelected = members.length > 0 && splitAmong.length === members.length;
+
+  // Currency selection. The chip row only appears when the group has more than
+  // one currency; an edited expense whose stamped code was removed from the
+  // group list still shows up as an extra chip so the selection isn't lost.
+  const currencyOptions = (() => {
+    const codes = getGroupCurrencies(group).map(c => c.code);
+    if (!codes.includes(currency)) codes.push(currency);
+    return codes;
+  })();
+  const showCurrencySelector = currencyOptions.length > 1;
+  const isDefaultCurrency = currency === defaultCode;
+  const currencyRate = getExpenseRate({ currency }, group);
+  // Input prefix: "$" for the default currency, the code text otherwise.
+  const prefixWidth = codeDisplayWidth(currency);
+  const amountPadding = isDefaultCurrency ? 'pl-8' : prefixWidth <= 2 ? 'pl-12' : prefixWidth <= 4 ? 'pl-16' : 'pl-20';
+  const rowPadding = isDefaultCurrency ? 'pl-7' : prefixWidth <= 2 ? 'pl-11' : prefixWidth <= 4 ? 'pl-14' : 'pl-16';
 
   const firstPayerAmountRef = useRef<HTMLInputElement>(null);
 
@@ -111,6 +138,9 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
     onSave({
       description: description.trim(),
       amount: parseFloat(amount),
+      // Always stamp the concrete selected code (even when it's the group
+      // default) so later default-currency changes can't relabel this expense.
+      currency,
       paidBy: isMultiplePayers ? finalPayments[0].memberId : paidBy,
       payments: finalPayments,
       splitAmong: finalSplitAmong,
@@ -211,8 +241,34 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
               <label className="block text-xs font-black uppercase font-nunito tracking-wider text-main-text/60 mb-1.5">
                 {t('expenses.amount')}
               </label>
+
+              {/* Currency selector — only when the group has extra currencies */}
+              {showCurrencySelector && (
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {currencyOptions.map(code => {
+                    const isSelected = code === currency;
+                    return (
+                      <button
+                        key={code}
+                        type="button"
+                        onClick={() => setCurrency(code)}
+                        className={`px-3.5 py-1.5 rounded-xl border-2 text-sm font-nunito font-black transition-all duration-150 cursor-pointer ${
+                          isSelected
+                            ? 'border-main-text bg-brand-light text-main-text shadow-[2px_2px_0px_#1A1A2E]'
+                            : 'border-gray-200 text-gray-500 hover:border-main-text hover:bg-gray-50'
+                        }`}
+                      >
+                        {code}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-main-text font-nunito font-black text-lg">$</span>
+                <span className={`absolute left-4 top-1/2 -translate-y-1/2 text-main-text font-nunito font-black ${isDefaultCurrency ? 'text-lg' : 'text-sm'}`}>
+                  {isDefaultCurrency ? '$' : currency}
+                </span>
                 <input
                   type="number"
                   inputMode="decimal"
@@ -221,10 +277,17 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
-                  className="w-full text-base font-nunito font-black text-main-text pl-8 pr-4 py-3 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none placeholder-gray-400 bg-white transition-all"
+                  className={`w-full text-base font-nunito font-black text-main-text ${amountPadding} pr-4 py-3 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none placeholder-gray-400 bg-white transition-all`}
                   required
                 />
               </div>
+
+              {/* Converted preview for foreign-currency amounts */}
+              {!isDefaultCurrency && parseFloat(amount) > 0 && (
+                <p className="text-xs font-bold text-main-text/50 mt-1.5">
+                  ≈ {formatCurrency(convertToDefault(parseFloat(amount), currencyRate), defaultCode)}
+                </p>
+              )}
             </div>
 
             {/* Paid By Control */}
@@ -268,7 +331,9 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
                         />
                         
                         <div className="relative w-32 shrink-0">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-main-text font-nunito font-black">$</span>
+                          <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-main-text font-nunito font-black ${isDefaultCurrency ? '' : 'text-xs'}`}>
+                            {isDefaultCurrency ? '$' : currency}
+                          </span>
                           <input
                             ref={index === 0 ? firstPayerAmountRef : undefined}
                             type="number"
@@ -276,7 +341,7 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
                             step="any"
                             value={p.amount || ''}
                             onChange={(e) => updatePayer(index, { amount: parseFloat(e.target.value) || 0 })}
-                            className="w-full text-base font-nunito font-black text-main-text pl-7 pr-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none"
+                            className={`w-full text-base font-nunito font-black text-main-text ${rowPadding} pr-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none`}
                             placeholder="0.00"
                           />
                         </div>
@@ -350,14 +415,16 @@ export function ExpenseModal({ members, currentMemberId, initialData, onClose, o
                       <div key={m.id} className="flex items-center gap-2">
                         <div className="flex-1 text-sm font-bold text-main-text truncate">{m.name}</div>
                         <div className="relative w-32 shrink-0">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-main-text font-nunito font-black">$</span>
+                          <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-main-text font-nunito font-black ${isDefaultCurrency ? '' : 'text-xs'}`}>
+                            {isDefaultCurrency ? '$' : currency}
+                          </span>
                           <input
                             type="number"
                             inputMode="decimal"
                             step="any"
                             value={split.amount || ''}
                             onChange={(e) => updateSplitAmount(m.id, parseFloat(e.target.value) || 0)}
-                            className="w-full text-base font-nunito font-black text-main-text pl-7 pr-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none"
+                            className={`w-full text-base font-nunito font-black text-main-text ${rowPadding} pr-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none`}
                             placeholder="0.00"
                           />
                         </div>
@@ -432,96 +499,16 @@ interface PayerSelectProps {
 }
 
 function PayerSelect({ value, members, disabledIds = [], onChange, size = 'sm' }: PayerSelectProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [panelPos, setPanelPos] = useState<{ top: number; left: number; width: number } | null>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
-
-  useLayoutEffect(() => {
-    if (!isOpen) return;
-    const updatePos = () => {
-      const rect = triggerRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      setPanelPos({
-        top: rect.bottom + 6,
-        left: rect.left,
-        width: rect.width,
-      });
-    };
-    updatePos();
-    window.addEventListener('resize', updatePos);
-    window.addEventListener('scroll', updatePos, true);
-    return () => {
-      window.removeEventListener('resize', updatePos);
-      window.removeEventListener('scroll', updatePos, true);
-    };
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleClick = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (triggerRef.current?.contains(target) || panelRef.current?.contains(target)) return;
-      setIsOpen(false);
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [isOpen]);
-
-  const selected = members.find(m => m.id === value);
-  const triggerPadding = size === 'md' ? 'px-4 py-3' : 'px-3 py-2';
-
   return (
-    <div className="flex-1 min-w-0">
-      <button
-        ref={triggerRef}
-        type="button"
-        onClick={() => setIsOpen(prev => !prev)}
-        className={`w-full flex items-center justify-between gap-2 text-base font-bold text-main-text ${triggerPadding} border-2 border-main-text rounded-xl bg-white shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] transition-all cursor-pointer`}
-        aria-haspopup="listbox"
-        aria-expanded={isOpen}
-      >
-        <span className="truncate text-left">{selected?.name ?? ''}</span>
-        <ChevronDown className={`w-4 h-4 stroke-[3] shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
-
-      {isOpen && panelPos && createPortal(
-        <div
-          ref={panelRef}
-          role="listbox"
-          style={{ top: panelPos.top, left: panelPos.left, width: panelPos.width }}
-          className="fixed z-[60] max-h-72 overflow-y-auto bg-white border-2 border-main-text rounded-xl shadow-[4px_4px_0px_#1A1A2E] p-1"
-        >
-          {members.map(m => {
-            const isActive = m.id === value;
-            const isDisabled = !isActive && disabledIds.includes(m.id);
-            return (
-              <button
-                key={m.id}
-                type="button"
-                role="option"
-                aria-selected={isActive}
-                disabled={isDisabled}
-                onClick={() => {
-                  onChange(m.id);
-                  setIsOpen(false);
-                }}
-                className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg font-nunito font-black text-sm text-left transition-colors ${
-                  isDisabled
-                    ? 'text-main-text/30 cursor-not-allowed'
-                    : isActive
-                      ? 'bg-accent-orange text-white cursor-pointer'
-                      : 'text-main-text hover:bg-brand-light cursor-pointer'
-                }`}
-              >
-                <span className="truncate">{m.name}</span>
-                {isActive && <Check className="w-4 h-4 stroke-[3] shrink-0" />}
-              </button>
-            );
-          })}
-        </div>,
-        document.body,
-      )}
-    </div>
+    <OptionSelect
+      value={value}
+      options={members.map(m => ({
+        id: m.id,
+        label: m.name,
+        disabled: disabledIds.includes(m.id),
+      }))}
+      onChange={onChange}
+      size={size}
+    />
   );
 }

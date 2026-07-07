@@ -1,8 +1,9 @@
 import { X, Calendar, Receipt } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { Member, Expense } from '../types';
+import type { Member, Expense, Group } from '../types';
 import { formatDate, formatCurrency } from '../utils/format';
 import { calculateEvenSplit } from '../utils/split';
+import { isForeignExpense, getExpenseRate } from '../utils/currency';
 import { useScrollLock } from '../hooks/useScrollLock';
 
 interface MemberBreakdownModalProps {
@@ -10,15 +11,17 @@ interface MemberBreakdownModalProps {
   // 'paid' lists expenses the member paid for; 'share' lists expenses the member participates in.
   mode: 'paid' | 'share';
   expenses: Expense[];
+  group?: Group | null;
   onClose: () => void;
 }
 
-export function MemberBreakdownModal({ member, mode, expenses, onClose }: MemberBreakdownModalProps) {
+export function MemberBreakdownModal({ member, mode, expenses, group = null, onClose }: MemberBreakdownModalProps) {
   useScrollLock();
   const { t, i18n } = useTranslation();
 
-  // Per-expense amount for this member, handling both legacy (paidBy/splitAmong)
-  // and v2 (payments/splits) expense shapes — same precedence as settlement.ts.
+  // Per-expense amount for this member in the expense's own currency, handling
+  // both legacy (paidBy/splitAmong) and v2 (payments/splits) expense shapes —
+  // same precedence as settlement.ts.
   const amountFor = (exp: Expense): number => {
     const total = parseFloat(exp.amount.toString());
     if (mode === 'paid') {
@@ -33,10 +36,20 @@ export function MemberBreakdownModal({ member, mode, expenses, onClose }: Member
     return calculateEvenSplit(total, exp.splitAmong).find(s => s.memberId === member.id)?.amount ?? 0;
   };
 
+  // Rows show the original expense-currency amount; the header total is in the
+  // group default currency so it lines up with the dashboard figures.
   const rows = expenses
-    .map(exp => ({ exp, amount: amountFor(exp) }))
+    .map(exp => {
+      const amount = amountFor(exp);
+      return {
+        exp,
+        amount,
+        converted: amount * getExpenseRate(exp, group),
+        foreign: isForeignExpense(exp, group),
+      };
+    })
     .filter(r => r.amount > 0);
-  const total = rows.reduce((sum, r) => sum + Math.round(r.amount * 100), 0) / 100;
+  const total = rows.reduce((sum, r) => sum + Math.round(r.converted * 100), 0) / 100;
 
   const title = mode === 'paid'
     ? t('expenses.paid_breakdown_title', { name: member.name })
@@ -80,7 +93,7 @@ export function MemberBreakdownModal({ member, mode, expenses, onClose }: Member
           </div>
 
           <div className="space-y-2">
-            {rows.map(({ exp, amount }, index) => (
+            {rows.map(({ exp, amount, converted, foreign }, index) => (
               <div
                 key={exp.id}
                 className="stagger-item flex items-center justify-between gap-3 p-3.5 border-2 border-main-text rounded-xl bg-white"
@@ -92,12 +105,23 @@ export function MemberBreakdownModal({ member, mode, expenses, onClose }: Member
                     <Calendar className="w-3 h-3 stroke-[2.5]" />
                     {formatDate(exp.createdAt, i18n.language)}
                     <span className="text-main-text/30">·</span>
-                    {formatCurrency(exp.amount)}
+                    {formatCurrency(exp.amount, foreign ? exp.currency : undefined)}
                   </div>
                 </div>
-                <span className="font-nunito font-black text-xl text-accent-orange whitespace-nowrap shrink-0 leading-none">
-                  {formatCurrency(amount)}
-                </span>
+                {foreign ? (
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className="font-nunito font-black text-xl text-accent-orange whitespace-nowrap leading-none">
+                      {formatCurrency(amount, exp.currency)}
+                    </span>
+                    <span className="text-[11px] font-bold text-main-text/50 whitespace-nowrap">
+                      ≈ {formatCurrency(converted)}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="font-nunito font-black text-xl text-accent-orange whitespace-nowrap shrink-0 leading-none">
+                    {formatCurrency(amount)}
+                  </span>
+                )}
               </div>
             ))}
           </div>

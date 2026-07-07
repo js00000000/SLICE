@@ -819,6 +819,101 @@ describe('Settlement Logic', () => {
     });
   });
 
+  describe('multi-currency conversion (rates map)', () => {
+    const members: Member[] = [
+      { id: '1', name: 'Alice' },
+      { id: '2', name: 'Bob' },
+    ];
+
+    it('converts a foreign-currency expense into default currency before balancing', () => {
+      // 1000 JPY paid by Alice, split evenly; 1 JPY = 0.21 TWD → 210 TWD total.
+      const expenses: Expense[] = [
+        { id: 'e1', description: 'Ramen', amount: 1000, paidBy: '1', splitAmong: ['1', '2'], currency: 'JPY' },
+      ];
+
+      const { balances, settlements } = calculateBalancesAndSettlements(
+        members, expenses, [], { TWD: 1, JPY: 0.21 },
+      );
+
+      expect(balances['1']).toBe(105);
+      expect(balances['2']).toBe(-105);
+      expect(settlements).toEqual([{ from: '2', to: '1', amount: 105 }]);
+    });
+
+    it('treats default-currency-stamped and legacy expenses as rate 1', () => {
+      const expenses: Expense[] = [
+        { id: 'e1', description: 'Stamped', amount: 100, paidBy: '1', splitAmong: ['1', '2'], currency: 'TWD' },
+        { id: 'e2', description: 'Legacy', amount: 100, paidBy: '1', splitAmong: ['1', '2'] },
+      ];
+
+      const { balances } = calculateBalancesAndSettlements(
+        members, expenses, [], { TWD: 1, JPY: 0.21 },
+      );
+
+      expect(balances['1']).toBe(100);
+      expect(balances['2']).toBe(-100);
+    });
+
+    it('falls back to rate 1 for codes missing from the map', () => {
+      const expenses: Expense[] = [
+        { id: 'e1', description: 'Unknown code', amount: 100, paidBy: '1', splitAmong: ['1', '2'], currency: 'XXX' },
+      ];
+
+      const { balances } = calculateBalancesAndSettlements(members, expenses, [], { TWD: 1 });
+
+      expect(balances['1']).toBe(50);
+      expect(balances['2']).toBe(-50);
+    });
+
+    it('converts multiple payers and custom splits per amount', () => {
+      // 1000 JPY: Alice pays 600, Bob pays 400; custom splits 700/300.
+      const expenses: Expense[] = [
+        {
+          id: 'e1',
+          description: 'Hotel',
+          amount: 1000,
+          paidBy: '1',
+          payments: [
+            { memberId: '1', amount: 600 },
+            { memberId: '2', amount: 400 },
+          ],
+          splitAmong: ['1', '2'],
+          splits: [
+            { memberId: '1', amount: 700 },
+            { memberId: '2', amount: 300 },
+          ],
+          currency: 'JPY',
+        },
+      ];
+
+      const { balances } = calculateBalancesAndSettlements(
+        members, expenses, [], { TWD: 1, JPY: 0.5 },
+      );
+
+      // Alice: +300 paid, -350 share → -50; Bob: +200 paid, -150 share → +50.
+      expect(balances['1']).toBe(-50);
+      expect(balances['2']).toBe(50);
+    });
+
+    it('keeps mixed-currency balances summing to zero after whole-dollar rounding', () => {
+      const threeMembers: Member[] = [...members, { id: '3', name: 'Charlie' }];
+      const expenses: Expense[] = [
+        // 1000 JPY @ 0.213 = 213 TWD split 3 ways (71 each, uneven cents)
+        { id: 'e1', description: 'Foreign', amount: 1000, paidBy: '1', splitAmong: ['1', '2', '3'], currency: 'JPY' },
+        // 100 TWD split 3 ways
+        { id: 'e2', description: 'Local', amount: 100, paidBy: '2', splitAmong: ['1', '2', '3'], currency: 'TWD' },
+      ];
+
+      const { balances } = calculateBalancesAndSettlements(
+        threeMembers, expenses, [], { TWD: 1, JPY: 0.213 },
+      );
+
+      const sum = Object.values(balances).reduce((a, b) => a + b, 0);
+      expect(sum).toBe(0);
+      Object.values(balances).forEach(b => expect(Number.isInteger(b)).toBe(true));
+    });
+  });
+
   it('should calculate correct whole-dollar balances and settlements when A pays 200 and only B and C split it', () => {
     // A paid 200, split between B and C (A is not in the split).
     // B's share: 100, C's share: 100.

@@ -17,10 +17,11 @@ interface BottomNavProps {
 export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: BottomNavProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { 
-    groupId: contextGroupId, 
+  const {
+    groupId: contextGroupId,
     isSettled,
     members,
+    currentGroup,
     currentMemberId,
     handleAddExpense
   } = useGroup();
@@ -276,6 +277,7 @@ export function BottomNav({ activeTab, groupId: propGroupId, onAddClick }: Botto
         <ExpenseModal
           members={members}
           currentMemberId={currentMemberId!}
+          group={currentGroup}
           initialData={null}
           onClose={() => setIsAddModalOpen(false)}
           onSave={async (data) => {

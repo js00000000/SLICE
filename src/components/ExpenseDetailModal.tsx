@@ -1,13 +1,15 @@
 import { X, Edit2, Trash2, Lock, Calendar } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { Member, Expense } from '../types';
+import type { Member, Expense, Group } from '../types';
 import { formatDate, formatCurrency } from '../utils/format';
 import { calculateEvenSplit } from '../utils/split';
+import { isForeignExpense, getExpenseRate, convertToDefault } from '../utils/currency';
 import { useScrollLock } from '../hooks/useScrollLock';
 
 interface ExpenseDetailModalProps {
   expense: Expense;
   members: Member[];
+  group?: Group | null;
   currentMemberId: string | null;
   isSettled: boolean;
   onClose: () => void;
@@ -18,6 +20,7 @@ interface ExpenseDetailModalProps {
 export function ExpenseDetailModal({
   expense: exp,
   members,
+  group = null,
   currentMemberId,
   isSettled,
   onClose,
@@ -30,6 +33,12 @@ export function ExpenseDetailModal({
   const getMemberName = (id: string) => members.find(m => m.id === id)?.name || t('common.loading');
 
   const amountNum = typeof exp.amount === 'string' ? parseFloat(exp.amount) : exp.amount;
+
+  // Foreign-currency expenses render every amount in the expense's own
+  // currency (rows must sum to the displayed original total), with the
+  // converted default-currency total shown alongside.
+  const foreign = isForeignExpense(exp, group);
+  const currencyLabel = foreign ? exp.currency : undefined;
 
   // Penny-accurate even split, so the UI matches the settlement ledger exactly.
   const evenSplits = calculateEvenSplit(amountNum, exp.splitAmong);
@@ -60,7 +69,7 @@ export function ExpenseDetailModal({
           {getMemberName(memberId)} {isMe && `(${t('common.me') || 'Me'})`}
         </span>
         <span className="font-nunito font-bold text-main-text shrink-0 ml-2">
-          {formatCurrency(amount)}
+          {formatCurrency(amount, currencyLabel)}
         </span>
       </div>
     );
@@ -98,9 +107,20 @@ export function ExpenseDetailModal({
             <span className="text-xs font-black uppercase font-nunito tracking-wider text-main-text/60">
               {t('expenses.amount')}
             </span>
-            <span className="font-nunito font-black text-2xl text-main-text">
-              {formatCurrency(exp.amount)}
-            </span>
+            {foreign ? (
+              <span className="flex flex-col items-end gap-0.5">
+                <span className="font-nunito font-black text-2xl text-main-text">
+                  {formatCurrency(exp.amount, exp.currency)}
+                </span>
+                <span className="text-xs font-bold text-main-text/50">
+                  ≈ {formatCurrency(convertToDefault(exp.amount, getExpenseRate(exp, group)))}
+                </span>
+              </span>
+            ) : (
+              <span className="font-nunito font-black text-2xl text-main-text">
+                {formatCurrency(exp.amount)}
+              </span>
+            )}
           </div>
 
           {payers.length > 0 && (

@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
 import { DollarSign, CheckCircle2, ArrowRight, Check, RotateCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { Member, Expense, SettlementRecord } from '../types';
+import type { Member, Expense, Group, SettlementRecord } from '../types';
 import { calculateBalancesAndSettlements } from '../lib/settlement';
+import { buildRateMap } from '../utils/currency';
 import { formatCurrency, formatDate } from '../utils/format';
 import { CountUp } from './CountUp';
 
@@ -10,6 +11,7 @@ interface BalancesViewProps {
   members: Member[];
   expenses: Expense[];
   currentMemberId: string;
+  group?: Group | null;
   completedSettlements?: SettlementRecord[];
   canUnmark?: (record: SettlementRecord) => boolean;
   onMarkPaid?: (settlement: { from: string; to: string; amount: number }) => void;
@@ -20,6 +22,7 @@ export function BalancesView({
   members,
   expenses,
   currentMemberId,
+  group = null,
   completedSettlements = [],
   canUnmark,
   onMarkPaid,
@@ -31,6 +34,7 @@ export function BalancesView({
       members,
       expenses,
       completedSettlements,
+      buildRateMap(group),
     );
 
     // Sort settlements: current member as payer first
@@ -41,7 +45,7 @@ export function BalancesView({
     });
 
     return { balances: map, settlements: transactions };
-  }, [members, expenses, completedSettlements, currentMemberId]);
+  }, [members, expenses, completedSettlements, currentMemberId, group]);
 
   const myBalance = balances[currentMemberId] || 0;
 

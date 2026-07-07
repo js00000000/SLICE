@@ -1,12 +1,14 @@
 import { Calendar } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { Member, Expense } from '../types';
+import type { Member, Expense, Group } from '../types';
 import { formatDate, formatCurrency } from '../utils/format';
 import { getPayers, resolvePayerDisplay } from '../utils/payers';
+import { isForeignExpense, getExpenseRate, convertToDefault } from '../utils/currency';
 
 interface ExpenseItemProps {
   expense: Expense;
   members: Member[];
+  group?: Group | null;
   currentMemberId: string | null;
   /** Active "paid by" filter, if any — surfaced as the primary payer. */
   filterPaidBy: string | null;
@@ -19,6 +21,7 @@ interface ExpenseItemProps {
 export function ExpenseItem({
   expense: exp,
   members,
+  group = null,
   currentMemberId,
   filterPaidBy,
   onView,
@@ -30,6 +33,10 @@ export function ExpenseItem({
 
   const payers = getPayers(exp);
   const { displayPayerIds, overflowCount } = resolvePayerDisplay(payers, currentMemberId, filterPaidBy);
+
+  // Foreign-currency expenses show the original amount plus the converted
+  // default-currency value; default-currency expenses render as before.
+  const foreign = isForeignExpense(exp, group);
 
   return (
     <div
@@ -64,9 +71,20 @@ export function ExpenseItem({
           )}
         </div>
 
-        <div className="font-nunito font-black text-2xl text-accent-orange whitespace-nowrap shrink-0 leading-none">
-          {formatCurrency(exp.amount)}
-        </div>
+        {foreign ? (
+          <div className="flex flex-col items-end gap-1 shrink-0">
+            <div className="font-nunito font-black text-2xl text-accent-orange whitespace-nowrap leading-none">
+              {formatCurrency(exp.amount, exp.currency)}
+            </div>
+            <div className="text-xs font-bold text-main-text/50 whitespace-nowrap">
+              ≈ {formatCurrency(convertToDefault(exp.amount, getExpenseRate(exp, group)))}
+            </div>
+          </div>
+        ) : (
+          <div className="font-nunito font-black text-2xl text-accent-orange whitespace-nowrap shrink-0 leading-none">
+            {formatCurrency(exp.amount)}
+          </div>
+        )}
       </div>
     </div>
   );

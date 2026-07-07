@@ -9,6 +9,11 @@ export interface Member {
   isHost?: boolean;
 }
 
+export interface GroupCurrency {
+  code: string; // Free-form label, 1–4 characters (e.g. "JPY" or "日圓")
+  rate: number; // 1 unit of this currency = rate × default currency
+}
+
 export interface Group {
   id: string;
   name: string;
@@ -20,6 +25,12 @@ export interface Group {
   joinId?: string;
   settledAt?: Timestamp | null;
   settledBy?: string | null;
+  // Currency settings. Both optional for legacy groups: absent means
+  // defaultCurrency 'TWD' with currencies [{ code: 'TWD', rate: 1 }].
+  // `currencies` contains ALL group currencies including the default,
+  // whose entry always has rate 1.
+  defaultCurrency?: string;
+  currencies?: GroupCurrency[];
 }
 
 export interface Payment {
@@ -35,6 +46,9 @@ export interface Expense {
   payments?: Payment[]; // Support for multiple payers
   splitAmong: string[];
   splits?: Payment[]; // Support for custom split amounts
+  // Concrete currency code stamped at save time (even when it equals the
+  // group default). Absent on legacy expenses → treated as the group default.
+  currency?: string;
   createdBy: string;
   createdAt?: Timestamp;
   updatedAt?: Timestamp;

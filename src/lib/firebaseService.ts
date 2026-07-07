@@ -17,7 +17,8 @@ import {
   limit,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { Member, Expense } from '../types';
+import type { Member, Expense, GroupCurrency } from '../types';
+import { validateCurrencyCode, FALLBACK_DEFAULT_CURRENCY } from '../utils/currency';
 
 export type ExpenseInput = Omit<Expense, 'id' | 'createdBy' | 'createdAt' | 'updatedAt'>;
 
@@ -56,6 +57,9 @@ function validateExpenseArrays(data: Partial<ExpenseInput>) {
     if (Math.abs(sum - amountCents!) > 1)
       throw new Error('Payments must sum to expense amount');
   }
+
+  if (data.currency !== undefined && !validateCurrencyCode(data.currency))
+    throw new Error('Currency code must be 1-4 characters');
 }
 
 // Random invite token for /join/:joinId URLs. Excludes visually ambiguous
@@ -84,6 +88,8 @@ export const firebaseService = {
       name: clampName(groupName),
       createdBy: userId,
       joinId,
+      defaultCurrency: FALLBACK_DEFAULT_CURRENCY,
+      currencies: [{ code: FALLBACK_DEFAULT_CURRENCY, rate: 1 }],
       createdAt: serverTimestamp(),
     });
 
@@ -323,6 +329,36 @@ export const firebaseService = {
   async updateGroupName(groupId: string, newName: string) {
     await updateDoc(doc(db, 'groups', groupId), {
       name: clampName(newName),
+      updatedAt: serverTimestamp(),
+    });
+  },
+
+  // Writes the default currency and the full currency list (which always
+  // contains the default at rate 1) in one update so a default change plus
+  // its rate recompute is atomic.
+  async updateGroupCurrencySettings(
+    groupId: string,
+    defaultCurrency: string,
+    currencies: GroupCurrency[],
+  ) {
+    const trimmedDefault = defaultCurrency.trim();
+    const cleaned = currencies.map(c => ({ code: c.code.trim(), rate: c.rate }));
+
+    if (!validateCurrencyCode(trimmedDefault))
+      throw new Error('Currency code must be 1-4 characters');
+    if (cleaned.some(c => !validateCurrencyCode(c.code)))
+      throw new Error('Currency code must be 1-4 characters');
+    if (cleaned.some(c => !Number.isFinite(c.rate) || c.rate <= 0))
+      throw new Error('Exchange rates must be positive numbers');
+    if (new Set(cleaned.map(c => c.code)).size !== cleaned.length)
+      throw new Error('Duplicate currency codes');
+    const defaultEntry = cleaned.find(c => c.code === trimmedDefault);
+    if (!defaultEntry || defaultEntry.rate !== 1)
+      throw new Error('Default currency must be in the list with rate 1');
+
+    await updateDoc(doc(db, 'groups', groupId), {
+      defaultCurrency: trimmedDefault,
+      currencies: cleaned,
       updatedAt: serverTimestamp(),
     });
   },

@@ -155,6 +155,7 @@ export function ExpensesPage() {
         <ExpenseModal
           members={members}
           currentMemberId={currentMemberId!}
+          group={currentGroup}
           initialData={expenseToEdit}
           onClose={() => {
             setIsExpenseModalOpen(false);

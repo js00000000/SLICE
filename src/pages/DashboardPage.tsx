@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Share2, DollarSign, Receipt } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -14,6 +14,7 @@ import { AppHeader } from '../components/AppHeader';
 import { useGroup } from '../contexts/GroupContext';
 import { useAuth } from '../contexts/AuthContext';
 import { calculateBalancesAndSettlements } from '../lib/settlement';
+import { buildRateMap } from '../utils/currency';
 import { CountUp } from '../components/CountUp';
 import { formatCurrency } from '../utils/format';
 
@@ -47,13 +48,21 @@ export function DashboardPage() {
     document.title = title;
   }, [currentGroup?.name, t]);
 
+  // code → rate lookup for converting foreign-currency expenses into the
+  // group default currency (all dashboard totals are in default currency).
+  const rates = useMemo(() => buildRateMap(currentGroup), [currentGroup]);
+  const expenseRate = useCallback(
+    (exp: { currency?: string }) => (exp.currency !== undefined ? (rates[exp.currency] ?? 1) : 1),
+    [rates],
+  );
+
   const totalSpend = useMemo(() => {
-    return expenses.reduce((sum, exp) => sum + parseFloat(exp.amount.toString()), 0);
-  }, [expenses]);
+    return expenses.reduce((sum, exp) => sum + parseFloat(exp.amount.toString()) * expenseRate(exp), 0);
+  }, [expenses, expenseRate]);
 
   const { balances } = useMemo(() => {
-    return calculateBalancesAndSettlements(members, expenses, completedSettlements);
-  }, [members, expenses, completedSettlements]);
+    return calculateBalancesAndSettlements(members, expenses, completedSettlements, rates);
+  }, [members, expenses, completedSettlements, rates]);
 
   const currentMemberBalance = currentMemberId ? (balances[currentMemberId] || 0) : 0;
 
@@ -61,11 +70,12 @@ export function DashboardPage() {
     const totals: Record<string, number> = {};
     members.forEach(m => totals[m.id] = 0);
     expenses.forEach(exp => {
-      const amount = parseFloat(exp.amount.toString());
+      const rate = expenseRate(exp);
+      const amount = parseFloat(exp.amount.toString()) * rate;
       if (exp.payments && exp.payments.length > 0) {
         exp.payments.forEach(p => {
           if (totals[p.memberId] !== undefined) {
-            totals[p.memberId] += parseFloat(p.amount.toString());
+            totals[p.memberId] += parseFloat(p.amount.toString()) * rate;
           }
         });
       } else if (totals[exp.paidBy] !== undefined) {
@@ -73,7 +83,7 @@ export function DashboardPage() {
       }
     });
     return totals;
-  }, [members, expenses]);
+  }, [members, expenses, expenseRate]);
 
   // Each member's total expense (their share of what was consumed), computed in
   // cents to stay penny-accurate and mirror the split logic in settlement.ts.
@@ -81,11 +91,12 @@ export function DashboardPage() {
     const cents: Record<string, number> = {};
     members.forEach(m => cents[m.id] = 0);
     expenses.forEach(exp => {
-      const totalCents = Math.round(parseFloat(exp.amount.toString()) * 100);
+      const rate = expenseRate(exp);
+      const totalCents = Math.round(parseFloat(exp.amount.toString()) * rate * 100);
       if (exp.splits && exp.splits.length > 0) {
         exp.splits.forEach(s => {
           if (cents[s.memberId] !== undefined) {
-            cents[s.memberId] += Math.round(parseFloat(s.amount.toString()) * 100);
+            cents[s.memberId] += Math.round(parseFloat(s.amount.toString()) * rate * 100);
           }
         });
       } else if (exp.splitAmong && exp.splitAmong.length > 0) {
@@ -101,7 +112,7 @@ export function DashboardPage() {
     const totals: Record<string, number> = {};
     Object.entries(cents).forEach(([id, c]) => { totals[id] = c / 100; });
     return totals;
-  }, [members, expenses]);
+  }, [members, expenses, expenseRate]);
 
   const openAddModal = () => {
     if (isSettled) {
@@ -291,6 +302,7 @@ export function DashboardPage() {
         <ExpenseModal
           members={members}
           currentMemberId={currentMemberId!}
+          group={currentGroup}
           initialData={null}
           onClose={() => {
             setIsExpenseModalOpen(false);
@@ -314,6 +326,7 @@ export function DashboardPage() {
           member={breakdown.member}
           mode={breakdown.mode}
           expenses={expenses}
+          group={currentGroup}
           onClose={() => setBreakdown(null)}
         />
       )}

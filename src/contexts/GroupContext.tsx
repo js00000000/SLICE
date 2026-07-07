@@ -14,8 +14,9 @@ import {
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { firebaseService, type ExpenseInput } from '../lib/firebaseService';
-import type { Member, Group, Expense, UserSettings, SettlementRecord } from '../types';
+import type { Member, Group, GroupCurrency, Expense, UserSettings, SettlementRecord } from '../types';
 import { calculateBalancesAndSettlements } from '../lib/settlement';
+import { buildRateMap } from '../utils/currency';
 import { useAuth } from './AuthContext';
 import { useDialog } from './DialogContext';
 
@@ -42,6 +43,7 @@ interface GroupContextType {
   handleUnclaimMember: (memberId: string) => Promise<void>;
   handleUpdateProfile: (data: Partial<Member>) => Promise<void>;
   handleUpdateGroupName: (newName: string) => Promise<void>;
+  handleUpdateGroupCurrencySettings: (defaultCurrency: string, currencies: GroupCurrency[]) => Promise<void>;
   handleAddExpense: (expenseData: ExpenseInput) => Promise<void>;
   handleUpdateExpense: (expenseId: string, expenseData: Partial<ExpenseInput>) => Promise<void>;
   handleDeleteExpense: (expense: Expense) => Promise<void>;
@@ -326,7 +328,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     if (!user || !groupId || !currentMemberId) return;
     
     // 1. Balance check
-    const { balances } = calculateBalancesAndSettlements(members, expenses, completedSettlements);
+    const { balances } = calculateBalancesAndSettlements(members, expenses, completedSettlements, buildRateMap(currentGroup));
     const myBalance = balances[currentMemberId] || 0;
     
     if (Math.abs(myBalance) > 0.01) {
@@ -521,6 +523,21 @@ export function GroupProvider({ children }: { children: ReactNode }) {
   }, [user, groupId, currentMemberId]);
   const isSettled = !!currentGroup?.settledAt;
 
+  const handleUpdateGroupCurrencySettings = async (defaultCurrency: string, currencies: GroupCurrency[]) => {
+    if (!user || !groupId) return;
+    const member = members.find(m => m.userId === user.uid);
+    if (!member?.isHost) {
+      toast.error(t('common.error_host_only'));
+      return;
+    }
+    // Rate edits retroactively change conversions, so a settled group is locked.
+    if (isSettled) {
+      toast.error(t('settle.locked_msg'));
+      return;
+    }
+    await firebaseService.updateGroupCurrencySettings(groupId, defaultCurrency, currencies);
+  };
+
   const handleAddExpense = async (expenseData: ExpenseInput) => {
     if (!user || !groupId || !currentMemberId) return;
     if (isSettled) {
@@ -667,7 +684,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     isLoading,
     handleCreateGroup, handleJoinGroup, handleLeaveGroup, handleDeleteGroup,
     handleSelectMember, handleCreateMember, handleCreateMemberByHost, handleDeleteMember, handleUnclaimMember, handleUpdateProfile,
-    handleUpdateGroupName, handleAddExpense, handleUpdateExpense, handleDeleteExpense,
+    handleUpdateGroupName, handleUpdateGroupCurrencySettings, handleAddExpense, handleUpdateExpense, handleDeleteExpense,
     handleSettleGroup, handleUnsettleGroup,
     handleMarkSettlementPaid, handleUnmarkSettlement,
   };

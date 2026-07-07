@@ -17,6 +17,8 @@ export interface Expense {
   payments?: Payment[];
   splitAmong: string[];
   splits?: Payment[];
+  // Currency code the expense amounts are recorded in. Absent = default currency.
+  currency?: string;
 }
 
 export interface Settlement {
@@ -114,19 +116,27 @@ export function calculateBalancesAndSettlements(
   members: Member[],
   expenses: Expense[],
   completedSettlements: CompletedSettlement[] = [],
+  // code → conversion rate into the default currency (1 unit of code =
+  // rate × default). Expenses whose currency is missing from the map (or
+  // that carry no currency at all) are treated as rate 1.
+  rates: Record<string, number> = {},
 ) {
   // Accumulate balances in integer cents for accuracy.
   const balancesCents: Record<string, number> = {};
   members.forEach(m => balancesCents[m.id] = 0);
 
   expenses.forEach(exp => {
-    const totalCents = toCents(exp.amount);
+    // Convert every amount of this expense into default-currency cents.
+    const rate = exp.currency !== undefined ? (rates[exp.currency] ?? 1) : 1;
+    const toConvertedCents = (n: number) => Math.round(parseFloat(n.toString()) * rate * 100);
+
+    const totalCents = toConvertedCents(exp.amount);
     const hasMultiplePayers = !!(exp.payments && exp.payments.length > 0);
 
     if (hasMultiplePayers) {
       exp.payments!.forEach(p => {
         if (balancesCents[p.memberId] !== undefined) {
-          balancesCents[p.memberId] += toCents(p.amount);
+          balancesCents[p.memberId] += toConvertedCents(p.amount);
         }
       });
     } else if (balancesCents[exp.paidBy] !== undefined) {
@@ -136,7 +146,7 @@ export function calculateBalancesAndSettlements(
     if (exp.splits && exp.splits.length > 0) {
       exp.splits.forEach(s => {
         if (balancesCents[s.memberId] !== undefined) {
-          balancesCents[s.memberId] -= toCents(s.amount);
+          balancesCents[s.memberId] -= toConvertedCents(s.amount);
         }
       });
     } else if (exp.splitAmong && exp.splitAmong.length > 0) {

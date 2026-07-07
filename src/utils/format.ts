@@ -19,10 +19,16 @@ export function formatDate(date: Timestamp | Date | undefined, locale: string = 
 
 /**
  * Format a number as a localized currency string.
+ * Without a code: default-currency style, e.g. "$252".
+ * With a code (foreign currency label): e.g. "JPY 1,200" — up to 2 decimals,
+ * trailing zeros trimmed.
  */
-export function formatCurrency(amount: number) {
-  // Simple $ format for now as per current UI
-  return `$${amount.toFixed(0)}`;
+export function formatCurrency(amount: number, code?: string) {
+  if (!code) {
+    // Simple $ format for now as per current UI
+    return `$${amount.toFixed(0)}`;
+  }
+  return `${code} ${Number(amount.toFixed(2)).toLocaleString()}`;
 }
 
 /**

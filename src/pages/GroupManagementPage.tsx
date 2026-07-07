@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
-import { Users, Shield, X, Plus, Copy, Trash2, Share2, Settings, UserMinus } from 'lucide-react';
+import { Users, Shield, X, Plus, Copy, Trash2, Share2, Settings, UserMinus, Coins } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { BottomNav } from '../components/BottomNav';
 import { AppHeader } from '../components/AppHeader';
@@ -11,7 +11,15 @@ import { useGroup } from '../contexts/GroupContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext';
 import { APP_NAME } from '../constants';
+import { OptionSelect } from '../components/OptionSelect';
 import { calculateBalancesAndSettlements } from '../lib/settlement';
+import {
+  buildRateMap,
+  getDefaultCurrency,
+  getGroupCurrencies,
+  recomputeCurrenciesForNewDefault,
+  validateCurrencyCode,
+} from '../utils/currency';
 import type { Member } from '../types';
 
 export function GroupManagementPage() {
@@ -22,15 +30,16 @@ export function GroupManagementPage() {
   const {
     members, expenses, completedSettlements, currentMember, currentGroup,
     handleUpdateProfile, handleDeleteMember, handleUpdateGroupName, handleDeleteGroup,
-    handleCreateMemberByHost, handleLeaveGroup, handleUnclaimMember
+    handleCreateMemberByHost, handleLeaveGroup, handleUnclaimMember,
+    handleUpdateGroupCurrencySettings
   } = useGroup();
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [newName, setNewName] = useState(currentGroup?.name || '');
   const [newMemberName, setNewMemberName] = useState('');
   const { balances } = useMemo(
-    () => calculateBalancesAndSettlements(members, expenses, completedSettlements),
-    [members, expenses, completedSettlements],
+    () => calculateBalancesAndSettlements(members, expenses, completedSettlements, buildRateMap(currentGroup)),
+    [members, expenses, completedSettlements, currentGroup],
   );
 
   // Sync newName state when currentGroup loads
@@ -38,6 +47,20 @@ export function GroupManagementPage() {
   if (currentGroup?.name !== prevGroupName) {
     setPrevGroupName(currentGroup?.name);
     setNewName(currentGroup?.name || '');
+  }
+
+  // Currency settings state. Rate drafts are keyed by currency code and synced
+  // from the group doc whenever the stored list changes (same pattern as newName).
+  const defaultCurrency = getDefaultCurrency(currentGroup);
+  const groupCurrencies = getGroupCurrencies(currentGroup);
+  const [newCurrencyCode, setNewCurrencyCode] = useState('');
+  const [newCurrencyRate, setNewCurrencyRate] = useState('');
+  const [rateDrafts, setRateDrafts] = useState<Record<string, string>>({});
+  const currenciesKey = JSON.stringify(groupCurrencies);
+  const [prevCurrenciesKey, setPrevCurrenciesKey] = useState(currenciesKey);
+  if (currenciesKey !== prevCurrenciesKey) {
+    setPrevCurrenciesKey(currenciesKey);
+    setRateDrafts({});
   }
 
   // Manual title fallback
@@ -53,6 +76,72 @@ export function GroupManagementPage() {
       await handleUpdateGroupName(newName.trim());
       toast.success(t('common.success'));
     }
+  };
+
+  const handleChangeDefaultCurrency = async (newDefault: string) => {
+    if (newDefault === defaultCurrency) return;
+    const isConfirmed = await confirm(
+      t('groups.default_currency_change_msg', { code: newDefault }),
+      {
+        title: t('groups.default_currency_change_title'),
+        confirmLabel: t('common.confirm'),
+        cancelLabel: t('common.cancel'),
+      },
+    );
+    if (!isConfirmed) return;
+    const recomputed = recomputeCurrenciesForNewDefault(groupCurrencies, newDefault);
+    await handleUpdateGroupCurrencySettings(newDefault, recomputed);
+    toast.success(t('groups.currency_updated'));
+  };
+
+  const handleSaveCurrencyRate = async (code: string) => {
+    const draft = rateDrafts[code];
+    if (draft === undefined) return;
+    const rate = parseFloat(draft);
+    if (!Number.isFinite(rate) || rate <= 0) {
+      toast.error(t('groups.currency_rate_invalid'));
+      return;
+    }
+    const updated = groupCurrencies.map(c => (c.code === code ? { code, rate } : c));
+    await handleUpdateGroupCurrencySettings(defaultCurrency, updated);
+    toast.success(t('groups.currency_updated'));
+  };
+
+  const handleAddCurrency = async () => {
+    const code = newCurrencyCode.trim();
+    const rate = parseFloat(newCurrencyRate);
+    if (!validateCurrencyCode(code)) {
+      toast.error(t('groups.currency_code_invalid'));
+      return;
+    }
+    if (groupCurrencies.some(c => c.code === code)) {
+      toast.error(t('groups.currency_duplicate'));
+      return;
+    }
+    if (!Number.isFinite(rate) || rate <= 0) {
+      toast.error(t('groups.currency_rate_invalid'));
+      return;
+    }
+    await handleUpdateGroupCurrencySettings(defaultCurrency, [...groupCurrencies, { code, rate }]);
+    setNewCurrencyCode('');
+    setNewCurrencyRate('');
+    toast.success(t('groups.currency_updated'));
+  };
+
+  const handleRemoveCurrency = async (code: string) => {
+    // The default can't be removed (its row has no remove button); block
+    // removing any currency that expenses still reference — silently falling
+    // back to rate 1 would corrupt balances retroactively.
+    const inUseCount = expenses.filter(e => e.currency === code).length;
+    if (inUseCount > 0) {
+      toast.error(t('groups.currency_in_use_error', { code, count: inUseCount }));
+      return;
+    }
+    await handleUpdateGroupCurrencySettings(
+      defaultCurrency,
+      groupCurrencies.filter(c => c.code !== code),
+    );
+    toast.success(t('groups.currency_updated'));
   };
 
   const handleDeleteMemberByHost = async (member: Member) => {
@@ -186,6 +275,111 @@ export function GroupManagementPage() {
                 {t('groups.share_link')}
               </button>
             </div>
+          </div>
+        </section>
+
+        {/* Currency Settings Section */}
+        <section className="stagger-item space-y-3 pt-3" style={{ animationDelay: '90ms' }}>
+          <h2 className="text-xs font-black font-nunito uppercase tracking-wider text-main-text/60 flex items-center gap-1.5 px-1">
+            <Coins className="w-4 h-4 text-accent-orange stroke-[2.5]" /> {t('groups.currency_settings')}
+          </h2>
+
+          <div className="bg-white rounded-[20px] border-3 border-main-text p-5 space-y-4 shadow-[3px_3px_0px_#1A1A2E]">
+            {/* Default currency picker */}
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-black uppercase font-nunito tracking-wider text-main-text/50">{t('groups.default_currency')}</span>
+              {currentMember.isHost ? (
+                <OptionSelect
+                  value={defaultCurrency}
+                  options={groupCurrencies.map(c => ({ id: c.code, label: c.code }))}
+                  onChange={handleChangeDefaultCurrency}
+                />
+              ) : (
+                <span className="text-base font-bold text-main-text font-nunito">{defaultCurrency}</span>
+              )}
+            </div>
+
+            {/* Currency list with exchange rates */}
+            {groupCurrencies.filter(c => c.code !== defaultCurrency).map(c => (
+              <div key={c.code} className="flex flex-col gap-2 border-t border-dashed border-gray-100 pt-3">
+                <span className="text-xs font-black uppercase font-nunito tracking-wider text-main-text/50">
+                  {c.code} · {t('groups.exchange_rate')}
+                </span>
+                {currentMember.isHost ? (
+                  <div className="flex gap-2 items-center">
+                    <span className="text-base font-nunito font-black text-main-text whitespace-nowrap">1 {c.code} =</span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      min="0"
+                      step="any"
+                      value={rateDrafts[c.code] ?? String(c.rate)}
+                      onChange={(e) => setRateDrafts(prev => ({ ...prev, [c.code]: e.target.value }))}
+                      className="flex-grow min-w-0 px-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none text-base font-bold bg-white"
+                    />
+                    <span className="text-base font-nunito font-black text-main-text whitespace-nowrap">{defaultCurrency}</span>
+                    <button
+                      onClick={() => handleSaveCurrencyRate(c.code)}
+                      disabled={rateDrafts[c.code] === undefined || rateDrafts[c.code] === String(c.rate)}
+                      className="px-4 py-2 bg-accent-orange text-white border-2 border-main-text rounded-xl font-nunito font-black text-xs shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] disabled:opacity-50 disabled:transform-none disabled:shadow-none cursor-pointer whitespace-nowrap"
+                    >
+                      {t('common.save')}
+                    </button>
+                    <button
+                      onClick={() => handleRemoveCurrency(c.code)}
+                      className="p-1.5 border-2 border-main-text text-red-500 bg-white rounded-lg transition-all duration-150 cursor-pointer hover:bg-red-50 hover:scale-105 active:scale-95"
+                      title={t('common.delete')}
+                    >
+                      <X className="w-4.5 h-4.5 stroke-[2.5]" />
+                    </button>
+                  </div>
+                ) : (
+                  <span className="text-base font-bold text-main-text font-nunito">
+                    1 {c.code} = {c.rate} {defaultCurrency}
+                  </span>
+                )}
+              </div>
+            ))}
+
+            {/* Add-currency row (host only) */}
+            {currentMember.isHost && (
+              <div className="flex flex-col gap-2 border-t border-dashed border-gray-100 pt-3">
+                <span className="text-xs font-black uppercase font-nunito tracking-wider text-main-text/50">{t('groups.add_currency')}</span>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    maxLength={4}
+                    placeholder={t('groups.currency_code_placeholder')}
+                    value={newCurrencyCode}
+                    onChange={(e) => setNewCurrencyCode(e.target.value)}
+                    className="w-24 px-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none text-base font-bold bg-white font-nunito"
+                  />
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="any"
+                    placeholder={t('groups.exchange_rate')}
+                    value={newCurrencyRate}
+                    onChange={(e) => setNewCurrencyRate(e.target.value)}
+                    className="flex-grow min-w-0 px-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none text-base font-bold bg-white"
+                  />
+                  <button
+                    onClick={handleAddCurrency}
+                    disabled={!newCurrencyCode.trim() || !newCurrencyRate.trim()}
+                    className="px-4 py-2 bg-accent-orange text-white border-2 border-main-text rounded-xl font-nunito font-black text-sm shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] disabled:opacity-50 disabled:transform-none disabled:shadow-none cursor-pointer flex items-center gap-1 whitespace-nowrap"
+                  >
+                    <Plus className="w-4 h-4 stroke-[3]" />
+                    {t('common.add')}
+                  </button>
+                </div>
+                {newCurrencyCode.trim() && newCurrencyRate && parseFloat(newCurrencyRate) > 0 && (
+                  <p className="text-xs font-bold text-main-text/50">
+                    {t('groups.currency_rate_hint', { code: newCurrencyCode.trim(), rate: newCurrencyRate, default: defaultCurrency })}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </section>
 

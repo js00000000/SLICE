@@ -140,6 +140,7 @@ export function SettlementsPage() {
           members={members}
           expenses={expenses}
           currentMemberId={currentMemberId!}
+          group={currentGroup}
           completedSettlements={completedSettlements}
           canUnmark={(record) => !!user && (record.completedBy === user.uid || isHost)}
           onMarkPaid={isSettled ? handleMarkSettlementPaid : undefined}

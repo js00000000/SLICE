@@ -18,7 +18,7 @@ interface ExpensesListProps {
 
 export function ExpensesList({ expenses, members, onEdit, onDelete, filterPaidBy, onFilterChange }: ExpensesListProps) {
   const { t } = useTranslation();
-  const { currentMemberId, isSettled } = useGroup();
+  const { currentMemberId, isSettled, currentGroup } = useGroup();
   const [viewingExpense, setViewingExpense] = useState<Expense | null>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [panelPos, setPanelPos] = useState<{ top: number; right: number } | null>(null);
@@ -147,6 +147,7 @@ export function ExpensesList({ expenses, members, onEdit, onDelete, filterPaidBy
               key={exp.id}
               expense={exp}
               members={members}
+              group={currentGroup}
               currentMemberId={currentMemberId}
               filterPaidBy={filterPaidBy}
               onView={setViewingExpense}
@@ -160,6 +161,7 @@ export function ExpensesList({ expenses, members, onEdit, onDelete, filterPaidBy
         <ExpenseDetailModal
           expense={viewingExpense}
           members={members}
+          group={currentGroup}
           currentMemberId={currentMemberId}
           isSettled={isSettled}
           onClose={() => setViewingExpense(null)}

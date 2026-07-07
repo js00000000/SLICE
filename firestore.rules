@@ -36,6 +36,22 @@ service cloud.firestore {
       allow write: if isOwner(userId) || isAdmin();
     }
 
+    // Currency settings validation. Codes are free-form, max 4 characters —
+    // string.size() in rules counts UTF-8 bytes, so 4 CJK chars (e.g. "日圓")
+    // can be up to 12 bytes; the client enforces the 4-character limit.
+    // Per-element map validation on lists is impractical in rules: the size cap
+    // plus client-side validation and the settlement fallback to rate 1 make
+    // malformed entries harmless.
+    function hasValidCurrencyFields(data) {
+      return (!('defaultCurrency' in data)
+          || (data.defaultCurrency is string
+              && data.defaultCurrency.size() >= 1
+              && data.defaultCurrency.size() <= 12))
+        && (!('currencies' in data)
+          || (data.currencies is list
+              && data.currencies.size() <= 20));
+    }
+
     // Groups
     match /groups/{groupId} {
       // Any authenticated user can read a group doc (name, joinId) to support the join flow.
@@ -46,7 +62,8 @@ service cloud.firestore {
       allow create: if isAuthenticated()
         && request.resource.data.createdBy == request.auth.uid
         && request.resource.data.name is string
-        && request.resource.data.name.size() <= 50;
+        && request.resource.data.name.size() <= 50
+        && hasValidCurrencyFields(request.resource.data);
 
       // Only host (creator) or admin can update or delete the group.
       // This includes renaming the group, settling up (setting settledAt/settledBy), and unsettling up (deleting settledAt/settledBy).
@@ -55,6 +72,7 @@ service cloud.firestore {
         && resource.data.createdBy == request.auth.uid
         && request.resource.data.name is string
         && request.resource.data.name.size() <= 50
+        && hasValidCurrencyFields(request.resource.data)
         && (
           // Defense-in-depth: If settling up, ensure settledBy matches the host/auth UID
           (!request.resource.data.keys().hasAll(['settledAt', 'settledBy']) || request.resource.data.settledBy == request.auth.uid)
@@ -130,17 +148,27 @@ service cloud.firestore {
       match /expenses/{expenseId} {
         allow read: if isAdmin() || isGroupMember(groupId);
 
+        // `currency` is optional (legacy expenses lack it); size() counts UTF-8
+        // bytes, so the cap is 12 for a 4-character CJK code (see note above).
         allow create: if isGroupMember(groupId)
           && request.resource.data.amount is number
           && request.resource.data.amount > 0
           && request.resource.data.description is string
-          && request.resource.data.description.size() <= 100;
+          && request.resource.data.description.size() <= 100
+          && (!('currency' in request.resource.data)
+              || (request.resource.data.currency is string
+                  && request.resource.data.currency.size() >= 1
+                  && request.resource.data.currency.size() <= 12));
 
         allow update: if isGroupMember(groupId)
           && request.resource.data.amount is number
           && request.resource.data.amount > 0
           && request.resource.data.description is string
-          && request.resource.data.description.size() <= 100;
+          && request.resource.data.description.size() <= 100
+          && (!('currency' in request.resource.data)
+              || (request.resource.data.currency is string
+                  && request.resource.data.currency.size() >= 1
+                  && request.resource.data.currency.size() <= 12));
 
         allow delete: if isAdmin() || isGroupMember(groupId);
       }
