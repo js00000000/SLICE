@@ -460,7 +460,14 @@ export default function App() {
       }
     }
 
-    // 3. Remove user membership from groups they joined but did not create
+    // 3. Unclaim this user from groups they joined but did not create.
+    // We must NOT delete the member document: the member may appear in
+    // existing expenses (payments/splits), and deleting the slot would orphan
+    // those references and break settlement math (balances no longer sum to
+    // zero). Instead we release the slot back to an unclaimed state (userId =
+    // null), leaving the name and balance intact so the group host can later
+    // reassign or delete it via the group UI (which blocks deletion while
+    // unsettled).
     const groupsJoinedButNotCreated = joinedGroupIds.filter(groupId =>
       !groupsCreatedByUser.some(g => g.id === groupId)
     );
@@ -472,8 +479,8 @@ export default function App() {
         const qSnap = await getDocs(q);
 
         const batch = writeBatch(db);
-        qSnap.forEach((doc) => {
-          batch.delete(doc.ref);
+        qSnap.forEach((memberDoc) => {
+          batch.update(memberDoc.ref, { userId: null, updatedAt: new Date().toISOString() });
         });
         // Purge this user's membership-index entry (doc ID == uid). Idempotent
         // if it doesn't exist, so no need to check first.
