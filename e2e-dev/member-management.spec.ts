@@ -61,8 +61,13 @@ test('host deletes a member after confirmation', async ({ page }) => {
   await expect(page.getByText('1 members')).toBeVisible();
   await expect(page.getByText('Bob', { exact: true })).toHaveCount(0);
 
-  await page.reload();
-  await expect(page.getByText('1 members')).toBeVisible();
+  // The UI updates optimistically, but the Firestore deleteDoc may not have
+  // committed to the server yet. Use a reload+retry loop so that variable
+  // network latency to the remote dev project doesn't flake the test.
+  await expect(async () => {
+    await page.reload();
+    await expect(page.getByText('1 members')).toBeVisible({ timeout: 5_000 });
+  }).toPass({ timeout: 30_000 });
   await expect(page.getByText('Bob', { exact: true })).toHaveCount(0);
 });
 

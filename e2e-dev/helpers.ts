@@ -83,6 +83,36 @@ export async function confirmDialog(page: Page): Promise<void> {
 }
 
 /**
+ * Add a currency in the group settings Currencies card (host only).
+ * Assumes the settings page (/group/{id}/members) is open. Scopes all
+ * locators to the Currencies section to avoid the Member-List "Add" button.
+ */
+export async function addCurrency(
+  page: Page,
+  { code, rate }: { code: string; rate: string },
+): Promise<void> {
+  const section = page.locator('section').filter({ hasText: 'Currencies' });
+  await section.getByPlaceholder('e.g. JPY').fill(code);
+  await section.getByPlaceholder('Exchange Rate').fill(rate);
+  await section.getByRole('button', { name: 'Add' }).click();
+}
+
+/**
+ * Open the expense modal via the bottom-nav "+" button. Uses the same
+ * retry-click pattern as addExpense to handle the occasional swallowed click
+ * right after a navigation. Resolves once the description field is visible.
+ */
+export async function openExpenseModal(page: Page): Promise<void> {
+  const descField = page.getByPlaceholder('e.g. Dinner, Taxi');
+  await expect(async () => {
+    if (!(await descField.isVisible())) {
+      await page.getByRole('button', { name: 'Add Expense' }).click();
+    }
+    await expect(descField).toBeVisible({ timeout: 3_000 });
+  }).toPass({ timeout: 20_000 });
+}
+
+/**
  * Best-effort teardown for the shared dev project: delete the current
  * anonymous account, which cascades to deleting the groups it created
  * (handleDeleteAccount → cleanupUserData in AuthContext). Drives the app's own
