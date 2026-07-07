@@ -7,6 +7,8 @@ import toast from 'react-hot-toast';
 import { APP_NAME } from '../constants';
 import { ExpenseModal } from '../components/ExpenseModal';
 import { ProfileModal } from '../components/ProfileModal';
+import { MemberBreakdownModal } from '../components/MemberBreakdownModal';
+import type { Member } from '../types';
 import { BottomNav } from '../components/BottomNav';
 import { AppHeader } from '../components/AppHeader';
 import { useGroup } from '../contexts/GroupContext';
@@ -35,6 +37,7 @@ export function DashboardPage() {
 
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [breakdown, setBreakdown] = useState<{ member: Member; mode: 'paid' | 'share' } | null>(null);
 
   // Manual title fallback
   useEffect(() => {
@@ -203,7 +206,12 @@ export function DashboardPage() {
                   .map(member => {
                     const paid = memberPaidTotals[member.id] || 0;
                     return (
-                      <div key={member.id} className="flex items-center justify-between p-3.5 border-2 border-main-text rounded-xl hover:bg-page-bg/40 transition-colors">
+                      <button
+                        type="button"
+                        key={member.id}
+                        onClick={() => setBreakdown({ member, mode: 'paid' })}
+                        className="w-full flex items-center justify-between p-3.5 border-2 border-main-text rounded-xl hover:bg-page-bg/40 transition-all cursor-pointer active:translate-x-[1px] active:translate-y-[1px]"
+                      >
                         <div className="flex items-center gap-2 min-w-0">
                           <span className="font-nunito font-black text-sm text-main-text truncate">{member.name}</span>
                           {member.id === currentGroup?.createdBy && (
@@ -213,10 +221,10 @@ export function DashboardPage() {
                             <span className="text-[9px] bg-success-light text-success-green border border-success-green/20 font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider font-nunito">{t('common.me')}</span>
                           )}
                         </div>
-                        <span className="text-xs font-black font-nunito uppercase tracking-wider text-main-text/70 bg-brand-light border border-main-text/10 px-2.5 py-1 rounded-lg">
+                        <span className="text-xs font-black font-nunito uppercase tracking-wider text-main-text/70 bg-brand-light border border-main-text/10 px-2.5 py-1 rounded-lg shrink-0">
                           {t('expenses.paid_action')} {formatCurrency(paid)}
                         </span>
-                      </div>
+                      </button>
                     );
                   })
               )}
@@ -246,7 +254,12 @@ export function DashboardPage() {
                   .map(member => {
                     const share = memberExpenseTotals[member.id] || 0;
                     return (
-                      <div key={member.id} className="flex items-center justify-between p-3.5 border-2 border-main-text rounded-xl hover:bg-page-bg/40 transition-colors">
+                      <button
+                        type="button"
+                        key={member.id}
+                        onClick={() => setBreakdown({ member, mode: 'share' })}
+                        className="w-full flex items-center justify-between p-3.5 border-2 border-main-text rounded-xl hover:bg-page-bg/40 transition-all cursor-pointer active:translate-x-[1px] active:translate-y-[1px]"
+                      >
                         <div className="flex items-center gap-2 min-w-0">
                           <span className="font-nunito font-black text-sm text-main-text truncate">{member.name}</span>
                           {member.id === currentGroup?.createdBy && (
@@ -259,7 +272,7 @@ export function DashboardPage() {
                         <span className="font-nunito font-black text-sm text-main-text bg-brand-light border border-main-text/10 px-2.5 py-1 rounded-lg shrink-0">
                           {formatCurrency(share)}
                         </span>
-                      </div>
+                      </button>
                     );
                   })
               )}
@@ -293,6 +306,15 @@ export function DashboardPage() {
             }
             setIsExpenseModalOpen(false);
           }}
+        />
+      )}
+
+      {breakdown && (
+        <MemberBreakdownModal
+          member={breakdown.member}
+          mode={breakdown.mode}
+          expenses={expenses}
+          onClose={() => setBreakdown(null)}
         />
       )}
 

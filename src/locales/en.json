@@ -135,7 +135,11 @@
     "total_amount_mismatch": "Total payment must equal total amount (Diff: {{diff}})",
     "equal_split": "Equal Split",
     "custom_split": "Custom Split",
-    "split_amount_mismatch": "Total split must equal total amount (Diff: {{diff}})"
+    "split_amount_mismatch": "Total split must equal total amount (Diff: {{diff}})",
+    "paid_breakdown_title": "Paid by {{name}}",
+    "share_breakdown_title": "{{name}}'s Expenses",
+    "total_paid": "Total Paid",
+    "total_share": "Total Cost"
   },
   "profile": {
     "title": "Profile Settings",

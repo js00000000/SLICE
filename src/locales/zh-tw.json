@@ -135,7 +135,11 @@
     "total_amount_mismatch": "付款總額必須等於支出總額 (差異: {{diff}})",
     "equal_split": "平分",
     "custom_split": "自定義金額",
-    "split_amount_mismatch": "分攤總額必須等於支出總額 (差異: {{diff}})"
+    "split_amount_mismatch": "分攤總額必須等於支出總額 (差異: {{diff}})",
+    "paid_breakdown_title": "{{name}} 付款的支出",
+    "share_breakdown_title": "{{name}} 分攤的支出",
+    "total_paid": "付款總額",
+    "total_share": "花費總額"
   },
   "profile": {
     "title": "個人設定",
