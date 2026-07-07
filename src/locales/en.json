@@ -86,6 +86,8 @@
     "currency_code_placeholder": "e.g. JPY",
     "currency_rate_hint": "1 {{code}} = {{rate}} {{default}}",
     "currency_in_use_error": "{{count}} expense(s) still use {{code}} — edit them before removing it",
+    "delete_currency": "Remove Currency",
+    "delete_currency_msg": "Remove {{code}} from this group? Its exchange rate will be lost.",
     "default_currency_change_title": "Change Default Currency",
     "default_currency_change_msg": "Change the default currency to {{code}}? All exchange rates will be recalculated relative to {{code}}, and balances will be shown in {{code}}.",
     "currency_code_invalid": "Currency code must be 1–4 characters",

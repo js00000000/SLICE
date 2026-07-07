@@ -86,6 +86,8 @@
     "currency_code_placeholder": "例如 JPY",
     "currency_rate_hint": "1 {{code}} = {{rate}} {{default}}",
     "currency_in_use_error": "還有 {{count}} 筆支出使用 {{code}}，請先修改後再移除",
+    "delete_currency": "移除幣別",
+    "delete_currency_msg": "確定要移除幣別「{{code}}」嗎？其匯率設定將會遺失。",
     "default_currency_change_title": "變更預設幣別",
     "default_currency_change_msg": "確定要將預設幣別改為 {{code}} 嗎？所有匯率將以 {{code}} 重新換算，餘額也會以 {{code}} 顯示。",
     "currency_code_invalid": "幣別代碼須為 1–4 個字",

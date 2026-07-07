@@ -137,6 +137,12 @@ export function GroupManagementPage() {
       toast.error(t('groups.currency_in_use_error', { code, count: inUseCount }));
       return;
     }
+    const isConfirmed = await confirm(t('groups.delete_currency_msg', { code }), {
+      title: t('groups.delete_currency'),
+      confirmLabel: t('common.delete'),
+      cancelLabel: t('common.cancel'),
+    });
+    if (!isConfirmed) return;
     await handleUpdateGroupCurrencySettings(
       defaultCurrency,
       groupCurrencies.filter(c => c.code !== code),
