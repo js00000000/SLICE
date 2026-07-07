@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import {
   Languages, CheckCircle2, Shield, Users,
-  Receipt, DollarSign, Loader2, Sparkles, Smartphone, UserCircle,
+  Receipt, DollarSign, Loader2, Sparkles, Globe, UserCircle,
   LogIn, Link2, Calculator, ChevronDown
 } from 'lucide-react';
 import { APP_NAME } from '../constants';
@@ -67,9 +67,9 @@ export function LandingPage({
       desc: isZh ? '自動算出最佳的結算關係，減少朋友間多次轉帳。' : 'Minimize transfers with our optimized settlement engine.'
     },
     {
-      icon: <Smartphone className="w-6 h-6 text-accent-orange stroke-[2.5]" />,
-      title: isZh ? '完美行動優先體驗' : 'Responsive RWD',
-      desc: isZh ? '精心雕琢的手機網頁介面，無 auto-zoom 困擾。' : 'Exquisite mobile UI with zero iOS auto-zoom issues.'
+      icon: <Globe className="w-6 h-6 text-accent-orange stroke-[2.5]" />,
+      title: isZh ? '多幣別自訂匯率' : 'Multi-Currency Support',
+      desc: isZh ? '出國旅遊混用日圓、美元也能分，群組自訂匯率、完全免費。' : 'Split in multiple currencies with custom rates — free, made for trips abroad.'
     },
     {
       icon: <Users className="w-6 h-6 text-accent-orange stroke-[2.5]" />,
@@ -116,6 +116,10 @@ export function LandingPage({
       a: '可以。每筆支出都支援自訂分攤金額、百分比分攤，並支援多人共同付款的情境。'
     },
     {
+      q: '出國旅遊可以多幣別分帳嗎？',
+      a: '可以。同一個群組能混用多種貨幣記帳（例如日圓、美元、台幣），由主辦人設定匯率，結算時自動換算成同一種貨幣——多幣別功能完全免費。'
+    },
+    {
       q: '朋友要怎麼加入我的群組？',
       a: '從群組頁面複製專屬邀請連結傳送即可，朋友點擊就能加入，無需事先註冊帳號。'
     },
@@ -139,6 +143,10 @@ export function LandingPage({
     {
       q: 'Can I split expenses unevenly?',
       a: 'Yes. Set custom amounts per person, or split by percentage. Multi-payer expenses are supported too.'
+    },
+    {
+      q: 'Can I split expenses in multiple currencies?',
+      a: 'Yes. Log expenses in different currencies within one group (e.g. JPY, USD, TWD) with host-set exchange rates — settlements convert automatically, completely free.'
     },
     {
       q: 'How do friends join my group?',
@@ -517,22 +525,21 @@ export function LandingPage({
           </a>
         </div>
 
-        <div className="flex items-center gap-4 text-[10px] font-bold tracking-wider uppercase">
-          <Link to="/about" className="text-main-text/50 hover:text-accent-orange transition-colors no-underline">
-            {isZh ? '關於' : 'About'}
-          </Link>
-          <span className="text-main-text/20">·</span>
-          <Link to="/compare/splitwise" className="text-main-text/50 hover:text-accent-orange transition-colors no-underline">
-            {isZh ? '比較 Splitwise' : 'vs Splitwise'}
-          </Link>
-          <span className="text-main-text/20">·</span>
-          <Link to="/privacy" className="text-main-text/50 hover:text-accent-orange transition-colors no-underline">
-            {isZh ? '隱私權' : 'Privacy'}
-          </Link>
-          <span className="text-main-text/20">·</span>
-          <Link to="/terms" className="text-main-text/50 hover:text-accent-orange transition-colors no-underline">
-            {isZh ? '服務條款' : 'Terms'}
-          </Link>
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-[10px] font-bold tracking-wider uppercase">
+          {[
+            { to: '/guide/travel-split', label: isZh ? '旅遊分帳攻略' : 'Travel Guide' },
+            { to: '/about', label: isZh ? '關於' : 'About' },
+            { to: '/compare/splitwise', label: isZh ? '比較 Splitwise' : 'vs Splitwise' },
+            { to: '/privacy', label: isZh ? '隱私權' : 'Privacy' },
+            { to: '/terms', label: isZh ? '服務條款' : 'Terms' }
+          ].map(({ to, label }, i) => (
+            <Fragment key={to}>
+              {i > 0 && <span className="text-main-text/20">·</span>}
+              <Link to={to} className="whitespace-nowrap text-main-text/50 hover:text-accent-orange transition-colors no-underline">
+                {label}
+              </Link>
+            </Fragment>
+          ))}
         </div>
       </footer>
       {isSponsorOpen && <SponsorModal onClose={() => setIsSponsorOpen(false)} />}

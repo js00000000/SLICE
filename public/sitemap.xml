@@ -11,6 +11,12 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://slice.fusion-labs.cc/" />
   </url>
   <url>
+    <loc>https://slice.fusion-labs.cc/guide/travel-split</loc>
+    <lastmod>2026-07-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://slice.fusion-labs.cc/about</loc>
     <lastmod>2026-07-08</lastmod>
     <changefreq>monthly</changefreq>
