@@ -89,6 +89,8 @@
     "not_claimed": "尚未綁定",
     "delete_member": "刪除成員",
     "delete_member_msg": "確定要刪除成員「{{name}}」嗎？此操作不可復原。",
+    "unclaim_member": "解除綁定",
+    "unclaim_member_msg": "要解除成員「{{name}}」與帳號的綁定嗎？成員與其紀錄會保留，但該身分可再次被綁定。",
     "error_unsettled": "無法刪除成員「{{name}}」，因為該成員還有未結清的款項 ({{balance}})。",
     "settled": "已結清",
     "owe": "待支付 ${{amount}}",

@@ -89,6 +89,8 @@
     "not_claimed": "Not Claimed",
     "delete_member": "Delete Member",
     "delete_member_msg": "Are you sure you want to delete '{{name}}'? This cannot be undone.",
+    "unclaim_member": "Release Member",
+    "unclaim_member_msg": "Release '{{name}}' from its linked account? The member and their history stay, but the slot becomes available to claim again.",
     "error_unsettled": "Cannot delete member '{{name}}' because they have unsettled balances ({{balance}}).",
     "settled": "Settled",
     "owe": "Owe ${{amount}}",

@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
-import { Users, Shield, X, Plus, Copy, Trash2, Share2, Settings } from 'lucide-react';
+import { Users, Shield, X, Plus, Copy, Trash2, Share2, Settings, UserMinus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { BottomNav } from '../components/BottomNav';
 import { AppHeader } from '../components/AppHeader';
@@ -22,7 +22,7 @@ export function GroupManagementPage() {
   const {
     members, expenses, completedSettlements, currentMember, currentGroup,
     handleUpdateProfile, handleDeleteMember, handleUpdateGroupName, handleDeleteGroup,
-    handleCreateMemberByHost, handleLeaveGroup
+    handleCreateMemberByHost, handleLeaveGroup, handleUnclaimMember
   } = useGroup();
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -67,6 +67,18 @@ export function GroupManagementPage() {
     const isConfirmed = await confirm(t('members.delete_member_msg', { name: member.name }));
     if (isConfirmed) {
       await handleDeleteMember(member.id);
+      toast.success(t('common.success'));
+    }
+  };
+
+  const handleUnclaimMemberByHost = async (member: Member) => {
+    const isConfirmed = await confirm(t('members.unclaim_member_msg', { name: member.name }), {
+      title: t('members.unclaim_member'),
+      confirmLabel: t('members.unclaim_member'),
+      cancelLabel: t('common.cancel'),
+    });
+    if (isConfirmed) {
+      await handleUnclaimMember(member.id);
       toast.success(t('common.success'));
     }
   };
@@ -217,10 +229,15 @@ export function GroupManagementPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {isClaimedByOthers && (
-                      <div className="text-[10px] font-black uppercase text-gray-400 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-full font-nunito">
-                        {t('members.claimed')}
-                      </div>
+                    {isClaimedByOthers && currentMember.isHost && (
+                      <button
+                        type="button"
+                        onClick={() => handleUnclaimMemberByHost(m)}
+                        className="p-1.5 border-2 border-main-text text-main-text bg-white rounded-lg transition-all duration-150 cursor-pointer hover:bg-brand-light hover:scale-105 active:scale-95"
+                        title={t('members.unclaim_member')}
+                      >
+                        <UserMinus className="w-4.5 h-4.5 stroke-[2.5]" />
+                      </button>
                     )}
                     {m.id !== currentMember.id && currentMember.isHost && (
                       <button

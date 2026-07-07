@@ -272,6 +272,21 @@ export const firebaseService = {
     return memberRef;
   },
 
+  // Host detaches another user from a member slot without deleting the slot or its
+  // expense history. Sets member.userId back to null and removes the membership index
+  // entry. The unclaimed user's /users doc is intentionally left untouched — the host
+  // has no write access to it (per rules); the slot simply becomes re-claimable and the
+  // detached user drops to member selection next time they open the group.
+  async unclaimMember(groupId: string, memberId: string, userId: string) {
+    const batch = writeBatch(db);
+    batch.update(doc(db, 'groups', groupId, 'members', memberId), {
+      userId: null,
+      updatedAt: serverTimestamp(),
+    });
+    batch.delete(doc(db, 'groups', groupId, 'claimedUserIds', userId));
+    await batch.commit();
+  },
+
   async deleteMember(groupId: string, memberId: string, userId?: string | null) {
     if (userId) {
       const batch = writeBatch(db);

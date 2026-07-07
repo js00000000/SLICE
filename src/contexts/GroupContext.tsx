@@ -39,6 +39,7 @@ interface GroupContextType {
   handleCreateMember: (name: string) => Promise<void>;
   handleCreateMemberByHost: (name: string) => Promise<void>;
   handleDeleteMember: (memberId: string) => Promise<void>;
+  handleUnclaimMember: (memberId: string) => Promise<void>;
   handleUpdateProfile: (data: Partial<Member>) => Promise<void>;
   handleUpdateGroupName: (newName: string) => Promise<void>;
   handleAddExpense: (expenseData: ExpenseInput) => Promise<void>;
@@ -441,6 +442,18 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     await firebaseService.deleteMember(groupId, memberId, memberToDelete?.userId);
   };
 
+  const handleUnclaimMember = async (memberId: string) => {
+    if (!user || !groupId) return;
+    const currentMember = members.find(m => m.userId === user.uid);
+    if (!currentMember?.isHost) {
+      toast.error(t('common.error_host_only'));
+      return;
+    }
+    const memberToUnclaim = members.find(m => m.id === memberId);
+    if (!memberToUnclaim?.userId) return;
+    await firebaseService.unclaimMember(groupId, memberId, memberToUnclaim.userId);
+  };
+
   const handleUpdateProfile = async (data: Partial<Member>) => {
     if (!user || !groupId || !currentMemberId) return;
     await firebaseService.updateMember(groupId, currentMemberId, data);
@@ -641,7 +654,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     isHost, isSettled,
     isLoading,
     handleCreateGroup, handleJoinGroup, handleLeaveGroup, handleDeleteGroup,
-    handleSelectMember, handleCreateMember, handleCreateMemberByHost, handleDeleteMember, handleUpdateProfile,
+    handleSelectMember, handleCreateMember, handleCreateMemberByHost, handleDeleteMember, handleUnclaimMember, handleUpdateProfile,
     handleUpdateGroupName, handleAddExpense, handleUpdateExpense, handleDeleteExpense,
     handleSettleGroup, handleUnsettleGroup,
     handleMarkSettlementPaid, handleUnmarkSettlement,
