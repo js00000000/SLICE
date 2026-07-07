@@ -233,6 +233,7 @@
     "install_title": "Add SLICE to your Home Screen",
     "install_subtitle": "Opens instantly like an app — handy on the go",
     "install_btn": "Install",
+    "install_menu": "Install App",
     "dismiss": "Dismiss install prompt",
     "ios_how": "How to add to Home Screen?",
     "ios_step_1": "Tap the Share button (📤) at the bottom of Safari.",

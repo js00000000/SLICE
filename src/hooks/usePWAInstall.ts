@@ -92,8 +92,12 @@ function isInstalled(): boolean {
  * - `platform === 'native'` — Chromium captured `beforeinstallprompt`; call
  *   `promptInstall()` to show the browser's install dialog.
  * - `platform === 'ios'` — iOS Safari has no install API; show manual steps.
- * - `platform === null` — don't show anything (already installed/standalone,
- *   dismissed recently, webview, or first-ever session).
+ * - `platform === null` — install isn't applicable at all (already
+ *   installed/standalone, or inside a webview).
+ *
+ * `platform` alone gates persistent entry points (e.g. the header menu item).
+ * The unsolicited banner additionally respects `showBanner`, which stays false
+ * on the first-ever session and for two weeks after a dismissal.
  */
 export function usePWAInstall() {
   const [, setTick] = useState(0);
@@ -133,22 +137,18 @@ export function usePWAInstall() {
   }, [forceUpdate]);
 
   let platform: InstallPlatform | null = null;
+  if (!isStandalone() && !isInstalled() && !isWebview()) {
+    if (deferredPrompt) platform = 'native';
+    else if (isIOS()) platform = 'ios';
+  }
+
   let enoughSessions = false;
   try {
     enoughSessions =
       (parseInt(localStorage.getItem(SESSION_COUNT_KEY) ?? '0', 10) || 0) >= MIN_SESSIONS;
   } catch { /* storage unavailable */ }
 
-  if (
-    enoughSessions &&
-    !isStandalone() &&
-    !isInstalled() &&
-    !isDismissedRecently() &&
-    !isWebview()
-  ) {
-    if (deferredPrompt) platform = 'native';
-    else if (isIOS()) platform = 'ios';
-  }
+  const showBanner = platform !== null && enoughSessions && !isDismissedRecently();
 
-  return { platform, promptInstall, dismiss };
+  return { platform, showBanner, promptInstall, dismiss };
 }

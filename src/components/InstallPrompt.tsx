@@ -5,10 +5,10 @@ import { usePWAInstall } from '../hooks/usePWAInstall';
 
 export function InstallPrompt() {
   const { t } = useTranslation();
-  const { platform, promptInstall, dismiss } = usePWAInstall();
+  const { platform, showBanner, promptInstall, dismiss } = usePWAInstall();
   const [expanded, setExpanded] = useState(false);
 
-  if (!platform) return null;
+  if (!platform || !showBanner) return null;
 
   return (
     <div className="fixed-in-container bottom-0 z-40 px-4 pb-[calc(env(safe-area-inset-bottom)+92px)]">

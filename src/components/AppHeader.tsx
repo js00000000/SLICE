@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Languages, User as LucideUser, LayoutGrid, LogOut, Menu } from 'lucide-react';
+import { ArrowLeft, Languages, User as LucideUser, LayoutGrid, LogOut, Menu, Smartphone } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { APP_NAME } from '../constants';
 import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext';
+import { usePWAInstall } from '../hooks/usePWAInstall';
 
 interface AppHeaderProps {
   showBack?: boolean;
@@ -26,7 +27,8 @@ export function AppHeader({
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user, handleLogout } = useAuth();
-  const { confirm } = useDialog();
+  const { confirm, alert } = useDialog();
+  const { platform: installPlatform, promptInstall } = usePWAInstall();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -70,6 +72,18 @@ export function AppHeader({
   const handleGroups = () => {
     setMenuOpen(false);
     navigate('/');
+  };
+
+  const handleInstall = async () => {
+    setMenuOpen(false);
+    if (installPlatform === 'native') {
+      await promptInstall();
+    } else if (installPlatform === 'ios') {
+      await alert(`1. ${t('pwa.ios_step_1')}\n2. ${t('pwa.ios_step_2')}`, {
+        title: t('pwa.ios_how'),
+        confirmLabel: t('common.confirm'),
+      });
+    }
   };
 
   const handleLogoutClick = async () => {
@@ -164,6 +178,21 @@ export function AppHeader({
                   {nextLangLabel}
                 </span>
               </button>
+
+              {installPlatform && (
+                <button
+                  role="menuitem"
+                  onClick={handleInstall}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left text-main-text hover:bg-brand-light transition-colors cursor-pointer border-b-2 border-main-text/10 last:border-b-0"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-brand-light border-2 border-main-text flex items-center justify-center shrink-0">
+                    <Smartphone className="w-4 h-4 stroke-[2.5]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-black">{t('pwa.install_menu')}</div>
+                  </div>
+                </button>
+              )}
 
               {showGroups && (
                 <button

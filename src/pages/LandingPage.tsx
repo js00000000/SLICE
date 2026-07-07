@@ -111,6 +111,10 @@ export function LandingPage({
       a: '從群組頁面複製專屬邀請連結傳送即可，朋友點擊就能加入，無需事先註冊帳號。'
     },
     {
+      q: '可以把 SLICE 安裝成 App 嗎？',
+      a: '可以。SLICE 是 PWA（漸進式網頁應用），Android 使用 Chrome 選單的「安裝應用程式」，iPhone 使用 Safari 分享按鈕的「加入主畫面」，即可像 App 一樣從主畫面直接開啟，無需透過 App Store 下載。'
+    },
+    {
       q: '我的資料安全嗎？',
       a: '群組資料儲存於 Google Firebase，僅您邀請的成員可存取。我們不出售、不分享您的資料，詳見隱私權政策。'
     }
@@ -130,6 +134,10 @@ export function LandingPage({
     {
       q: 'How do friends join my group?',
       a: "Share the unique invite link from the group page. They click and they're in — no SLICE account required up front."
+    },
+    {
+      q: 'Can I install SLICE as an app?',
+      a: 'Yes. SLICE is a PWA (progressive web app) — on Android use "Install app" from the Chrome menu; on iPhone use "Add to Home Screen" from the Safari share button. It then launches from your home screen like a native app, no App Store needed.'
     },
     {
       q: 'Is my data private?',
