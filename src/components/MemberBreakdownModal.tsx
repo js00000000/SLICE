@@ -44,10 +44,10 @@ export function MemberBreakdownModal({ member, mode, expenses, onClose }: Member
 
   return (
     <div
-      className="fixed inset-0 bg-main-text/40 backdrop-blur-sm z-50 flex items-end justify-center pt-16 sm:pt-20 px-0 pb-0 animate-in fade-in duration-200 select-none"
+      className="fixed inset-0 bg-main-text/40 backdrop-blur-sm z-50 flex items-center justify-center p-5 animate-in fade-in duration-200 select-none"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-white w-full max-w-md rounded-t-[24px] border-t-3 border-x-3 border-main-text shadow-[0_-12px_40px_rgba(26,26,46,0.15)] flex flex-col max-h-[calc(100dvh-4rem)] sm:max-h-[calc(100dvh-5rem)] overflow-hidden animate-slide-up">
+      <div className="bg-white w-full max-w-md rounded-[24px] border-3 border-main-text shadow-[6px_6px_0px_#1A1A2E] flex flex-col h-[min(600px,80dvh)] overflow-hidden animate-in zoom-in-95 duration-200">
 
         {/* Modal Header */}
         <div className="flex items-start justify-between gap-3 px-6 py-4 border-b-3 border-main-text shrink-0 bg-brand-light">
@@ -101,6 +101,17 @@ export function MemberBreakdownModal({ member, mode, expenses, onClose }: Member
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Modal Actions */}
+        <div className="px-6 py-4 border-t-3 border-main-text bg-white shrink-0">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full flex items-center justify-center gap-2 py-3.5 bg-white text-main-text rounded-xl font-nunito font-black border-3 border-main-text shadow-[4px_4px_0px_#1A1A2E] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_#1A1A2E] transition-all duration-150 cursor-pointer"
+          >
+            {t('common.close')}
+          </button>
         </div>
       </div>
     </div>
