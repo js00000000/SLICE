@@ -134,6 +134,12 @@ export default function App() {
   const [isDeletingUser, setIsDeletingUser] = useState(false);
   const [isDeletingGroup, setIsDeletingGroup] = useState(false);
 
+  // Bulk user selection & deletion
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [bulkDeleteProgress, setBulkDeleteProgress] = useState({ done: 0, total: 0 });
+
   // Auth monitoring
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -330,10 +336,11 @@ export default function App() {
   const handleDeleteGroup = async (groupId: string) => {
     setIsDeletingGroup(true);
     try {
-      // 1. Delete all subcollections (members, expenses, settlements)
+      // 1. Delete all subcollections (members, expenses, settlements, membership index)
       const membersSnap = await getDocs(collection(db, "groups", groupId, "members"));
       const expensesSnap = await getDocs(collection(db, "groups", groupId, "expenses"));
       const settlementsSnap = await getDocs(collection(db, "groups", groupId, "settlements"));
+      const claimedSnap = await getDocs(collection(db, "groups", groupId, "claimedUserIds"));
 
       const batch = writeBatch(db);
 
@@ -347,6 +354,10 @@ export default function App() {
 
       settlementsSnap.forEach((sDoc) => {
         batch.delete(sDoc.ref);
+      });
+
+      claimedSnap.forEach((cDoc) => {
+        batch.delete(cDoc.ref);
       });
 
       // 2. Delete group doc itself
@@ -391,82 +402,107 @@ export default function App() {
     }
   };
 
+  // Core deletion routine for a single user and all related data.
+  // Pure Firestore work — does NOT touch UI state or refresh the lists,
+  // so it can be reused by both the single-user and bulk-delete flows.
+  // `skipUserIds` lets bulk delete avoid updating references on users that
+  // are themselves being deleted in the same batch.
+  const deleteUserData = async (userId: string, skipUserIds?: Set<string>) => {
+    // 1. Find user's settings to get joinedGroupIds
+    const userRef = doc(db, "users", userId);
+    const userSnap = await getDoc(userRef);
+    let joinedGroupIds: string[] = [];
+    if (userSnap.exists()) {
+      const data = userSnap.data();
+      joinedGroupIds = data.joinedGroupIds || [];
+    }
+
+    // 2. Groups created by this user
+    const groupsCreatedByUser = groupsList.filter(g => g.createdBy === userId);
+
+    // Delete all groups created by this user
+    for (const g of groupsCreatedByUser) {
+      const membersSnap = await getDocs(collection(db, "groups", g.id, "members"));
+      const expensesSnap = await getDocs(collection(db, "groups", g.id, "expenses"));
+      const settlementsSnap = await getDocs(collection(db, "groups", g.id, "settlements"));
+      const claimedSnap = await getDocs(collection(db, "groups", g.id, "claimedUserIds"));
+
+      const batch = writeBatch(db);
+      membersSnap.forEach((mDoc) => batch.delete(mDoc.ref));
+      expensesSnap.forEach((eDoc) => batch.delete(eDoc.ref));
+      settlementsSnap.forEach((sDoc) => batch.delete(sDoc.ref));
+      claimedSnap.forEach((cDoc) => batch.delete(cDoc.ref));
+      batch.delete(doc(db, "groups", g.id));
+      await batch.commit();
+
+      // Also clean references for other users of this deleted group
+      // (skip users queued for deletion — their docs are going away anyway)
+      const usersToUpdate = usersList.filter(u =>
+        u.id !== userId &&
+        !(skipUserIds && skipUserIds.has(u.id)) &&
+        (u.lastGroupId === g.id || (u.joinedGroupIds && u.joinedGroupIds.includes(g.id)))
+      );
+
+      for (const u of usersToUpdate) {
+        const otherUserRef = doc(db, "users", u.id);
+        const updates: Record<string, unknown> = {};
+        if (u.lastGroupId === g.id) {
+          updates.lastGroupId = null;
+        }
+        if (u.joinedGroupIds && u.joinedGroupIds.includes(g.id)) {
+          updates.joinedGroupIds = arrayRemove(g.id);
+        }
+        await updateDoc(otherUserRef, updates);
+      }
+
+      if (selectedGroup && selectedGroup.id === g.id) {
+        setSelectedGroup(null);
+      }
+    }
+
+    // 3. Remove user membership from groups they joined but did not create
+    const groupsJoinedButNotCreated = joinedGroupIds.filter(groupId =>
+      !groupsCreatedByUser.some(g => g.id === groupId)
+    );
+
+    for (const groupId of groupsJoinedButNotCreated) {
+      try {
+        const membersRef = collection(db, "groups", groupId, "members");
+        const q = query(membersRef, where("userId", "==", userId));
+        const qSnap = await getDocs(q);
+
+        const batch = writeBatch(db);
+        qSnap.forEach((doc) => {
+          batch.delete(doc.ref);
+        });
+        // Purge this user's membership-index entry (doc ID == uid). Idempotent
+        // if it doesn't exist, so no need to check first.
+        batch.delete(doc(db, "groups", groupId, "claimedUserIds", userId));
+        await batch.commit();
+      } catch (err) {
+        console.error(`Error removing user ${userId} from group ${groupId}:`, err);
+      }
+    }
+
+    // 4. Finally, delete the user doc itself
+    await deleteDoc(userRef);
+  };
+
   const handleDeleteUser = async (userId: string) => {
     setIsDeletingUser(true);
     try {
-      // 1. Find user's settings to get joinedGroupIds
-      const userRef = doc(db, "users", userId);
-      const userSnap = await getDoc(userRef);
-      let joinedGroupIds: string[] = [];
-      if (userSnap.exists()) {
-        const data = userSnap.data();
-        joinedGroupIds = data.joinedGroupIds || [];
-      }
-
-      // 2. Groups created by this user
-      const groupsCreatedByUser = groupsList.filter(g => g.createdBy === userId);
-      
-      // Delete all groups created by this user
-      for (const g of groupsCreatedByUser) {
-        const membersSnap = await getDocs(collection(db, "groups", g.id, "members"));
-        const expensesSnap = await getDocs(collection(db, "groups", g.id, "expenses"));
-        const settlementsSnap = await getDocs(collection(db, "groups", g.id, "settlements"));
-
-        const batch = writeBatch(db);
-        membersSnap.forEach((mDoc) => batch.delete(mDoc.ref));
-        expensesSnap.forEach((eDoc) => batch.delete(eDoc.ref));
-        settlementsSnap.forEach((sDoc) => batch.delete(sDoc.ref));
-        batch.delete(doc(db, "groups", g.id));
-        await batch.commit();
-
-        // Also clean references for other users of this deleted group
-        const usersToUpdate = usersList.filter(u => 
-          u.id !== userId && (u.lastGroupId === g.id || (u.joinedGroupIds && u.joinedGroupIds.includes(g.id)))
-        );
-
-        for (const u of usersToUpdate) {
-          const otherUserRef = doc(db, "users", u.id);
-          const updates: Record<string, unknown> = {};
-          if (u.lastGroupId === g.id) {
-            updates.lastGroupId = null;
-          }
-          if (u.joinedGroupIds && u.joinedGroupIds.includes(g.id)) {
-            updates.joinedGroupIds = arrayRemove(g.id);
-          }
-          await updateDoc(otherUserRef, updates);
-        }
-        
-        if (selectedGroup && selectedGroup.id === g.id) {
-          setSelectedGroup(null);
-        }
-      }
-
-      // 3. Remove user membership from groups they joined but did not create
-      const groupsJoinedButNotCreated = joinedGroupIds.filter(groupId => 
-        !groupsCreatedByUser.some(g => g.id === groupId)
-      );
-
-      for (const groupId of groupsJoinedButNotCreated) {
-        try {
-          const membersRef = collection(db, "groups", groupId, "members");
-          const q = query(membersRef, where("userId", "==", userId));
-          const qSnap = await getDocs(q);
-          
-          const batch = writeBatch(db);
-          qSnap.forEach((doc) => {
-            batch.delete(doc.ref);
-          });
-          await batch.commit();
-        } catch (err) {
-          console.error(`Error removing user ${userId} from group ${groupId}:`, err);
-        }
-      }
-
-      // 4. Finally, delete the user doc itself
-      await deleteDoc(userRef);
+      await deleteUserData(userId);
 
       setUserToDelete(null);
-      
+
+      // Drop from any pending selection
+      setSelectedUserIds(prev => {
+        if (!prev.has(userId)) return prev;
+        const next = new Set(prev);
+        next.delete(userId);
+        return next;
+      });
+
       // Refresh list
       await fetchData();
 
@@ -478,6 +514,62 @@ export default function App() {
       setIsDeletingUser(false);
     }
   };
+
+  // Bulk-delete every currently selected user and all their related data.
+  const handleBulkDeleteUsers = async () => {
+    const ids = Array.from(selectedUserIds);
+    if (ids.length === 0) return;
+
+    const idSet = new Set(ids);
+    setIsBulkDeleting(true);
+    setBulkDeleteProgress({ done: 0, total: ids.length });
+
+    let successCount = 0;
+    const failedIds: string[] = [];
+
+    for (const userId of ids) {
+      try {
+        await deleteUserData(userId, idSet);
+        successCount += 1;
+      } catch (error) {
+        console.error(`Error deleting user ${userId}:`, error);
+        failedIds.push(userId);
+      } finally {
+        setBulkDeleteProgress(p => ({ ...p, done: p.done + 1 }));
+      }
+    }
+
+    // Keep only failures selected so the operator can retry them
+    setSelectedUserIds(new Set(failedIds));
+    setShowBulkDeleteConfirm(false);
+    setIsBulkDeleting(false);
+    setBulkDeleteProgress({ done: 0, total: 0 });
+
+    await fetchData();
+
+    if (failedIds.length === 0) {
+      toast.success(`已成功刪除 ${successCount} 位使用者及其相關資料！`);
+    } else if (successCount === 0) {
+      toast.error("批次刪除失敗，請檢查權限或控制台日誌。");
+    } else {
+      toast.error(`已刪除 ${successCount} 位，${failedIds.length} 位刪除失敗（仍保留於選取中）。`);
+    }
+  };
+
+  // Selection helpers
+  const toggleUserSelection = (userId: string) => {
+    setSelectedUserIds(prev => {
+      const next = new Set(prev);
+      if (next.has(userId)) {
+        next.delete(userId);
+      } else {
+        next.add(userId);
+      }
+      return next;
+    });
+  };
+
+  const clearUserSelection = () => setSelectedUserIds(new Set());
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -567,6 +659,32 @@ export default function App() {
       }
       return userSortOrder === "asc" ? comparison : -comparison;
     });
+
+  // Select-all state is scoped to the currently visible (filtered) rows
+  const selectedVisibleCount = filteredUsers.reduce(
+    (n, u) => (selectedUserIds.has(u.id) ? n + 1 : n),
+    0
+  );
+  const allVisibleSelected = filteredUsers.length > 0 && selectedVisibleCount === filteredUsers.length;
+  const someVisibleSelected = selectedVisibleCount > 0 && !allVisibleSelected;
+
+  const toggleSelectAllVisible = () => {
+    setSelectedUserIds(prev => {
+      const next = new Set(prev);
+      if (allVisibleSelected) {
+        // Unselect all currently visible rows
+        filteredUsers.forEach(u => next.delete(u.id));
+      } else {
+        // Select all currently visible rows
+        filteredUsers.forEach(u => next.add(u.id));
+      }
+      return next;
+    });
+  };
+
+  // Users backing the current selection (may include rows filtered out of view)
+  const selectedUsers = usersList.filter(u => selectedUserIds.has(u.id));
+  const groupsToBeDeletedByBulk = groupsList.filter(g => selectedUserIds.has(g.createdBy));
 
   // Filter & Sort Groups List
   const filteredGroups = groupsList
@@ -923,12 +1041,56 @@ export default function App() {
               </div>
             </div>
 
+            {/* Bulk selection action bar */}
+            {selectedUserIds.size > 0 && (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-main-text text-white border-2 border-main-text rounded-2xl px-4 py-3 shadow-[4px_4px_0px_#1A1A2E] animate-fadeIn">
+                <div className="flex items-center gap-3">
+                  <span className="bg-accent-orange text-white font-nunito font-black text-sm w-8 h-8 flex items-center justify-center rounded-lg border-2 border-white/20 shrink-0">
+                    {selectedUserIds.size}
+                  </span>
+                  <span className="text-sm font-bold">
+                    已選取 {selectedUserIds.size} 位使用者
+                    {groupsToBeDeletedByBulk.length > 0 && (
+                      <span className="text-white/60 font-semibold">
+                        （含 {groupsToBeDeletedByBulk.length} 個建立的群組）
+                      </span>
+                    )}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 self-start sm:self-auto">
+                  <button
+                    onClick={clearUserSelection}
+                    className="bg-white/10 hover:bg-white/20 text-white font-nunito font-black text-sm py-2 px-4 border-2 border-white/30 rounded-xl active:translate-x-[1px] active:translate-y-[1px] cursor-pointer"
+                  >
+                    取消選取
+                  </button>
+                  <button
+                    onClick={() => setShowBulkDeleteConfirm(true)}
+                    className="bg-red-500 hover:bg-red-600 text-white font-nunito font-black text-sm py-2 px-4 border-2 border-white rounded-xl shadow-[2px_2px_0px_rgba(255,255,255,0.25)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none btn-bounce cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    刪除選取項目
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Users table */}
             <div className="bg-white border-2 border-main-text rounded-2xl overflow-hidden shadow-[4px_4px_0px_#1A1A2E]">
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-left">
                   <thead>
                     <tr className="bg-brand-light border-b-2 border-main-text text-sm font-bold text-gray-600">
+                      <th className="p-4 w-px">
+                        <input
+                          type="checkbox"
+                          aria-label="全選目前顯示的使用者"
+                          checked={allVisibleSelected}
+                          ref={(el) => { if (el) el.indeterminate = someVisibleSelected; }}
+                          onChange={toggleSelectAllVisible}
+                          className="w-5 h-5 accent-accent-orange cursor-pointer align-middle"
+                        />
+                      </th>
                       <th className="p-4 font-nunito font-black">用戶識別碼 (UID)</th>
                       <th className="p-4 font-nunito font-black">登入管道</th>
                       <th className="p-4 font-nunito font-black">來源地區</th>
@@ -941,7 +1103,19 @@ export default function App() {
                   <tbody className="divide-y-2 divide-gray-100">
                     {filteredUsers.length > 0 ? (
                       filteredUsers.map((u) => (
-                        <tr key={u.id} className="hover:bg-gray-50/50 transition-colors">
+                        <tr
+                          key={u.id}
+                          className={`transition-colors ${selectedUserIds.has(u.id) ? "bg-brand-light/60" : "hover:bg-gray-50/50"}`}
+                        >
+                          <td className="p-4 w-px">
+                            <input
+                              type="checkbox"
+                              aria-label={`選取使用者 ${u.id}`}
+                              checked={selectedUserIds.has(u.id)}
+                              onChange={() => toggleUserSelection(u.id)}
+                              className="w-5 h-5 accent-accent-orange cursor-pointer align-middle"
+                            />
+                          </td>
                           <td className="p-4 font-mono text-xs font-semibold flex items-center gap-2">
                             <span className="bg-gray-50 px-2 py-1 border border-gray-200 rounded text-gray-600 font-mono">
                               {u.id}
@@ -1001,7 +1175,7 @@ export default function App() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={7} className="p-8 text-center text-sm font-semibold text-gray-400">
+                        <td colSpan={8} className="p-8 text-center text-sm font-semibold text-gray-400">
                           無符合條件的使用者
                         </td>
                       </tr>
@@ -1581,6 +1755,84 @@ export default function App() {
                   className="flex-1 bg-red-500 hover:bg-red-600 text-white font-nunito font-black text-sm py-2.5 px-4 border-2 border-main-text rounded-xl shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] btn-bounce cursor-pointer text-center flex items-center justify-center gap-1.5 disabled:opacity-50"
                 >
                   {isDeletingGroup ? "刪除中..." : "確認刪除"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* BULK USER DELETE CONFIRMATION MODAL */}
+        {showBulkDeleteConfirm && (
+          <div className="fixed inset-0 bg-[#1A1A2E]/50 flex items-center justify-center p-4 z-50 overflow-y-auto font-plus-jakarta">
+            <div className="bg-white border-3 border-main-text rounded-2xl w-full max-w-md overflow-hidden shadow-[6px_6px_0px_#1A1A2E] flex flex-col animate-fadeIn">
+              <div className="bg-[#FFF0EA] border-b-3 border-main-text p-5 flex items-center gap-3 shrink-0">
+                <div className="bg-accent-orange p-2 rounded-lg border-2 border-main-text">
+                  <UserX className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-lg font-nunito font-black text-main-text">
+                  批次刪除使用者
+                </h3>
+              </div>
+              <div className="p-6 space-y-4 overflow-y-auto">
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  您即將刪除 <strong className="text-main-text">{selectedUserIds.size}</strong> 位使用者及其所有相關資料。
+                </p>
+                <div className="bg-red-50 border-2 border-red-500 rounded-xl p-4 text-xs space-y-1.5 text-red-700">
+                  <p className="font-bold flex items-center gap-1.5">
+                    <AlertTriangle className="w-4 h-4 text-red-500" />
+                    警告：此動作無法復原！
+                  </p>
+                  <p>1. 這些使用者的設定檔將會被永久刪除。</p>
+                  <p>2. <strong>由這些使用者建立的 {groupsToBeDeletedByBulk.length} 個分帳群組及其帳目和成員資料亦將被一併刪除。</strong></p>
+                  <p>3. 這些使用者加入的其他群組將會自動移除其成員資料。</p>
+                </div>
+
+                {/* Users to be deleted */}
+                <div className="space-y-1.5">
+                  <span className="text-xs font-bold text-gray-500">即將被刪除的使用者：</span>
+                  <div className="max-h-32 overflow-y-auto border border-dashed border-gray-200 rounded-lg p-2 bg-gray-50 space-y-1">
+                    {selectedUsers.map(u => (
+                      <div key={u.id} className="text-xs font-semibold text-gray-600 flex justify-between gap-2">
+                        <span className="font-mono truncate max-w-[200px]">{u.id}</span>
+                        <span className="text-[10px] text-gray-400 shrink-0">
+                          {u.isAnonymous ? "訪客" : "Google"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {isBulkDeleting && bulkDeleteProgress.total > 0 && (
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-xs font-bold text-gray-500">
+                      <span>刪除進度</span>
+                      <span>{bulkDeleteProgress.done} / {bulkDeleteProgress.total}</span>
+                    </div>
+                    <div className="w-full h-2.5 bg-gray-100 border border-main-text rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-accent-orange transition-all duration-300"
+                        style={{ width: `${(bulkDeleteProgress.done / bulkDeleteProgress.total) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="bg-gray-50 border-t-2 border-main-text p-4 flex gap-3 shrink-0">
+                <button
+                  onClick={() => setShowBulkDeleteConfirm(false)}
+                  disabled={isBulkDeleting}
+                  className="flex-1 bg-white hover:bg-gray-100 text-main-text font-nunito font-black text-sm py-2.5 px-4 border-2 border-main-text rounded-xl shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] btn-bounce cursor-pointer text-center disabled:opacity-50"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleBulkDeleteUsers}
+                  disabled={isBulkDeleting}
+                  className="flex-1 bg-red-500 hover:bg-red-600 text-white font-nunito font-black text-sm py-2.5 px-4 border-2 border-main-text rounded-xl shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] btn-bounce cursor-pointer text-center flex items-center justify-center gap-1.5 disabled:opacity-50"
+                >
+                  {isBulkDeleting
+                    ? `刪除中... (${bulkDeleteProgress.done}/${bulkDeleteProgress.total})`
+                    : `確認刪除 ${selectedUserIds.size} 位`}
                 </button>
               </div>
             </div>

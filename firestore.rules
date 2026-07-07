@@ -73,7 +73,7 @@ service cloud.firestore {
         // memberId) so the client can skip a redundant backfill write when the
         // entry already exists. exists() in rules works regardless of this.
         allow get: if uid == request.auth.uid;
-        allow list: if false;
+        allow list: if isAdmin();
         // User can create/update their own entry when they have (or are acquiring in
         // this same batch) a member slot with userId == request.auth.uid.
         // getAfter() reads the projected post-batch state, allowing atomic
@@ -82,10 +82,13 @@ service cloud.firestore {
           && getAfter(/databases/$(database)/documents/groups/$(groupId)/members/$(request.resource.data.memberId)).data.userId == request.auth.uid;
         allow update: if uid == request.auth.uid
           && getAfter(/databases/$(database)/documents/groups/$(groupId)/members/$(request.resource.data.memberId)).data.userId == request.auth.uid;
-        // User can remove their own entry (leave), or the host can remove any entry (member deletion).
-        allow delete: if isAuthenticated() && (
-          uid == request.auth.uid
-          || get(/databases/$(database)/documents/groups/$(groupId)).data.createdBy == request.auth.uid
+        // User can remove their own entry (leave), the host can remove any entry
+        // (member deletion), or an admin can purge the index (backoffice cleanup).
+        allow delete: if isAdmin() || (
+          isAuthenticated() && (
+            uid == request.auth.uid
+            || get(/databases/$(database)/documents/groups/$(groupId)).data.createdBy == request.auth.uid
+          )
         );
       }
 
@@ -125,7 +128,7 @@ service cloud.firestore {
       // Expenses subcollection — gated on group membership to prevent data leaks
       // and unauthorized writes by users who are not part of this group.
       match /expenses/{expenseId} {
-        allow read: if isGroupMember(groupId);
+        allow read: if isAdmin() || isGroupMember(groupId);
 
         allow create: if isGroupMember(groupId)
           && request.resource.data.amount is number
@@ -139,14 +142,14 @@ service cloud.firestore {
           && request.resource.data.description is string
           && request.resource.data.description.size() <= 100;
 
-        allow delete: if isGroupMember(groupId);
+        allow delete: if isAdmin() || isGroupMember(groupId);
       }
 
       // Manual settlement records subcollection
       // Each record represents an out-of-band money transfer that one party has
       // confirmed completing (e.g. "Alice paid Bob $50 via Venmo").
       match /settlements/{settlementId} {
-        allow read: if isGroupMember(groupId);
+        allow read: if isAdmin() || isGroupMember(groupId);
 
         // Only the payer or receiver can mark a payment complete.
         // The marker must be authenticated as the member referenced by
