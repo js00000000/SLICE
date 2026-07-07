@@ -28,6 +28,7 @@ import { useAuth } from './contexts/AuthContext';
 import { useGroup } from './contexts/GroupContext';
 import { isWebview } from './utils/webview';
 import { WebviewWarningBanner } from './components/WebviewWarningBanner';
+import { InstallPrompt } from './components/InstallPrompt';
 
 const isValidRoute = (pathname: string): boolean => {
   if (pathname === '/' || pathname === '') return true;
@@ -253,7 +254,8 @@ export default function App() {
           <WebviewWarningBanner onDismiss={() => setShowWebviewBanner(false)} />
         </div>
       )}
-      
+      {!showWebviewBanner && !isLoading && <InstallPrompt />}
+
       {isLoading ? (
         <AppSkeleton />
       ) : (

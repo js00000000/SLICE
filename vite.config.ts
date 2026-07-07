@@ -15,7 +15,7 @@ export default defineConfig({
         'icons.svg',
         'robots.txt',
         'sitemap.xml',
-        'apple-touch-icon-180x180.png',
+        'apple-touch-icon.png',
       ],
       devOptions: {
         // Generate/serve the service worker during `npm run dev` so PWA
@@ -23,6 +23,7 @@ export default defineConfig({
         enabled: true,
       },
       manifest: {
+        id: '/',
         name: 'SLICE 群組分帳',
         short_name: 'SLICE',
         description:

@@ -229,6 +229,13 @@
   },
   "pwa": {
     "update_available": "有新版本可用",
-    "refresh": "重新整理"
+    "refresh": "重新整理",
+    "install_title": "把 SLICE 加到主畫面",
+    "install_subtitle": "像 App 一樣秒開，出遊分帳更順手",
+    "install_btn": "安裝",
+    "dismiss": "關閉安裝提示",
+    "ios_how": "如何加入主畫面？",
+    "ios_step_1": "點選 Safari 下方的分享按鈕（📤）。",
+    "ios_step_2": "向下捲動並選擇「加入主畫面」。"
   }
 }

@@ -229,6 +229,13 @@
   },
   "pwa": {
     "update_available": "New version available",
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "install_title": "Add SLICE to your Home Screen",
+    "install_subtitle": "Opens instantly like an app — handy on the go",
+    "install_btn": "Install",
+    "dismiss": "Dismiss install prompt",
+    "ios_how": "How to add to Home Screen?",
+    "ios_step_1": "Tap the Share button (📤) at the bottom of Safari.",
+    "ios_step_2": "Scroll down and tap \"Add to Home Screen\"."
   }
 }
