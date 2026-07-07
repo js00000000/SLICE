@@ -194,7 +194,7 @@ export function ComparePage() {
 
           <div className="text-center">
             <Link
-              to="/"
+              to="/#get-started"
               className="inline-flex items-center gap-2 bg-accent-orange text-white font-nunito font-black text-lg px-8 py-4 rounded-2xl border-3 border-main-text shadow-[4px_4px_0px_#1A1A2E] hover:bg-[#ff7b4b] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[2px_2px_0px_#1A1A2E] transition-all no-underline"
             >
               {content.cta}

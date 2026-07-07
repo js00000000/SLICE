@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import {
@@ -27,9 +27,18 @@ export function LandingPage({
   hasWebviewBanner = false
 }: LandingPageProps) {
   const { t, i18n } = useTranslation();
+  const location = useLocation();
   const [isSponsorOpen, setIsSponsorOpen] = useState(false);
   const [openFaqs, setOpenFaqs] = useState<Set<number>>(new Set());
   const isZh = i18n.resolvedLanguage?.startsWith('zh');
+
+  // Content pages (about/compare) link to /#get-started so their CTA lands on
+  // the login widget, not the top of the hero.
+  useEffect(() => {
+    if (location.hash === '#get-started') {
+      document.getElementById('get-started')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [location.hash]);
 
   const toggleFaq = (idx: number) => {
     setOpenFaqs(prev => {
@@ -304,7 +313,7 @@ export function LandingPage({
 
         {/* Right Column: Styled Tactile 3D Login Widget Card */}
         <div className="lg:col-span-5 flex justify-center">
-          <div className="w-full max-w-md bg-white rounded-[24px] border-3 border-main-text p-8 space-y-6 relative shadow-[8px_8px_0px_#1A1A2E] transform transition-transform duration-300">
+          <div id="get-started" className="w-full max-w-md bg-white rounded-[24px] border-3 border-main-text p-8 space-y-6 relative shadow-[8px_8px_0px_#1A1A2E] transform transition-transform duration-300">
 
             {/* Login widget header */}
             <div className="text-center space-y-3 border-b-2 border-dashed border-main-text/10 pb-4">
@@ -509,6 +518,10 @@ export function LandingPage({
         </div>
 
         <div className="flex items-center gap-4 text-[10px] font-bold tracking-wider uppercase">
+          <Link to="/about" className="text-main-text/50 hover:text-accent-orange transition-colors no-underline">
+            {isZh ? '關於' : 'About'}
+          </Link>
+          <span className="text-main-text/20">·</span>
           <Link to="/compare/splitwise" className="text-main-text/50 hover:text-accent-orange transition-colors no-underline">
             {isZh ? '比較 Splitwise' : 'vs Splitwise'}
           </Link>

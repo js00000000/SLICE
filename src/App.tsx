@@ -23,6 +23,7 @@ import { JoinGroupPage } from './pages/JoinGroupPage';
 import { LandingPage } from './pages/LandingPage';
 import { LegalPage } from './pages/LegalPage';
 import { ComparePage } from './pages/ComparePage';
+import { AboutPage } from './pages/AboutPage';
 
 // Import Hooks
 import { useAuth } from './contexts/AuthContext';
@@ -35,6 +36,7 @@ const isValidRoute = (pathname: string): boolean => {
   if (pathname === '/' || pathname === '') return true;
   if (pathname === '/privacy' || pathname === '/terms') return true;
   if (pathname === '/compare/splitwise') return true;
+  if (pathname === '/about') return true;
   if (/^\/join\/[^/]+\/?$/.test(pathname)) return true;
   if (/^\/group\/[^/]+\/?$/.test(pathname)) return true;
   if (/^\/group\/[^/]+\/expenses\/?$/.test(pathname)) return true;
@@ -154,7 +156,8 @@ export default function App() {
     if (
       location.pathname === '/privacy' ||
       location.pathname === '/terms' ||
-      location.pathname === '/compare/splitwise'
+      location.pathname === '/compare/splitwise' ||
+      location.pathname === '/about'
     ) return;
     if (authLoading) {
       document.title = APP_NAME;
@@ -167,6 +170,7 @@ export default function App() {
   if (location.pathname === '/privacy') return <LegalPage kind="privacy" />;
   if (location.pathname === '/terms') return <LegalPage kind="terms" />;
   if (location.pathname === '/compare/splitwise') return <ComparePage />;
+  if (location.pathname === '/about') return <AboutPage />;
 
   if (authLoading || checkingUrlGroup) return (
     <div className="mobile-container">
