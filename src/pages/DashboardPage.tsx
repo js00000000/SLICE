@@ -11,6 +11,7 @@ import { MemberBreakdownModal } from '../components/MemberBreakdownModal';
 import type { Member } from '../types';
 import { BottomNav } from '../components/BottomNav';
 import { AppHeader } from '../components/AppHeader';
+import { SettledCTACard } from '../components/SettledCTACard';
 import { useGroup } from '../contexts/GroupContext';
 import { useAuth } from '../contexts/AuthContext';
 import { calculateBalancesAndSettlements } from '../lib/settlement';
@@ -30,6 +31,7 @@ export function DashboardPage() {
     completedSettlements,
     currentMemberId,
     currentMember,
+    isHost,
     isSettled,
     handleUpdateProfile,
     handleAddExpense,
@@ -194,6 +196,11 @@ export function DashboardPage() {
               </div>
             </div>
           </div>
+
+          {/* Growth-loop CTAs — Dashboard is the default landing tab for a
+              group, so settled visitors see this even if they never open
+              Balances. Same card/conditions as SettlementsPage. */}
+          {isSettled && <SettledCTACard isHost={isHost} animationDelay="120ms" />}
 
           {/* Member Contribution Breakdown */}
           <div className="stagger-item bg-white rounded-[24px] border-3 border-main-text p-5 shadow-[4px_4px_0px_#1A1A2E] space-y-4" style={{ animationDelay: '180ms' }}>

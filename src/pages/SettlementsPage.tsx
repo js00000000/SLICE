@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { APP_NAME } from '../constants';
 import { BalancesView } from '../components/BalancesView';
+import { SettledCTACard } from '../components/SettledCTACard';
 import { ProfileModal } from '../components/ProfileModal';
 import { BottomNav } from '../components/BottomNav';
 import { AppHeader } from '../components/AppHeader';
@@ -134,6 +135,9 @@ export function SettlementsPage() {
             </button>
           )
         )}
+
+        {/* Growth-loop CTAs, shown only once everything is settled */}
+        {isSettled && <SettledCTACard isHost={isHost} />}
 
         {/* Balances list */}
         <BalancesView
