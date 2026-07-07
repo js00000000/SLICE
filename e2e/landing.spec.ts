@@ -79,21 +79,22 @@ test.describe('Landing page', () => {
 
   test('emits FAQ + HowTo JSON-LD structured data', async ({ page }) => {
     const scripts = page.locator('script[type="application/ld+json"]');
-    // react-helmet-async injects these into <head> after mount.
-    await expect(scripts.first()).toBeAttached();
 
-    const ldJson = await scripts.allTextContents();
-    const types = ldJson
-      .map((raw) => {
-        try {
-          return JSON.parse(raw)['@type'];
-        } catch {
-          return null;
-        }
-      })
-      .filter(Boolean);
+    // react-helmet-async injects its scripts into <head> after mount, and the
+    // static index.html JSON-LD is attached from the start — so poll until the
+    // Helmet-provided types show up rather than reading at first attachment.
+    const readTypes = async () =>
+      (await scripts.allTextContents())
+        .map((raw) => {
+          try {
+            return JSON.parse(raw)['@type'];
+          } catch {
+            return null;
+          }
+        })
+        .filter(Boolean);
 
-    expect(types).toContain('FAQPage');
-    expect(types).toContain('HowTo');
+    await expect.poll(readTypes).toContain('FAQPage');
+    await expect.poll(readTypes).toContain('HowTo');
   });
 });

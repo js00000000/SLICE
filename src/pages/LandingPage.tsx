@@ -509,6 +509,10 @@ export function LandingPage({
         </div>
 
         <div className="flex items-center gap-4 text-[10px] font-bold tracking-wider uppercase">
+          <Link to="/compare/splitwise" className="text-main-text/50 hover:text-accent-orange transition-colors no-underline">
+            {isZh ? '比較 Splitwise' : 'vs Splitwise'}
+          </Link>
+          <span className="text-main-text/20">·</span>
           <Link to="/privacy" className="text-main-text/50 hover:text-accent-orange transition-colors no-underline">
             {isZh ? '隱私權' : 'Privacy'}
           </Link>

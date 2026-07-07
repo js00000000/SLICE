@@ -22,6 +22,7 @@ import { GroupManagementPage } from './pages/GroupManagementPage';
 import { JoinGroupPage } from './pages/JoinGroupPage';
 import { LandingPage } from './pages/LandingPage';
 import { LegalPage } from './pages/LegalPage';
+import { ComparePage } from './pages/ComparePage';
 
 // Import Hooks
 import { useAuth } from './contexts/AuthContext';
@@ -33,6 +34,7 @@ import { InstallPrompt } from './components/InstallPrompt';
 const isValidRoute = (pathname: string): boolean => {
   if (pathname === '/' || pathname === '') return true;
   if (pathname === '/privacy' || pathname === '/terms') return true;
+  if (pathname === '/compare/splitwise') return true;
   if (/^\/join\/[^/]+\/?$/.test(pathname)) return true;
   if (/^\/group\/[^/]+\/?$/.test(pathname)) return true;
   if (/^\/group\/[^/]+\/expenses\/?$/.test(pathname)) return true;
@@ -145,11 +147,15 @@ export default function App() {
     };
   }, [location.pathname, user, isSoftLoggedOut, authLoading, t]);
 
-  // Manual title fallback for login and loading states. Legal pages are
-  // returned early below and own their own <title> via Helmet, so skip them
-  // here — otherwise this effect (which still runs) would clobber it.
+  // Manual title fallback for login and loading states. Legal/compare pages
+  // are returned early below and own their own <title> via Helmet, so skip
+  // them here — otherwise this effect (which still runs) would clobber it.
   useEffect(() => {
-    if (location.pathname === '/privacy' || location.pathname === '/terms') return;
+    if (
+      location.pathname === '/privacy' ||
+      location.pathname === '/terms' ||
+      location.pathname === '/compare/splitwise'
+    ) return;
     if (authLoading) {
       document.title = APP_NAME;
     } else if (!user || isSoftLoggedOut) {
@@ -157,9 +163,10 @@ export default function App() {
     }
   }, [user, isSoftLoggedOut, authLoading, t, location.pathname]);
 
-  // Legal pages render regardless of auth state, ahead of the loading gate.
+  // Legal/compare pages render regardless of auth state, ahead of the loading gate.
   if (location.pathname === '/privacy') return <LegalPage kind="privacy" />;
   if (location.pathname === '/terms') return <LegalPage kind="terms" />;
+  if (location.pathname === '/compare/splitwise') return <ComparePage />;
 
   if (authLoading || checkingUrlGroup) return (
     <div className="mobile-container">

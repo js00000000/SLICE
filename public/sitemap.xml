@@ -11,6 +11,15 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://slice.fusion-labs.cc/" />
   </url>
   <url>
+    <loc>https://slice.fusion-labs.cc/compare/splitwise</loc>
+    <lastmod>2026-07-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="zh-TW" href="https://slice.fusion-labs.cc/compare/splitwise" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://slice.fusion-labs.cc/compare/splitwise" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://slice.fusion-labs.cc/compare/splitwise" />
+  </url>
+  <url>
     <loc>https://slice.fusion-labs.cc/privacy</loc>
     <lastmod>2026-06-13</lastmod>
     <changefreq>yearly</changefreq>
