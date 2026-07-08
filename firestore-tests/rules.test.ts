@@ -105,6 +105,19 @@ describe('/groups enumeration (the run-3 HIGH enabler)', () => {
     await assertSucceeds(getDoc(doc(asUser(ATTACKER), 'groups', GID)));
   });
 
+  it('a member can GET a group they JOINED but did not create (My Groups per-id fetch)', async () => {
+    // Regression: the "My Groups" list must fetch joined groups via per-doc
+    // get(), not a `documentId() in [...]` list — the owner-scoped list rule
+    // would reject the whole query as soon as it includes a joined (non-owned)
+    // group. This asserts the per-doc get() the client now uses is allowed.
+    await seed(async (db) => {
+      await setDoc(doc(db, 'groups', GID), { name: 'Friend trip', createdBy: HOST, joinId: TOKEN });
+      await setDoc(doc(db, 'groups', GID, 'members', 'm1'), { name: 'Guest', userId: MEMBER });
+      await setDoc(doc(db, 'groups', GID, 'claimedUserIds', MEMBER), { memberId: 'm1' });
+    });
+    await assertSucceeds(getDoc(doc(asUser(MEMBER), 'groups', GID)));
+  });
+
   it('accepted residual: a user who already KNOWS a groupId can still self-join (needs a server to fully close)', async () => {
     await seed(async (db) => {
       await setDoc(doc(db, 'groups', GID), { name: 'G', createdBy: VICTIM, joinId: TOKEN });

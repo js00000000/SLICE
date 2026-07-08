@@ -7,10 +7,7 @@ import {
   collection,
   doc,
   onSnapshot,
-  query,
-  where,
-  documentId,
-  getDocs
+  getDoc,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { firebaseService, type ExpenseInput } from '../lib/firebaseService';
@@ -133,13 +130,20 @@ export function GroupProvider({ children }: { children: ReactNode }) {
         const ids = data.joinedGroupIds || [];
         setJoinedGroupIds(ids);
         if (ids.length > 0) {
-          const groupsQuery = query(
-            collection(db, 'groups'),
-            where(documentId(), 'in', ids.slice(0, 30))
-          );
-
-          getDocs(groupsQuery).then(snapshot => {
-            const groupsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Group));
+          // Fetch each joined group by id with a per-doc get(). A collection
+          // query here would be a `list`, which the rules restrict to
+          // owner-scoped queries (createdBy == uid) to prevent group
+          // enumeration — so a single `documentId() in [...]` query would be
+          // rejected outright the moment `ids` includes a group the user
+          // JOINED but didn't create. Individual get()s are allowed for any
+          // group the user can already name (which is exactly joinedGroupIds).
+          // Cap matches the previous 30-id `in` limit.
+          Promise.all(
+            ids.slice(0, 30).map(id => getDoc(doc(db, 'groups', id)))
+          ).then(snaps => {
+            const groupsData = snaps
+              .filter(snap => snap.exists())
+              .map(snap => ({ id: snap.id, ...snap.data() } as Group));
             setMyGroups(groupsData);
           }).catch(err => console.error("Fetch my groups error:", err));
         } else {
