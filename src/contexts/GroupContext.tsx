@@ -387,6 +387,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
           members.map(m => m.id),
           completedSettlements.map(s => s.id),
           members.filter(m => m.userId != null).map(m => m.userId as string),
+          currentGroup?.joinId ?? null,
         );
         toast.success(t('groups.delete_group_success'));
       } catch (error) {
@@ -487,12 +488,12 @@ export function GroupProvider({ children }: { children: ReactNode }) {
   const currentMember = members.find(m => m.id === currentMemberId);
   const isHost = !!currentMember?.isHost;
 
-  // Backfill the joinId field for groups created before it existed. Only the
-  // host has write access to the group doc per Firestore rules.
+  // Backfill the joinId field and its /joinIds/{token} lookup doc for groups
+  // created before either existed (old invite links only resolve once the
+  // lookup doc is in place). Only the host has write access per Firestore rules.
   useEffect(() => {
     if (!currentGroup || !isHost) return;
-    if (currentGroup.joinId) return;
-    firebaseService.ensureJoinId(currentGroup.id).catch(err => {
+    firebaseService.ensureJoinId(currentGroup.id, currentGroup.joinId).catch(err => {
       console.error("Backfill joinId error:", err);
     });
   }, [currentGroup, isHost]);

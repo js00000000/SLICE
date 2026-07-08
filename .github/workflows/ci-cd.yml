@@ -98,9 +98,39 @@ jobs:
           path: playwright-report/
           retention-days: 7
 
+  rules-test:
+    name: Firestore rules tests
+    needs: changes
+    if: ${{ needs.changes.outputs.app == 'true' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      # The Firestore emulator is a Java process; pin a JDK rather than rely on
+      # the runner image's default.
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - run: npm ci
+
+      # Adversarial security-rules tests (assertFails/assertSucceeds) against the
+      # emulator. `test:rules` wraps vitest in `firebase emulators:exec`, which
+      # boots and tears down the emulator around the run. This gates deploys:
+      # reopening `list` on /groups or breaking the /joinIds guard fails here
+      # BEFORE the rules ship to dev or prod.
+      - name: Run Firestore rules tests
+        run: npm run test:rules
+
   deploy-test:
     name: Deploy to test
-    needs: [changes, test]
+    needs: [changes, test, rules-test]
     if: ${{ needs.changes.outputs.app == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     environment:
@@ -188,7 +218,7 @@ jobs:
 
   deploy-production:
     name: Deploy to production (manual)
-    needs: [changes, test]
+    needs: [changes, test, rules-test]
     if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'production' }}
     runs-on: ubuntu-latest
     environment:

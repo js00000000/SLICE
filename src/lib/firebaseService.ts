@@ -3,7 +3,6 @@ import {
   doc,
   setDoc,
   getDoc,
-  getDocs,
   addDoc,
   updateDoc,
   deleteDoc,
@@ -12,9 +11,6 @@ import {
   arrayRemove,
   writeBatch,
   deleteField,
-  query,
-  where,
-  limit,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Member, Expense, GroupCurrency } from '../types';
@@ -75,6 +71,10 @@ function generateJoinId(length = 10): string {
   return out;
 }
 
+// Groups whose /joinIds/{token} lookup doc has been verified this session, so
+// ensureJoinId doesn't re-read the mapping on every group snapshot.
+const verifiedJoinMappings = new Set<string>();
+
 export const firebaseService = {
   async createGroup(userId: string, groupName: string, hostName: string) {
     const groupRef = doc(collection(db, 'groups'));
@@ -105,6 +105,10 @@ export const firebaseService = {
     // 3. Register host UID in the membership index (enables isGroupMember() in rules)
     batch.set(doc(db, 'groups', groupId, 'claimedUserIds', userId), { memberId: memberRef.id });
 
+    // 3b. Publish the join-token lookup doc. Written in the same batch so the
+    // rules' getAfter() binding (token == group.joinId, creator == host) holds.
+    batch.set(doc(db, 'joinIds', joinId), { groupId });
+
     // 4. Update User Settings
     const userRef = doc(db, 'users', userId);
     batch.set(userRef, {
@@ -116,8 +120,11 @@ export const firebaseService = {
     return groupId;
   },
 
-  // Resolve a public join token to its Firestore group id.
-  // Returns null if the join token doesn't match any group.
+  // Resolve a public join token to its Firestore group id via the
+  // /joinIds/{token} lookup doc. Returns null if the token doesn't match any
+  // group. Querying the groups collection is no longer possible (rules only
+  // allow owner-scoped lists), which is what keeps groupIds/joinIds
+  // non-enumerable.
   // Legacy fallback: groups created before the joinId field exists can still be
   // joined via their raw Firestore id. Once a group has joinId, that fallback
   // is intentionally disabled for it (so id-guessing can't bypass the gate).
@@ -125,9 +132,8 @@ export const firebaseService = {
     const trimmed = joinId.trim();
     if (!trimmed) return null;
 
-    const q = query(collection(db, 'groups'), where('joinId', '==', trimmed), limit(1));
-    const snap = await getDocs(q);
-    if (!snap.empty) return snap.docs[0].id;
+    const mappingSnap = await getDoc(doc(db, 'joinIds', trimmed));
+    if (mappingSnap.exists()) return mappingSnap.data().groupId as string;
 
     // Legacy fallback for invite links generated before joinId existed.
     const legacyRef = doc(db, 'groups', trimmed);
@@ -138,16 +144,36 @@ export const firebaseService = {
     return null;
   },
 
-  // Backfill joinId for groups created before this field existed. Host-only
-  // (Firestore rules require createdBy == auth.uid for group updates).
-  async ensureJoinId(groupId: string): Promise<string> {
-    const groupRef = doc(db, 'groups', groupId);
-    const snap = await getDoc(groupRef);
-    if (!snap.exists()) throw new Error('group_not_found');
-    const existing = snap.data().joinId as string | undefined;
-    if (existing) return existing;
-    const joinId = generateJoinId();
-    await updateDoc(groupRef, { joinId, updatedAt: serverTimestamp() });
+  // Backfill joinId and its /joinIds/{token} lookup doc for groups created
+  // before either existed. Host-only (rules bind both writes to createdBy).
+  // Pass the group's current joinId when known to skip the group read.
+  async ensureJoinId(groupId: string, existingJoinId?: string): Promise<string> {
+    let joinId = existingJoinId;
+    if (!joinId) {
+      const groupRef = doc(db, 'groups', groupId);
+      const snap = await getDoc(groupRef);
+      if (!snap.exists()) throw new Error('group_not_found');
+      joinId = snap.data().joinId as string | undefined;
+      if (!joinId) {
+        // Group predates joinId entirely: mint the token and publish both the
+        // field and the lookup doc atomically.
+        joinId = generateJoinId();
+        const batch = writeBatch(db);
+        batch.update(groupRef, { joinId, updatedAt: serverTimestamp() });
+        batch.set(doc(db, 'joinIds', joinId), { groupId });
+        await batch.commit();
+        verifiedJoinMappings.add(groupId);
+        return joinId;
+      }
+    }
+    // Group already has a token — heal the lookup doc for groups created before
+    // /joinIds existed, so their old invite links keep resolving.
+    if (!verifiedJoinMappings.has(groupId)) {
+      const mapRef = doc(db, 'joinIds', joinId);
+      const mapSnap = await getDoc(mapRef);
+      if (!mapSnap.exists()) await setDoc(mapRef, { groupId });
+      verifiedJoinMappings.add(groupId);
+    }
     return joinId;
   },
 
@@ -204,8 +230,15 @@ export const firebaseService = {
     memberIds: string[],
     settlementIds: string[] = [],
     claimedUserIds: string[] = [],
+    joinId: string | null = null,
   ) {
     const batch = writeBatch(db);
+
+    // 0. Delete the join-token lookup doc (rules check the pre-batch group doc,
+    // so this must ride in the same batch as the group deletion below).
+    if (joinId) {
+      batch.delete(doc(db, 'joinIds', joinId));
+    }
 
     // 1. Delete all expenses
     for (const id of expenseIds) {

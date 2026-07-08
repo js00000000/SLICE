@@ -360,7 +360,12 @@ export default function App() {
         batch.delete(cDoc.ref);
       });
 
-      // 2. Delete group doc itself
+      // 2. Delete the join-token lookup doc, then the group doc itself
+      const groupSnap = await getDoc(doc(db, "groups", groupId));
+      const joinId = groupSnap.exists() ? (groupSnap.data().joinId as string | undefined) : undefined;
+      if (joinId) {
+        batch.delete(doc(db, "joinIds", joinId));
+      }
       batch.delete(doc(db, "groups", groupId));
 
       // Commit all deletions

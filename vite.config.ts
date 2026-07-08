@@ -105,6 +105,8 @@ export default defineConfig({
   // Playwright specs under e2e/. Keep the unit runner (vitest) and the e2e
   // runner (playwright) strictly separate.
   test: {
-    exclude: [...configDefaults.exclude, 'e2e/**', 'e2e-dev/**'],
+    // firestore-tests/ needs the Firestore emulator; it runs via its own
+    // config (vitest.rules.config.ts) under `npm run test:rules`, never here.
+    exclude: [...configDefaults.exclude, 'e2e/**', 'e2e-dev/**', 'firestore-tests/**'],
   },
 })

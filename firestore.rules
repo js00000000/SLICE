@@ -52,18 +52,58 @@ service cloud.firestore {
               && data.currencies.size() <= 20));
     }
 
+    // Join-token lookup — /joinIds/{token} → { groupId }.
+    // The token is the secret carried by an invite link. Keying the lookup by
+    // token lets the client resolve /join/:joinId without any ability to list
+    // or query the groups collection (see the groups list rule below).
+    match /joinIds/{token} {
+      // Resolving requires possession of the token (it's the document ID).
+      allow get: if isAuthenticated();
+      // Never enumerable — a list would leak every group's invite token.
+      allow list: if isAdmin();
+      // Only the group's host can publish a mapping, and only for the token that
+      // equals the group's own joinId — so a token can never be pointed at a
+      // group it doesn't belong to. getAfter() covers both the createGroup batch
+      // (group + mapping written atomically) and the lazy backfill for groups
+      // that predate this index.
+      allow create: if isAuthenticated()
+        && request.resource.data.keys().hasOnly(['groupId'])
+        && request.resource.data.groupId is string
+        && getAfter(/databases/$(database)/documents/groups/$(request.resource.data.groupId)).data.createdBy == request.auth.uid
+        && getAfter(/databases/$(database)/documents/groups/$(request.resource.data.groupId)).data.joinId == token;
+      allow update: if false;
+      // Host removes the mapping when deleting the group. get() reads the
+      // pre-batch state, where the group doc still exists.
+      allow delete: if isAdmin() || (
+        isAuthenticated()
+        && get(/databases/$(database)/documents/groups/$(resource.data.groupId)).data.createdBy == request.auth.uid
+      );
+    }
+
     // Groups
     match /groups/{groupId} {
-      // Any authenticated user can read a group doc (name, joinId) to support the join flow.
-      // Expense and settlement reads are gated on isGroupMember() at the subcollection level.
-      allow read: if isAuthenticated();
+      // Fetching BY ID is open to any authenticated user so the join and
+      // member-selection flows work pre-membership. Listing is what made
+      // membership self-grantable (any signed-in user could enumerate every
+      // groupId/joinId and then claim a member slot in any group), so it is
+      // restricted to owner-scoped queries: the client must include
+      // where(createdBy == request.auth.uid) — used by guest-account cleanup —
+      // or the query is rejected. A groupId therefore only travels via invite
+      // links and acts as the join capability.
+      allow get: if isAuthenticated();
+      allow list: if isAdmin() || (isAuthenticated() && resource.data.createdBy == request.auth.uid);
 
-      // Creating a group
+      // Creating a group. joinId is optional (legacy groups lack it) but when
+      // present must look like a generated invite token.
       allow create: if isAuthenticated()
         && request.resource.data.createdBy == request.auth.uid
         && request.resource.data.name is string
         && request.resource.data.name.size() <= 50
-        && hasValidCurrencyFields(request.resource.data);
+        && hasValidCurrencyFields(request.resource.data)
+        && (!('joinId' in request.resource.data)
+            || (request.resource.data.joinId is string
+                && request.resource.data.joinId.size() >= 8
+                && request.resource.data.joinId.size() <= 24));
 
       // Only host (creator) or admin can update or delete the group.
       // This includes renaming the group, settling up (setting settledAt/settledBy), and unsettling up (deleting settledAt/settledBy).
@@ -76,6 +116,18 @@ service cloud.firestore {
         && (
           // Defense-in-depth: If settling up, ensure settledBy matches the host/auth UID
           (!request.resource.data.keys().hasAll(['settledAt', 'settledBy']) || request.resource.data.settledBy == request.auth.uid)
+        )
+        // joinId is immutable once set (and can't be removed). Otherwise a host
+        // could re-point their group's joinId at a token they saw elsewhere and
+        // publish a /joinIds mapping that hijacks someone else's invite link.
+        // A missing joinId may be backfilled once with a valid token.
+        && (
+          ('joinId' in resource.data && request.resource.data.joinId == resource.data.joinId)
+          || (!('joinId' in resource.data) && !('joinId' in request.resource.data))
+          || (!('joinId' in resource.data)
+              && request.resource.data.joinId is string
+              && request.resource.data.joinId.size() >= 8
+              && request.resource.data.joinId.size() <= 24)
         )
       );
 

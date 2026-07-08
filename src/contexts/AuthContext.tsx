@@ -209,6 +209,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await deleteDoc(doc(db, 'groups', gid, 'claimedUserIds', memberUserId));
           }
         }
+        // Delete the join-token lookup doc while the group doc still exists
+        // (rules verify createdBy against the live group)
+        const groupJoinId = groupDoc.data().joinId as string | undefined;
+        if (groupJoinId) {
+          await deleteDoc(doc(db, 'joinIds', groupJoinId));
+        }
         // Finally delete the group document
         await deleteDoc(groupDoc.ref);
         deletedGroupIds.add(gid);
