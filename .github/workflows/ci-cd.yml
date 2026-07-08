@@ -294,3 +294,33 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy ./backoffice/dist --project-name=slice-backoffice --branch=main --commit-dirty=true
+
+  # Posts to Discord when any job above fails. `always()` lets this run even
+  # though an upstream job failed; `contains(needs.*.result, 'failure')` fires
+  # only on real failures (skipped/cancelled jobs don't count). Needs the
+  # DISCORD_WEBHOOK_URL repo secret (Discord channel → Integrations → Webhooks).
+  notify-discord:
+    name: Notify Discord on failure
+    needs: [changes, test, rules-test, deploy-test, e2e-dev, deploy-production, deploy-backoffice]
+    if: ${{ always() && contains(needs.*.result, 'failure') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post failure to Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          BRANCH: ${{ github.ref_name }}
+          ACTOR: ${{ github.actor }}
+          SHA: ${{ github.sha }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+            echo "DISCORD_WEBHOOK_URL secret is not set — skipping Discord notification." >&2
+            exit 0
+          fi
+          MSG=":x: **CI failed** on \`$BRANCH\`
+          Repo: **${{ github.repository }}** · event: \`$EVENT\`
+          Commit: \`${SHA:0:7}\` by **$ACTOR**
+          Run: $RUN_URL"
+          jq -n --arg content "$MSG" '{content: $content}' \
+            | curl -sfS -H "Content-Type: application/json" -d @- "$DISCORD_WEBHOOK_URL"
