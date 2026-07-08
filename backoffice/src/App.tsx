@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import { 
   onAuthStateChanged, 
@@ -96,11 +97,31 @@ interface Settlement {
   completedAt?: Timestamp | null;
 }
 
+type TabKey = "dashboard" | "users" | "groups";
+
+// Each tab is a real route so views are deep-linkable and browser back/forward works.
+const TAB_TO_PATH: Record<TabKey, string> = {
+  dashboard: "/",
+  users: "/users",
+  groups: "/groups",
+};
+
+const pathToTab = (pathname: string): TabKey =>
+  pathname.startsWith("/users") ? "users" : pathname.startsWith("/groups") ? "groups" : "dashboard";
+
 export default function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"dashboard" | "users" | "groups">("dashboard");
+
+  // `activeTab` is derived from the URL; `setActiveTab` navigates so every
+  // existing call site keeps working while each view gets its own route.
+  const activeTab = pathToTab(location.pathname);
+  const setActiveTab = (tab: TabKey) => navigate(TAB_TO_PATH[tab]);
+
   const [menuOpen, setMenuOpen] = useState(false);
   
   // Data States
