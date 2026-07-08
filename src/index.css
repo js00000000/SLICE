@@ -94,6 +94,20 @@
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);
   }
+
+  /* Hide the native number-input spinner (up/down steppers) on amount and
+     exchange-rate fields — the tiny arrows clutter the tactile design and are
+     useless for money entry. Keeps type="number" for the numeric keypad. */
+  .no-spinner {
+    appearance: textfield;
+    -moz-appearance: textfield;
+  }
+  .no-spinner::-webkit-outer-spin-button,
+  .no-spinner::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+  }
 }
 
 /* Animations */

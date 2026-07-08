@@ -321,7 +321,7 @@ export function GroupManagementPage() {
                       step="any"
                       value={rateDrafts[c.code] ?? String(c.rate)}
                       onChange={(e) => setRateDrafts(prev => ({ ...prev, [c.code]: e.target.value }))}
-                      className="flex-grow min-w-0 px-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none text-base font-bold bg-white"
+                      className="no-spinner flex-grow min-w-0 px-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none text-base font-bold bg-white"
                     />
                     <span className="text-base font-nunito font-black text-main-text whitespace-nowrap">{defaultCurrency}</span>
                     <button
@@ -368,7 +368,7 @@ export function GroupManagementPage() {
                     placeholder={t('groups.exchange_rate')}
                     value={newCurrencyRate}
                     onChange={(e) => setNewCurrencyRate(e.target.value)}
-                    className="flex-grow min-w-0 px-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none text-base font-bold bg-white"
+                    className="no-spinner flex-grow min-w-0 px-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none text-base font-bold bg-white"
                   />
                   <button
                     onClick={handleAddCurrency}

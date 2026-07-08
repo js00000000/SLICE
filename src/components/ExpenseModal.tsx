@@ -277,7 +277,7 @@ export function ExpenseModal({ members, currentMemberId, group = null, initialDa
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
-                  className={`w-full text-base font-nunito font-black text-main-text ${amountPadding} pr-4 py-3 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none placeholder-gray-400 bg-white transition-all`}
+                  className={`no-spinner w-full text-base font-nunito font-black text-main-text ${amountPadding} pr-4 py-3 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none placeholder-gray-400 bg-white transition-all`}
                   required
                 />
               </div>
@@ -341,7 +341,7 @@ export function ExpenseModal({ members, currentMemberId, group = null, initialDa
                             step="any"
                             value={p.amount || ''}
                             onChange={(e) => updatePayer(index, { amount: parseFloat(e.target.value) || 0 })}
-                            className={`w-full text-base font-nunito font-black text-main-text ${rowPadding} pr-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none`}
+                            className={`no-spinner w-full text-base font-nunito font-black text-main-text ${rowPadding} pr-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none`}
                             placeholder="0.00"
                           />
                         </div>
@@ -424,7 +424,7 @@ export function ExpenseModal({ members, currentMemberId, group = null, initialDa
                             step="any"
                             value={split.amount || ''}
                             onChange={(e) => updateSplitAmount(m.id, parseFloat(e.target.value) || 0)}
-                            className={`w-full text-base font-nunito font-black text-main-text ${rowPadding} pr-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none`}
+                            className={`no-spinner w-full text-base font-nunito font-black text-main-text ${rowPadding} pr-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none`}
                             placeholder="0.00"
                           />
                         </div>
