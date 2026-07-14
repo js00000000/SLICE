@@ -1,14 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://slice.fusion-labs.cc/</loc>
     <lastmod>2026-06-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="zh-TW" href="https://slice.fusion-labs.cc/" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://slice.fusion-labs.cc/" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://slice.fusion-labs.cc/" />
   </url>
   <url>
     <loc>https://slice.fusion-labs.cc/guide/travel-split</loc>
@@ -21,18 +17,12 @@
     <lastmod>2026-07-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
-    <xhtml:link rel="alternate" hreflang="zh-TW" href="https://slice.fusion-labs.cc/about" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://slice.fusion-labs.cc/about" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://slice.fusion-labs.cc/about" />
   </url>
   <url>
     <loc>https://slice.fusion-labs.cc/compare/splitwise</loc>
     <lastmod>2026-07-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
-    <xhtml:link rel="alternate" hreflang="zh-TW" href="https://slice.fusion-labs.cc/compare/splitwise" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://slice.fusion-labs.cc/compare/splitwise" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://slice.fusion-labs.cc/compare/splitwise" />
   </url>
   <url>
     <loc>https://slice.fusion-labs.cc/privacy</loc>
