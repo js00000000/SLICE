@@ -24,6 +24,7 @@ export function MemberSelectionPage() {
     <div className="min-h-screen bg-page-bg text-main-text selection:bg-brand-light font-plus-jakarta flex flex-col pb-10">
       <Helmet>
         <title>{t('members.select_identity')} - {APP_NAME}</title>
+        <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
       <AppHeader

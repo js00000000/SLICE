@@ -194,6 +194,7 @@ export function GroupManagementPage() {
         <title>{currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `${t('common.settings')} - ${APP_NAME}`}</title>
         <meta property="og:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `${t('common.settings')} - ${APP_NAME}`} />
         <meta property="twitter:title" content={currentGroup?.name ? `${currentGroup.name} - ${APP_NAME}` : `${t('common.settings')} - ${APP_NAME}`} />
+        <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
       <AppHeader

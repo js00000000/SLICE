@@ -47,6 +47,7 @@ export function JoinGroupPage() {
     <>
       <Helmet>
         <title>{t('groups.join')} - {APP_NAME}</title>
+        <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <LoadingView message={t('common.loading')} />
     </>
