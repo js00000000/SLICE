@@ -1,1 +1,6 @@
-/*    /index.html   200
+# Missing hashed assets must 404 (not fall through to the SPA shell),
+# otherwise a stale HTML shell requesting an old hash gets index.html (text/html)
+# and the browser throws "Expected a JavaScript-or-Wasm module script".
+/assets/*   /assets/:splat   404
+# SPA fallback for app routes.
+/*          /index.html      200
