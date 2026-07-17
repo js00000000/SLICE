@@ -24,14 +24,22 @@ import { LandingPage } from './pages/LandingPage';
 import { LegalPage } from './pages/LegalPage';
 import { ComparePage } from './pages/ComparePage';
 import { AboutPage } from './pages/AboutPage';
-import { TravelSplitGuidePage } from './pages/TravelSplitGuidePage';
+import { GuidePage } from './pages/GuidePage';
 import { COMPARE_SLUGS } from './data/compareData';
+import { GUIDE_SLUGS } from './data/guideData';
 
 // Parse a known /compare/:slug route to its slug, or null. Unknown competitors
 // fall through to the SPA's not-found handling (redirect to "/").
 const getCompareSlug = (pathname: string): string | null => {
   const m = pathname.match(/^\/compare\/([^/]+)\/?$/);
   return m && COMPARE_SLUGS.includes(m[1]) ? m[1] : null;
+};
+
+// Parse a known /guide/:slug route to its slug, or null. Unknown scenarios fall
+// through to the SPA's not-found handling (redirect to "/").
+const getGuideSlug = (pathname: string): string | null => {
+  const m = pathname.match(/^\/guide\/([^/]+)\/?$/);
+  return m && GUIDE_SLUGS.includes(m[1]) ? m[1] : null;
 };
 
 // Import Hooks
@@ -46,7 +54,7 @@ const isValidRoute = (pathname: string): boolean => {
   if (pathname === '/privacy' || pathname === '/terms') return true;
   if (getCompareSlug(pathname)) return true;
   if (pathname === '/about') return true;
-  if (pathname === '/guide/travel-split') return true;
+  if (getGuideSlug(pathname)) return true;
   if (/^\/join\/[^/]+\/?$/.test(pathname)) return true;
   if (/^\/group\/[^/]+\/?$/.test(pathname)) return true;
   if (/^\/group\/[^/]+\/expenses\/?$/.test(pathname)) return true;
@@ -168,7 +176,7 @@ export default function App() {
       location.pathname === '/terms' ||
       location.pathname.startsWith('/compare/') ||
       location.pathname === '/about' ||
-      location.pathname === '/guide/travel-split'
+      location.pathname.startsWith('/guide/')
     ) return;
     if (authLoading) {
       document.title = APP_NAME;
@@ -183,7 +191,8 @@ export default function App() {
   const compareSlug = getCompareSlug(location.pathname);
   if (compareSlug) return <ComparePage slug={compareSlug} />;
   if (location.pathname === '/about') return <AboutPage />;
-  if (location.pathname === '/guide/travel-split') return <TravelSplitGuidePage />;
+  const guideSlug = getGuideSlug(location.pathname);
+  if (guideSlug) return <GuidePage slug={guideSlug} />;
 
   if (authLoading || checkingUrlGroup) return (
     <div className="mobile-container">

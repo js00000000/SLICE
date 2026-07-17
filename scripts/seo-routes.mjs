@@ -12,8 +12,12 @@
 
 export const PAGES = [
   { path: '/', file: 'src/pages/LandingPage.tsx', changefreq: 'weekly', priority: '1.0' },
-  { path: '/guide/travel-split', file: 'src/pages/TravelSplitGuidePage.tsx', changefreq: 'monthly', priority: '0.6' },
   { path: '/about', file: 'src/pages/AboutPage.tsx', changefreq: 'monthly', priority: '0.5' },
+
+  // Programmatic /guide/:scenario pages — driven by src/data/guideData.ts.
+  { path: '/guide/travel-split', file: 'src/data/guideData.ts', changefreq: 'monthly', priority: '0.6' },
+  { path: '/guide/japan-trip', file: 'src/data/guideData.ts', changefreq: 'monthly', priority: '0.6' },
+  { path: '/guide/dining-aa', file: 'src/data/guideData.ts', changefreq: 'monthly', priority: '0.6' },
 
   // Programmatic /compare/:competitor pages — driven by src/data/compareData.ts.
   { path: '/compare/splitwise', file: 'src/data/compareData.ts', changefreq: 'monthly', priority: '0.6' },
