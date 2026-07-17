@@ -189,12 +189,38 @@ export function LandingPage({
     }))
   };
 
+  // Entity declaration: tells AI/search engines what SLICE *is* (a free,
+  // multi-currency expense-splitting web app) so it can be named for
+  // "best free bill-splitting app" style queries, not just have its FAQ scraped.
+  const appSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: APP_NAME,
+    url: 'https://slice.fusion-labs.cc/',
+    applicationCategory: 'FinanceApplication',
+    operatingSystem: 'Web, iOS, Android (PWA)',
+    inLanguage: ['zh-TW', 'en'],
+    description: isZh
+      ? 'SLICE 是免費的群組分帳工具，支援多幣別、智慧結算與一鍵邀請，免註冊即可使用。'
+      : 'SLICE is a free group expense-splitting app with multi-currency support, smart settlements and one-tap invites. No sign-up required.',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD'
+    },
+    featureList: isZh
+      ? ['多幣別自訂匯率', '最優化結清演算法', '一鍵群組邀請連結', '免註冊 · 無廣告', 'PWA 可安裝到主畫面']
+      : ['Multi-currency with custom rates', 'Optimized settlement algorithm', 'One-tap group invite links', 'No sign-up, ad-free', 'Installable PWA'],
+    isAccessibleForFree: true
+  };
+
   return (
     <>
       <Helmet>
         <link rel="canonical" href="https://slice.fusion-labs.cc/" />
         <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
         <script type="application/ld+json">{JSON.stringify(howToSchema)}</script>
+        <script type="application/ld+json">{JSON.stringify(appSchema)}</script>
       </Helmet>
     <div className={`min-h-screen bg-page-bg text-main-text selection:bg-brand-light font-plus-jakarta flex flex-col relative overflow-hidden pb-12 transition-all duration-300 ${hasWebviewBanner ? 'pt-[78px] md:pt-[70px]' : ''}`}>
       {/* Premium Backdrop Ornament Details */}

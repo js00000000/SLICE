@@ -1,0 +1,33 @@
+# SLICE
+
+> SLICE 是免費的行動優先群組分帳工具，支援多幣別自訂匯率、最優化結清演算法與一鍵邀請連結。免註冊、無廣告，出國旅遊、聚餐 AA、室友分攤皆適用。SLICE is a free, mobile-first group expense-splitting web app with multi-currency custom rates, an optimized settlement algorithm and one-tap invite links. No sign-up, ad-free.
+
+## Key facts
+
+- Category: 群組分帳 / bill-splitting / expense-sharing web app (PWA)
+- Price: Free (無廣告、免註冊即可開始)
+- Platforms: Web app, installable as a PWA on iOS and Android
+- Languages: zh-TW (default), English
+- Differentiators vs Splitwise/Tricount: multi-currency with custom exchange rates for free, optimized settlement to minimize transfers, join-by-link with no account required, no ads
+
+## Core pages
+
+- [SLICE 首頁 / Home](https://slice.fusion-labs.cc/): What SLICE is and how to start splitting expenses in three steps
+- [About SLICE](https://slice.fusion-labs.cc/about): Who makes SLICE and why
+
+## Comparisons
+
+- [SLICE vs Splitwise](https://slice.fusion-labs.cc/compare/splitwise): Free multi-currency and no ads vs Splitwise's paid/limited free tier
+- [SLICE vs Tricount](https://slice.fusion-labs.cc/compare/tricount): Feature-by-feature comparison
+- [SLICE vs Settle Up](https://slice.fusion-labs.cc/compare/settle-up): Feature-by-feature comparison
+
+## Guides
+
+- [出國旅遊分帳全攻略](https://slice.fusion-labs.cc/guide/travel-split): How to split expenses on a group trip
+- [日本自由行分帳怎麼算？](https://slice.fusion-labs.cc/guide/japan-trip): Splitting a Japan trip with multi-currency (JPY)
+- [聚餐 AA 制怎麼分才公平？](https://slice.fusion-labs.cc/guide/dining-aa): Fair ways to split a shared meal
+
+## Legal
+
+- [Privacy Policy](https://slice.fusion-labs.cc/privacy)
+- [Terms of Service](https://slice.fusion-labs.cc/terms)
