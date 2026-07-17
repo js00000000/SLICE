@@ -450,6 +450,62 @@ export function LandingPage({
         </div>
       </section>
 
+      {/* Learn More — contextual internal links to indexable content pages */}
+      <section className="w-full max-w-7xl mx-auto px-6 py-12 md:py-20 border-t-2 border-dashed border-main-text/10 relative z-10">
+        <div className="text-center space-y-2 mb-12">
+          <h2 className="text-3xl font-nunito font-black text-main-text">
+            {isZh ? '深入了解' : 'Learn more'}
+          </h2>
+          <p className="text-sm text-gray-500 font-medium">
+            {isZh ? '想更會分帳？這兩篇幫你搞定。' : 'Want to split smarter? Start with these.'}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          {/* → Travel split guide */}
+          <Link
+            to="/guide/travel-split"
+            className="group bg-white p-6 rounded-[20px] border-3 border-main-text shadow-[4px_4px_0px_#1A1A2E] hover:bg-brand-light/40 active:translate-x-[1px] active:translate-y-[1px] active:shadow-[2px_2px_0px_#1A1A2E] transition-all duration-150 no-underline flex flex-col gap-3"
+          >
+            <div className="w-12 h-12 bg-brand-light border-2 border-main-text rounded-xl flex items-center justify-center rotate-[-3deg] shadow-[2px_2px_0px_#1A1A2E] shrink-0">
+              <Globe className="w-6 h-6 text-accent-orange stroke-[2.5]" />
+            </div>
+            <h3 className="font-nunito font-black text-lg text-main-text leading-snug">
+              {isZh ? '出國旅遊怎麼分帳？' : 'Splitting a trip abroad?'}
+            </h3>
+            <p className="text-sm text-gray-500 font-medium leading-relaxed">
+              {isZh
+                ? '多幣別換算、多人墊付、回國用最少轉帳結清——一篇看懂旅遊分帳的完整流程。'
+                : 'Multi-currency conversion, who-fronted-what, and the fewest transfers to settle up back home — the whole flow in one guide.'}
+            </p>
+            <span className="mt-auto text-sm font-nunito font-black text-accent-orange group-hover:underline">
+              {isZh ? '閱讀旅遊分帳全攻略 →' : 'Read the travel split guide →'}
+            </span>
+          </Link>
+
+          {/* → Splitwise comparison */}
+          <Link
+            to="/compare/splitwise"
+            className="group bg-white p-6 rounded-[20px] border-3 border-main-text shadow-[4px_4px_0px_#1A1A2E] hover:bg-brand-light/40 active:translate-x-[1px] active:translate-y-[1px] active:shadow-[2px_2px_0px_#1A1A2E] transition-all duration-150 no-underline flex flex-col gap-3"
+          >
+            <div className="w-12 h-12 bg-brand-light border-2 border-main-text rounded-xl flex items-center justify-center rotate-[-3deg] shadow-[2px_2px_0px_#1A1A2E] shrink-0">
+              <Sparkles className="w-6 h-6 text-accent-orange stroke-[2.5]" />
+            </div>
+            <h3 className="font-nunito font-black text-lg text-main-text leading-snug">
+              {isZh ? '在找 Splitwise 替代方案？' : 'Looking for a Splitwise alternative?'}
+            </h3>
+            <p className="text-sm text-gray-500 font-medium leading-relaxed">
+              {isZh
+                ? '價格、廣告、註冊門檻、多幣別、記帳限制——SLICE 與 Splitwise 逐項比較，幫你挑對工具。'
+                : 'Price, ads, signup, multi-currency, expense limits — SLICE vs Splitwise compared side by side.'}
+            </p>
+            <span className="mt-auto text-sm font-nunito font-black text-accent-orange group-hover:underline">
+              {isZh ? '看 SLICE vs Splitwise 比較 →' : 'See SLICE vs Splitwise →'}
+            </span>
+          </Link>
+        </div>
+      </section>
+
       {/* FAQ */}
       <section className="w-full max-w-7xl mx-auto px-6 py-12 md:py-20 border-t-2 border-dashed border-main-text/10 relative z-10">
         <div className="text-center space-y-2 mb-12">
