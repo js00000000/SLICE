@@ -21,10 +21,12 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="SLICE" />
 
-  <!-- Hreflang alternates -->
-  <link rel="alternate" hreflang="zh-TW" href="https://slice.fusion-labs.cc/" />
-  <link rel="alternate" hreflang="en" href="https://slice.fusion-labs.cc/" />
-  <link rel="alternate" hreflang="x-default" href="https://slice.fusion-labs.cc/" />
+  <!--
+    No hreflang: SLICE is a single-URL app that swaps language at runtime (i18next)
+    and has no per-locale URLs. zh-TW is the default everywhere (html lang, canonical,
+    static meta/OG, i18n fallbackLng). English stays available via the in-app toggle;
+    revisit hreflang only if/when we ship real /en/* locale URLs for an English market.
+  -->
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />

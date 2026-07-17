@@ -56,8 +56,8 @@ const PORT = 4183
 // append them last, which matches the browser/Helmet "last one wins" resolution.
 // So we dedupe by identity keeping the LAST occurrence: the route-specific value
 // survives and the static landing duplicate is dropped. Tags with a unique
-// identity (og:image, the three hreflang alternates, apple-* meta, JSON-LD) have
-// no duplicate and are left untouched.
+// identity (og:image, apple-* meta, JSON-LD) have no duplicate and are left
+// untouched.
 function dedupeManagedHead() {
   const head = document.head
 
@@ -72,8 +72,7 @@ function dedupeManagedHead() {
   })
   if (titles[0]) titles[0].textContent = resolvedTitle
 
-  // <link rel="canonical">: keep the last. (rel="alternate" hreflang links are
-  // distinct identities and are intentionally not touched.)
+  // <link rel="canonical">: keep the last.
   const canonicals = head.querySelectorAll('link[rel="canonical"]')
   canonicals.forEach((el, i) => {
     if (i < canonicals.length - 1) el.remove()
