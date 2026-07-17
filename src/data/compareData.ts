@@ -159,42 +159,42 @@ const tricount: CompetitorEntry = {
     title: 'SLICE vs Tricount',
     subtitle: '分帳工具比較',
     description:
-      '在 SLICE 與 Tricount 之間猶豫？兩者都免費、都適合旅遊分帳。比較介面語言、加入門檻、網頁 vs App、多幣別與結算方式，挑出更適合你的那一個。',
+      'SLICE vs Tricount：想找繁體中文、免安裝、免註冊的旅遊分帳工具？逐項比較介面語言、加入門檻、網頁 vs App、多幣別與結算，看看為什麼台灣與中文使用者更適合 SLICE。',
     intro: [
-      'Tricount 是歐洲很受歡迎的旅遊分帳 App，已被銀行 bunq 收購，本身免費、支援多幣別，靠連結分享讓大家一起記帳。',
-      '和多數比較不同，SLICE 與 Tricount 在「免費」與「低門檻」這兩點上其實很接近。所以這頁的重點不是價格，而是使用方式、語言與體驗上的差異——尤其對台灣與中文使用者而言。'
+      'Tricount 是歐洲很受歡迎的旅遊分帳 App（已被銀行 bunq 收購），功能成熟、也免費——但它是為歐洲市場、以原生 App 為核心設計的產品。',
+      '如果你和朋友主要用繁體中文、習慣在 LINE 群裡丟連結揪團，SLICE 會是更順的選擇：原生繁中介面、免安裝直接開網頁、被邀請的人點連結就能記帳。這頁逐項比較，重點放在對台灣與中文使用者真正有感的差異。'
     ],
     tableCaption: 'SLICE 與 Tricount 功能比較表',
     rows: [
-      { feature: '價格', slice: '完全免費', sliceGood: true, competitor: '免費（由 bunq 提供）', competitorGood: true },
-      { feature: '廣告', slice: '無廣告', sliceGood: true, competitor: '大致無干擾廣告', competitorGood: true },
-      { feature: '繁體中文介面', slice: '原生繁體中文', sliceGood: true, competitor: '以歐語為主，中文支援有限', competitorGood: false },
-      { feature: '註冊門檻', slice: '免註冊，訪客模式秒開', sliceGood: true, competitor: '可用連結加入，主要透過 App', competitorGood: true },
-      { feature: '使用方式', slice: '純網頁，可加入主畫面（PWA）', sliceGood: true, competitor: '以原生 App 為主，另有網頁版', competitorGood: true },
+      { feature: '繁體中文介面', slice: '原生繁體中文，完整在地化', sliceGood: true, competitor: '以歐語為主，繁中支援有限', competitorGood: false },
+      { feature: '免安裝使用', slice: '純網頁，點連結即用；可加入主畫面（PWA）', sliceGood: true, competitor: '以原生 App 為核心，另有網頁版', competitorGood: false },
+      { feature: '註冊門檻', slice: '免註冊，訪客模式秒開', sliceGood: true, competitor: '可用連結加入，但主要透過 App', competitorGood: false },
+      { feature: '朋友加入方式', slice: 'LINE 丟連結，點開就能記帳', sliceGood: true, competitor: '通常需安裝 App 才能加入', competitorGood: false },
+      { feature: '價格', slice: '完全免費、無廣告', sliceGood: true, competitor: '免費（由 bunq 提供）', competitorGood: true },
       { feature: '多幣別', slice: '免費支援，群組自訂匯率', sliceGood: true, competitor: '免費支援多幣別', competitorGood: true },
-      { feature: '最少轉帳結算', slice: '內建自動計算', sliceGood: true, competitor: '提供結算餘額', competitorGood: true },
+      { feature: '最少轉帳結算', slice: '內建自動計算，一目了然', sliceGood: true, competitor: '提供結算餘額', competitorGood: true },
       { feature: '跨裝置同步', slice: '連結 Google 帳號即同步', sliceGood: true, competitor: '需帳號／App 同步', competitorGood: true },
       { feature: '離線使用', slice: '需連線（PWA 有基本快取）', sliceGood: false, competitor: '原生 App 離線體驗較成熟', competitorGood: true },
-      { feature: '銀行整合', slice: '無（純分帳工具）', sliceGood: false, competitor: '可與 bunq 銀行帳戶整合', competitorGood: true }
+      { feature: '銀行整合', slice: '無（專注分帳）', sliceGood: false, competitor: '可與 bunq 銀行帳戶整合', competitorGood: true }
     ],
     whenSliceTitle: '什麼時候選 SLICE？',
     whenSlice: [
-      '如果你的朋友主要用繁體中文、習慣在 LINE 群裡分享連結，SLICE 的在地化與「點連結就開始、不用裝 App」會讓揪團記帳的阻力更低。',
-      '想在瀏覽器裡直接用、不想再多裝一個 App，或想把分帳頁「加入主畫面」當成輕量工具，SLICE 的網頁優先設計會更順手。',
-      '在意畫面清爽、結算一目了然，SLICE 內建的最少轉帳結算會直接算出誰轉給誰。'
+      '你的同伴主要用繁體中文：SLICE 是原生繁中，選單、說明、結算都不用猜，長輩或不熟英文的朋友也能直接上手。',
+      '你們靠 LINE 揪團：把群組連結丟進群，朋友點開就能記帳，不必先各自去商店下載 App、註冊帳號——這一步的流失，往往決定大家最後有沒有真的一起記。',
+      '你想「開了就用」：SLICE 是純網頁，手機、電腦瀏覽器直接用，也能加入主畫面當輕量 App，不必再多裝一個。'
     ],
     whenCompetitorTitle: '什麼時候 Tricount 可能更適合？',
     whenCompetitor: [
-      '如果你或同行的人已經在用 Tricount、身處歐洲、或想要更成熟的原生 App 離線體驗，Tricount 是很穩的選擇。',
-      '若你剛好是 bunq 的使用者，想把分帳與銀行帳戶整合，那 Tricount 的生態會更順。'
+      '你人在歐洲、或同行的人已經在用 Tricount：沿用既有習慣、享受它成熟的原生 App 與離線體驗，是合理選擇。',
+      '你剛好是 bunq 使用者、想把分帳和銀行帳戶整合：這是 Tricount 有、而 SLICE 目前沒有的東西。'
     ],
     faqTitle: '常見問題',
     faqs: [
-      { q: 'SLICE 和 Tricount 都免費，差在哪？', a: '主要差在使用方式與語言。SLICE 是網頁優先、免安裝、原生繁體中文、訪客模式秒開；Tricount 以原生 App 為主、在歐洲較普及、可與 bunq 銀行整合。功能定位相近，選擇取決於你和同伴的習慣。' },
-      { q: 'Tricount 需要下載 App 嗎？', a: `以${DATA_AS_OF_ZH}的公開資訊，Tricount 主要透過原生 App 使用，也有網頁版；被邀請的人通常會用 App 加入。SLICE 則是純網頁，點連結即可參與，不必安裝。` },
-      { q: 'Tricount 有繁體中文嗎？', a: 'Tricount 以歐洲語言為主，繁體中文支援相對有限；SLICE 提供原生繁體中文介面，對台灣使用者更友善。實際語言支援請以官方為準。' },
-      { q: '可以把 Tricount 的帳搬到 SLICE 嗎？', a: '目前沒有自動匯入功能。建議在原工具把未結清的帳結掉，新行程直接在 SLICE 開新群組。' },
-      { q: 'SLICE 支援多幣別嗎？', a: '支援，且是免費功能。你可以為群組設定自訂匯率，出國旅遊用多種貨幣記帳都沒問題。' }
+      { q: 'SLICE 和 Tricount 都免費，我為什麼要選 SLICE？', a: '對台灣與中文使用者來說，SLICE 有三個實際優勢：原生繁體中文介面、免安裝（純網頁、點連結即用）、免註冊訪客模式。Tricount 功能成熟，但以歐洲、原生 App 為核心，繁中支援與「不裝 App 就能加入」這兩點不如 SLICE。' },
+      { q: 'Tricount 一定要下載 App 嗎？', a: `以${DATA_AS_OF_ZH}的公開資訊，Tricount 以原生 App 為核心，雖有網頁版，被邀請的人通常仍會用 App 加入。SLICE 則是純網頁，點連結即可參與、免安裝，對臨時揪團更友善。` },
+      { q: 'Tricount 有繁體中文嗎？', a: 'Tricount 以歐洲語言為主，繁體中文支援相對有限；SLICE 提供完整的原生繁體中文介面。實際語言支援請以官方為準。' },
+      { q: 'SLICE 的多幣別和 Tricount 一樣免費嗎？', a: '是，兩者的多幣別都免費。SLICE 還可為群組設定自訂匯率，出國多幣別記帳沒問題。' },
+      { q: '可以把 Tricount 的帳搬到 SLICE 嗎？', a: '目前沒有自動匯入功能。建議在原工具把未結清的帳結掉，新行程直接在 SLICE 開新群組。' }
     ],
     cta: '免費開始分帳',
     disclaimer:
@@ -205,42 +205,42 @@ const tricount: CompetitorEntry = {
     title: 'SLICE vs Tricount',
     subtitle: 'Bill-splitting comparison',
     description:
-      'Choosing between SLICE and Tricount? Both are free and travel-friendly. Compare sign-up friction, web vs app, multi-currency, settlement, and localization to pick the better fit.',
+      'SLICE vs Tricount: want a bill-splitter with no app to install and no sign-up? Compare friction, web vs app, multi-currency, and settlement to see why SLICE gets a group splitting faster.',
     intro: [
-      'Tricount is a popular European travel expense-splitting app, now owned by the bank bunq. It is free, supports multiple currencies, and lets a group log expenses together via a shared link.',
-      'Unlike most comparisons, SLICE and Tricount are actually close on the "free" and "low-friction" axes. So this page is less about price and more about how you use each one — platform, language, and experience.'
+      'Tricount is a popular European travel expense-splitting app (now owned by the bank bunq). It is mature and free — but it is built around native apps that everyone in the group installs.',
+      'SLICE takes the opposite approach: it is web-first and install-free. Create a group, share the link, and friends start logging by tapping it — no app download, no account. This page compares the two with a focus on friction: how fast you can get a group actually splitting.'
     ],
     tableCaption: 'Feature comparison between SLICE and Tricount',
     rows: [
-      { feature: 'Pricing', slice: 'Completely free', sliceGood: true, competitor: 'Free (provided by bunq)', competitorGood: true },
-      { feature: 'Ads', slice: 'No ads', sliceGood: true, competitor: 'Largely non-intrusive', competitorGood: true },
-      { feature: 'Traditional Chinese UI', slice: 'Native Traditional Chinese', sliceGood: true, competitor: 'European-first; limited Chinese', competitorGood: false },
-      { feature: 'Sign-up', slice: 'None — guest mode starts instantly', sliceGood: true, competitor: 'Join by link, mostly via the app', competitorGood: true },
-      { feature: 'Platform', slice: 'Web-only, installable (PWA)', sliceGood: true, competitor: 'App-first, with a web version', competitorGood: true },
+      { feature: 'No install needed', slice: 'Web-only — tap the link and go; installable (PWA)', sliceGood: true, competitor: 'App-first; everyone installs it', competitorGood: false },
+      { feature: 'Sign-up', slice: 'None — guest mode starts instantly', sliceGood: true, competitor: 'Join by link, but mostly via the app', competitorGood: false },
+      { feature: 'How friends join', slice: 'Share a link — tap to start logging', sliceGood: true, competitor: 'Usually install the app to join', competitorGood: false },
+      { feature: 'Works in any browser', slice: 'Phone, tablet, desktop — same URL', sliceGood: true, competitor: 'App-centric; web version available', competitorGood: true },
+      { feature: 'Pricing', slice: 'Completely free, no ads', sliceGood: true, competitor: 'Free (provided by bunq)', competitorGood: true },
       { feature: 'Multi-currency', slice: 'Free, with per-group custom rates', sliceGood: true, competitor: 'Multi-currency supported, free', competitorGood: true },
       { feature: 'Minimal-transfer settlement', slice: 'Built in, automatic', sliceGood: true, competitor: 'Provides settlement balances', competitorGood: true },
       { feature: 'Cross-device sync', slice: 'Link a Google account to sync', sliceGood: true, competitor: 'Syncs via account/app', competitorGood: true },
       { feature: 'Offline use', slice: 'Online-first (basic PWA caching)', sliceGood: false, competitor: 'More mature offline in native apps', competitorGood: true },
-      { feature: 'Bank integration', slice: 'None (pure splitter)', sliceGood: false, competitor: 'Integrates with bunq accounts', competitorGood: true }
+      { feature: 'Bank integration', slice: 'None (focused splitter)', sliceGood: false, competitor: 'Integrates with bunq accounts', competitorGood: true }
     ],
     whenSliceTitle: 'When to pick SLICE',
     whenSlice: [
-      'If your friends mostly speak Traditional Chinese and share links in group chats, SLICE\'s localization and "tap the link, no install" flow lowers the friction of getting everyone logging.',
-      'If you would rather use it straight in the browser without installing another app — or pin a lightweight splitter to your home screen — SLICE\'s web-first design fits better.',
-      'If you want a clean view and an at-a-glance payoff, SLICE\'s built-in minimal-transfer settlement spells out exactly who pays whom.'
+      'Ad-hoc groups and short trips: SLICE has the lowest possible startup cost — no app to install, no account to create. Drop the link in the chat and everyone is logging in seconds.',
+      'People who resist installing apps: the friend who never downloads anything can still join SLICE from a browser. That one dropped step often decides whether the group actually splits together.',
+      'Anyone who wants "open and go": SLICE runs in any browser and can be pinned to the home screen — no extra app to manage.'
     ],
     whenCompetitorTitle: 'When Tricount may fit better',
     whenCompetitor: [
-      'If you or your travel companions already use Tricount, are based in Europe, or want a more mature native-app offline experience, Tricount is a solid pick.',
-      'If you happen to be a bunq user and want your splitting tied into a bank account, Tricount\'s ecosystem is a smoother fit.'
+      'You are in Europe, or your companions already use Tricount: sticking with a mature native app and its offline experience is a reasonable call.',
+      'You are a bunq user who wants splitting tied into a bank account — something Tricount does and SLICE does not.'
     ],
     faqTitle: 'Frequently asked questions',
     faqs: [
-      { q: 'SLICE and Tricount are both free — what is the difference?', a: 'Mostly platform and language. SLICE is web-first, install-free, natively in Traditional Chinese, with instant guest mode; Tricount is app-first, more widespread in Europe, and integrates with bunq banking. They overlap in purpose, so the choice comes down to your group\'s habits.' },
-      { q: 'Do I need to download an app for Tricount?', a: `As of ${DATA_AS_OF_EN}, Tricount is used mainly through its native apps, with a web version available; invited members typically join via the app. SLICE is web-only — tap the link and join, no install required.` },
-      { q: 'Does Tricount support Traditional Chinese?', a: 'Tricount is European-language-first, and Traditional Chinese support is relatively limited; SLICE ships a native Traditional Chinese interface. Check the official site for current language coverage.' },
-      { q: 'Can I move my Tricount expenses to SLICE?', a: 'There is no automatic import today. We recommend settling outstanding balances in your current tool, then starting a fresh group in SLICE for the next trip.' },
-      { q: 'Does SLICE support multiple currencies?', a: 'Yes, and it is free. You can set custom exchange rates per group, so logging across several currencies on an overseas trip works out of the box.' }
+      { q: 'SLICE and Tricount are both free — why pick SLICE?', a: 'Friction. SLICE is web-first and install-free, with an instant guest mode, so a group can start splitting by tapping a link — no app download, no account. Tricount is a capable, mature app, but it is app-first: everyone installs it and typically signs in, which adds steps before anyone logs a thing.' },
+      { q: 'Do I need to download an app for Tricount?', a: `As of ${DATA_AS_OF_EN}, Tricount is used mainly through its native apps; a web version exists, but invited members typically join via the app. SLICE is web-only — tap the link and join, no install required.` },
+      { q: "Is SLICE's multi-currency free like Tricount's?", a: 'Yes — multi-currency is free in both. SLICE also lets you set custom exchange rates per group, which is handy for overseas trips.' },
+      { q: 'Where does Tricount have the edge?', a: 'Tricount has a more mature native-app offline experience and integrates with bunq bank accounts. If those matter to you it is a strong pick; if you want zero-install, zero-sign-up splitting, SLICE is more direct.' },
+      { q: 'Can I move my Tricount expenses to SLICE?', a: 'There is no automatic import today. We recommend settling outstanding balances in your current tool, then starting a fresh group in SLICE for the next trip.' }
     ],
     cta: 'Start splitting for free',
     disclaimer:
