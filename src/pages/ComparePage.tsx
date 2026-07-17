@@ -230,6 +230,8 @@ function getContent(isZh: boolean): CompareContent {
         { feature: '記帳次數', slice: '無限制', sliceGood: true, splitwise: '免費版有每日輸入上限', splitwiseGood: false },
         { feature: '多幣別', slice: '免費支援，群組自訂匯率', sliceGood: true, splitwise: '換匯屬 Pro 功能', splitwiseGood: false },
         { feature: '最少轉帳結算', slice: '內建自動計算', sliceGood: true, splitwise: '支援（簡化債務）', splitwiseGood: true },
+        { feature: '收據／單據掃描', slice: '手動輸入為主', sliceGood: false, splitwise: 'Pro 支援掃描辨識', splitwiseGood: true },
+        { feature: '離線使用', slice: '需連線（PWA 有基本快取）', sliceGood: false, splitwise: '原生 App 離線體驗較成熟', splitwiseGood: true },
         { feature: '朋友加入方式', slice: '點邀請連結即可，無需帳號', sliceGood: true, splitwise: '成員需註冊帳號', splitwiseGood: false },
         { feature: '使用方式', slice: '網頁直接用，可加入主畫面（PWA）', sliceGood: true, splitwise: '原生 App（iOS／Android）＋網頁版', splitwiseGood: true },
         { feature: '介面語言', slice: '繁體中文、英文', sliceGood: true, splitwise: '多國語言', splitwiseGood: true }
@@ -258,6 +260,14 @@ function getContent(isZh: boolean): CompareContent {
         {
           q: '不註冊的話，我的資料會不見嗎？',
           a: '不會。訪客模式會建立匿名帳號，資料儲存在雲端（Google Firebase）；想跨裝置保留紀錄時，隨時可以升級連結 Google 帳號，資料會完整保留。'
+        },
+        {
+          q: 'Splitwise 免費版有哪些限制？',
+          a: `以${DATA_AS_OF_ZH}的公開資訊，Splitwise 免費版會顯示廣告、每天可新增的支出筆數有上限，且多幣別換匯、收據掃描等進階功能需訂閱 Pro；實際限制請以官方為準。SLICE 則完全免費、無廣告、記帳次數無上限。`
+        },
+        {
+          q: '分帳紀錄可以匯出或備份嗎？',
+          a: 'SLICE 目前沒有 CSV／PDF 匯出功能，但你的帳目會即時儲存在雲端帳號中；連結 Google 帳號後即可跨裝置同步，換手機也不怕遺失紀錄。'
         }
       ],
       cta: '免費開始分帳',
@@ -282,6 +292,8 @@ function getContent(isZh: boolean): CompareContent {
       { feature: 'Expense entries', slice: 'Unlimited', sliceGood: true, splitwise: 'Daily limit on the free tier', splitwiseGood: false },
       { feature: 'Multi-currency', slice: 'Free, with per-group custom rates', sliceGood: true, splitwise: 'Currency conversion is a Pro feature', splitwiseGood: false },
       { feature: 'Minimal-transfer settlement', slice: 'Built in, automatic', sliceGood: true, splitwise: 'Supported (simplify debts)', splitwiseGood: true },
+      { feature: 'Receipt scanning', slice: 'Manual entry', sliceGood: false, splitwise: 'Scanning/OCR on Pro', splitwiseGood: true },
+      { feature: 'Offline use', slice: 'Online-first (basic PWA caching)', sliceGood: false, splitwise: 'More mature offline in native apps', splitwiseGood: true },
       { feature: 'How friends join', slice: 'Tap an invite link — no account needed', sliceGood: true, splitwise: 'Members need to register', splitwiseGood: false },
       { feature: 'Platform', slice: 'Web, installable to home screen (PWA)', sliceGood: true, splitwise: 'Native apps (iOS/Android) + web', splitwiseGood: true },
       { feature: 'Languages', slice: 'Traditional Chinese, English', sliceGood: true, splitwise: 'Many languages', splitwiseGood: true }
@@ -310,6 +322,14 @@ function getContent(isZh: boolean): CompareContent {
       {
         q: "If I don't register, will I lose my data?",
         a: 'No. Guest mode creates an anonymous account and your data is stored in the cloud (Google Firebase). You can link a Google account at any time to keep your records across devices — nothing is lost when you upgrade.'
+      },
+      {
+        q: 'What are the limits on the Splitwise free tier?',
+        a: `As of ${DATA_AS_OF_EN}, the Splitwise free tier shows ads and caps how many expenses you can add per day, and advanced features like currency conversion and receipt scanning require a Pro subscription — check their site for the current limits. SLICE, by contrast, is completely free with no ads and no cap on expense entries.`
+      },
+      {
+        q: 'Can I export or back up my expense history?',
+        a: 'SLICE does not offer CSV/PDF export yet, but your data is saved to your cloud account in real time. Link a Google account to sync across devices so you never lose records when switching phones.'
       }
     ],
     cta: 'Start splitting for free',
