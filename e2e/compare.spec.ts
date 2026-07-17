@@ -52,7 +52,9 @@ test.describe('Compare page', () => {
   test('is reachable from the landing footer', async ({ page }) => {
     await page.goto('/');
 
-    await page.getByRole('link', { name: 'vs Splitwise' }).click();
+    // exact: true so this matches the footer link ("vs Splitwise") and not the
+    // landing compare CTA card, whose accessible name is "Looking for a Splitwise…".
+    await page.getByRole('link', { name: 'vs Splitwise', exact: true }).click();
     await expect(page).toHaveURL(/\/compare\/splitwise$/);
     await expect(page.getByRole('heading', { level: 1, name: 'SLICE vs Splitwise' })).toBeVisible();
   });
