@@ -1,49 +1,31 @@
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, ArrowRight, Check, Minus } from 'lucide-react';
 import { APP_NAME } from '../constants';
+import { COMPARE_COMPETITORS, COMPARE_SLUGS, SITE_ORIGIN, getCompetitor } from '../data/compareData';
 
-const DATA_AS_OF_ZH = '2026 年 7 月';
-const DATA_AS_OF_EN = 'July 2026';
-const PAGE_PATH = '/compare/splitwise';
-const PAGE_URL = `https://slice.fusion-labs.cc${PAGE_PATH}`;
-
-interface CompareRow {
-  feature: string;
-  slice: string;
-  sliceGood: boolean;
-  splitwise: string;
-  splitwiseGood: boolean;
+interface ComparePageProps {
+  /** URL slug, e.g. "splitwise". Parsed by App from /compare/:slug. */
+  slug: string;
 }
 
-interface CompareFaq {
-  q: string;
-  a: string;
-}
-
-interface CompareContent {
-  title: string;
-  subtitle: string;
-  description: string;
-  intro: string[];
-  tableCaption: string;
-  rows: CompareRow[];
-  whenSliceTitle: string;
-  whenSlice: string[];
-  whenSplitwiseTitle: string;
-  whenSplitwise: string[];
-  faqTitle: string;
-  faqs: CompareFaq[];
-  cta: string;
-  disclaimer: string;
-}
-
-export function ComparePage() {
+export function ComparePage({ slug }: ComparePageProps) {
   const { i18n } = useTranslation();
   const isZh = i18n.resolvedLanguage?.startsWith('zh') ?? false;
   const lang = isZh ? 'zh-Hant-TW' : 'en';
-  const content = getContent(isZh);
+
+  const entry = getCompetitor(slug);
+  // Defensive: App only renders known slugs, but guard direct/stale renders.
+  if (!entry) return <Navigate to="/" replace />;
+
+  const content = isZh ? entry.zh : entry.en;
+  const pagePath = `/compare/${entry.slug}`;
+  const pageUrl = `${SITE_ORIGIN}${pagePath}`;
+
+  // Hub-and-spoke internal links: every comparison points at its siblings so no
+  // page is orphaned and link equity flows across the cluster.
+  const siblings = COMPARE_SLUGS.filter((s) => s !== entry.slug).map((s) => COMPARE_COMPETITORS[s]);
 
   const structuredData = {
     '@context': 'https://schema.org',
@@ -51,8 +33,8 @@ export function ComparePage() {
       {
         '@type': 'BreadcrumbList',
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: APP_NAME, item: 'https://slice.fusion-labs.cc/' },
-          { '@type': 'ListItem', position: 2, name: content.title, item: PAGE_URL }
+          { '@type': 'ListItem', position: 1, name: APP_NAME, item: `${SITE_ORIGIN}/` },
+          { '@type': 'ListItem', position: 2, name: content.title, item: pageUrl }
         ]
       },
       {
@@ -72,10 +54,10 @@ export function ComparePage() {
         <html lang={lang} />
         <title>{`${content.title} — ${APP_NAME}`}</title>
         <meta name="description" content={content.description} />
-        <link rel="canonical" href={PAGE_URL} />
+        <link rel="canonical" href={pageUrl} />
         <meta property="og:title" content={`${content.title} — ${APP_NAME}`} />
         <meta property="og:description" content={content.description} />
-        <meta property="og:url" content={PAGE_URL} />
+        <meta property="og:url" content={pageUrl} />
         <meta property="og:locale" content={isZh ? 'zh_TW' : 'en_US'} />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
@@ -125,7 +107,7 @@ export function ComparePage() {
                   </th>
                   <th className="text-left pb-3 w-[33%]">
                     <span className="inline-flex items-center gap-1.5 bg-page-bg text-main-text text-sm font-nunito font-black px-3 py-1.5 rounded-lg border-2 border-main-text">
-                      Splitwise
+                      {content.competitorName}
                     </span>
                   </th>
                 </tr>
@@ -146,10 +128,10 @@ export function ComparePage() {
                     </td>
                     <td className="text-sm font-semibold text-main-text/70 py-3.5 align-top">
                       <span className="flex items-start gap-1.5">
-                        {row.splitwiseGood
+                        {row.competitorGood
                           ? <Check className="w-4 h-4 mt-0.5 shrink-0 text-success-green stroke-[3]" />
                           : <Minus className="w-4 h-4 mt-0.5 shrink-0 text-main-text/30 stroke-[3]" />}
-                        {row.splitwise}
+                        {row.competitor}
                       </span>
                     </td>
                   </tr>
@@ -172,9 +154,9 @@ export function ComparePage() {
           </section>
 
           <section className="mb-10">
-            <h2 className="text-xl font-nunito font-black text-main-text mb-3">{content.whenSplitwiseTitle}</h2>
+            <h2 className="text-xl font-nunito font-black text-main-text mb-3">{content.whenCompetitorTitle}</h2>
             <div className="space-y-3 text-[15px] leading-relaxed text-main-text/85 font-medium">
-              {content.whenSplitwise.map((p, i) => (
+              {content.whenCompetitor.map((p, i) => (
                 <p key={i}>{p}</p>
               ))}
             </div>
@@ -203,137 +185,33 @@ export function ComparePage() {
           </div>
         </div>
 
+        {/* Related comparisons — hub-and-spoke internal linking */}
+        {siblings.length > 0 && (
+          <nav aria-label={isZh ? '其他分帳工具比較' : 'Other comparisons'} className="mt-8">
+            <h2 className="text-sm font-black uppercase tracking-widest text-main-text/50 font-nunito mb-4 px-1">
+              {isZh ? '其他比較' : 'Other comparisons'}
+            </h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {siblings.map((sib) => (
+                <Link
+                  key={sib.slug}
+                  to={`/compare/${sib.slug}`}
+                  className="flex items-center justify-between gap-2 bg-white border-2 border-main-text rounded-2xl px-4 py-3 shadow-[3px_3px_0px_#1A1A2E] hover:bg-brand-light active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] transition-all no-underline"
+                >
+                  <span className="text-[15px] font-nunito font-black text-main-text">
+                    SLICE vs {sib.competitorName}
+                  </span>
+                  <ArrowRight className="w-4 h-4 shrink-0 stroke-[3] text-accent-orange" />
+                </Link>
+              ))}
+            </div>
+          </nav>
+        )}
+
         <div className="mt-6 text-center text-xs font-black tracking-widest text-main-text/40 font-nunito uppercase">
           © {new Date().getFullYear()} {APP_NAME}
         </div>
       </main>
     </div>
   );
-}
-
-function getContent(isZh: boolean): CompareContent {
-  if (isZh) {
-    return {
-      title: 'SLICE vs Splitwise',
-      subtitle: '分帳工具比較',
-      description:
-        '正在找 Splitwise 的免費替代方案？比較 SLICE 與 Splitwise：價格、廣告、註冊門檻、多幣別、記帳限制，幫你挑對群組分帳工具。',
-      intro: [
-        'Splitwise 是最知名的分帳 App 之一，但近年免費版加入了廣告與每日記帳上限，不少功能移到付費的 Pro 方案。',
-        'SLICE 是完全免費的網頁版群組分帳工具：不用下載、不用註冊，開網頁就能開始記帳。這一頁誠實比較兩者的差異，幫你判斷哪一個適合你的情境。'
-      ],
-      tableCaption: 'SLICE 與 Splitwise 功能比較表',
-      rows: [
-        { feature: '價格', slice: '完全免費，無付費方案', sliceGood: true, splitwise: '免費版＋ Pro 訂閱制', splitwiseGood: false },
-        { feature: '廣告', slice: '無廣告', sliceGood: true, splitwise: '免費版有廣告', splitwiseGood: false },
-        { feature: '註冊門檻', slice: '免註冊，訪客模式秒開', sliceGood: true, splitwise: '需要建立帳號', splitwiseGood: false },
-        { feature: '記帳次數', slice: '無限制', sliceGood: true, splitwise: '免費版有每日輸入上限', splitwiseGood: false },
-        { feature: '多幣別', slice: '免費支援，群組自訂匯率', sliceGood: true, splitwise: '換匯屬 Pro 功能', splitwiseGood: false },
-        { feature: '最少轉帳結算', slice: '內建自動計算', sliceGood: true, splitwise: '支援（簡化債務）', splitwiseGood: true },
-        { feature: '收據／單據掃描', slice: '手動輸入為主', sliceGood: false, splitwise: 'Pro 支援掃描辨識', splitwiseGood: true },
-        { feature: '離線使用', slice: '需連線（PWA 有基本快取）', sliceGood: false, splitwise: '原生 App 離線體驗較成熟', splitwiseGood: true },
-        { feature: '朋友加入方式', slice: '點邀請連結即可，無需帳號', sliceGood: true, splitwise: '成員需註冊帳號', splitwiseGood: false },
-        { feature: '使用方式', slice: '網頁直接用，可加入主畫面（PWA）', sliceGood: true, splitwise: '原生 App（iOS／Android）＋網頁版', splitwiseGood: true },
-        { feature: '介面語言', slice: '繁體中文、英文', sliceGood: true, splitwise: '多國語言', splitwiseGood: true }
-      ],
-      whenSliceTitle: '什麼時候選 SLICE？',
-      whenSlice: [
-        '短期出遊、聚餐、臨時成團的分帳，SLICE 幾乎沒有起步成本：開群組、把連結丟進 LINE 群，朋友點開就能記帳——不用逼每個人下載 App、註冊帳號。',
-        '出國旅遊會用到多種幣別時，SLICE 的多幣別與自訂匯率是免費功能；記帳次數也沒有上限，旅途中密集記帳不會卡住。',
-        '結束後，內建的最少轉帳結算會直接告訴每個人「誰轉給誰、轉多少」，一次清空。'
-      ],
-      whenSplitwiseTitle: '什麼時候 Splitwise 可能更適合？',
-      whenSplitwise: [
-        '如果你需要長期（跨年度）的帳務追蹤、收據掃描、或與室友之間的固定循環帳單，Splitwise 的 Pro 方案有更完整的進階功能，原生 App 的離線體驗也更成熟。',
-        '兩者並不衝突：不少人固定帳目用 Splitwise、臨時出遊用 SLICE。'
-      ],
-      faqTitle: '常見問題',
-      faqs: [
-        {
-          q: 'SLICE 真的完全免費嗎？',
-          a: '是。SLICE 沒有付費方案、沒有廣告、沒有記帳次數限制，由獨立開發者維護，僅接受自願性質的贊助。'
-        },
-        {
-          q: '可以把 Splitwise 的資料匯入 SLICE 嗎？',
-          a: '目前沒有自動匯入功能。建議把 Splitwise 上未結清的帳先結掉，新的行程直接在 SLICE 開新群組記帳。'
-        },
-        {
-          q: '不註冊的話，我的資料會不見嗎？',
-          a: '不會。訪客模式會建立匿名帳號，資料儲存在雲端（Google Firebase）；想跨裝置保留紀錄時，隨時可以升級連結 Google 帳號，資料會完整保留。'
-        },
-        {
-          q: 'Splitwise 免費版有哪些限制？',
-          a: `以${DATA_AS_OF_ZH}的公開資訊，Splitwise 免費版會顯示廣告、每天可新增的支出筆數有上限，且多幣別換匯、收據掃描等進階功能需訂閱 Pro；實際限制請以官方為準。SLICE 則完全免費、無廣告、記帳次數無上限。`
-        },
-        {
-          q: '分帳紀錄可以匯出或備份嗎？',
-          a: 'SLICE 目前沒有 CSV／PDF 匯出功能，但你的帳目會即時儲存在雲端帳號中；連結 Google 帳號後即可跨裝置同步，換手機也不怕遺失紀錄。'
-        }
-      ],
-      cta: '免費開始分帳',
-      disclaimer:
-        `Splitwise 相關描述以 ${DATA_AS_OF_ZH}的公開資訊為準，其功能與定價可能變動，請以官方網站為準。Splitwise 為其權利人之商標；本站為獨立專案，與 Splitwise 無任何關聯。`
-    };
-  }
-  return {
-    title: 'SLICE vs Splitwise',
-    subtitle: 'Bill-splitting comparison',
-    description:
-      'Looking for a free Splitwise alternative? Compare SLICE and Splitwise on pricing, ads, sign-up friction, multi-currency, and expense limits.',
-    intro: [
-      'Splitwise is one of the best-known bill-splitting apps, but its free tier now includes ads and a daily expense-entry limit, with several features moved behind the Pro subscription.',
-      'SLICE is a completely free, web-based group expense splitter: nothing to download, no account required — open the page and start logging. Here is an honest comparison to help you pick the right tool for your situation.'
-    ],
-    tableCaption: 'Feature comparison between SLICE and Splitwise',
-    rows: [
-      { feature: 'Pricing', slice: 'Completely free, no paid tier', sliceGood: true, splitwise: 'Free tier + Pro subscription', splitwiseGood: false },
-      { feature: 'Ads', slice: 'No ads', sliceGood: true, splitwise: 'Ads on the free tier', splitwiseGood: false },
-      { feature: 'Sign-up', slice: 'None — guest mode starts instantly', sliceGood: true, splitwise: 'Account required', splitwiseGood: false },
-      { feature: 'Expense entries', slice: 'Unlimited', sliceGood: true, splitwise: 'Daily limit on the free tier', splitwiseGood: false },
-      { feature: 'Multi-currency', slice: 'Free, with per-group custom rates', sliceGood: true, splitwise: 'Currency conversion is a Pro feature', splitwiseGood: false },
-      { feature: 'Minimal-transfer settlement', slice: 'Built in, automatic', sliceGood: true, splitwise: 'Supported (simplify debts)', splitwiseGood: true },
-      { feature: 'Receipt scanning', slice: 'Manual entry', sliceGood: false, splitwise: 'Scanning/OCR on Pro', splitwiseGood: true },
-      { feature: 'Offline use', slice: 'Online-first (basic PWA caching)', sliceGood: false, splitwise: 'More mature offline in native apps', splitwiseGood: true },
-      { feature: 'How friends join', slice: 'Tap an invite link — no account needed', sliceGood: true, splitwise: 'Members need to register', splitwiseGood: false },
-      { feature: 'Platform', slice: 'Web, installable to home screen (PWA)', sliceGood: true, splitwise: 'Native apps (iOS/Android) + web', splitwiseGood: true },
-      { feature: 'Languages', slice: 'Traditional Chinese, English', sliceGood: true, splitwise: 'Many languages', splitwiseGood: true }
-    ],
-    whenSliceTitle: 'When to pick SLICE',
-    whenSlice: [
-      'For trips, dinners, and ad-hoc groups, SLICE has almost zero startup cost: create a group, drop the invite link into your chat, and friends start logging right away — no one has to install an app or create an account.',
-      'Traveling across currencies? Multi-currency with custom exchange rates is free in SLICE, and there is no cap on how many expenses you log.',
-      'When the trip ends, the built-in minimal-transfer settlement tells everyone exactly who pays whom, and how much, to clear all balances at once.'
-    ],
-    whenSplitwiseTitle: 'When Splitwise may fit better',
-    whenSplitwise: [
-      'If you need long-running, multi-year ledgers, receipt scanning, or recurring bills with roommates, Splitwise Pro offers more advanced features, and its native apps have a more mature offline experience.',
-      'The two are not mutually exclusive — plenty of people keep Splitwise for recurring household bills and use SLICE for one-off trips.'
-    ],
-    faqTitle: 'Frequently asked questions',
-    faqs: [
-      {
-        q: 'Is SLICE really completely free?',
-        a: 'Yes. SLICE has no paid tier, no ads, and no limits on expense entries. It is maintained by an independent developer and funded only by voluntary sponsorship.'
-      },
-      {
-        q: 'Can I import my Splitwise data into SLICE?',
-        a: 'There is no automatic import at the moment. We recommend settling outstanding balances in Splitwise first, then starting fresh groups in SLICE for new trips.'
-      },
-      {
-        q: "If I don't register, will I lose my data?",
-        a: 'No. Guest mode creates an anonymous account and your data is stored in the cloud (Google Firebase). You can link a Google account at any time to keep your records across devices — nothing is lost when you upgrade.'
-      },
-      {
-        q: 'What are the limits on the Splitwise free tier?',
-        a: `As of ${DATA_AS_OF_EN}, the Splitwise free tier shows ads and caps how many expenses you can add per day, and advanced features like currency conversion and receipt scanning require a Pro subscription — check their site for the current limits. SLICE, by contrast, is completely free with no ads and no cap on expense entries.`
-      },
-      {
-        q: 'Can I export or back up my expense history?',
-        a: 'SLICE does not offer CSV/PDF export yet, but your data is saved to your cloud account in real time. Link a Google account to sync across devices so you never lose records when switching phones.'
-      }
-    ],
-    cta: 'Start splitting for free',
-    disclaimer:
-      `Statements about Splitwise reflect publicly available information as of ${DATA_AS_OF_EN}; its features and pricing may change — check their official site. Splitwise is a trademark of its owner; this site is an independent project not affiliated with Splitwise.`
-  };
 }

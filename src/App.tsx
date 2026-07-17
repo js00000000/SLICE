@@ -25,6 +25,14 @@ import { LegalPage } from './pages/LegalPage';
 import { ComparePage } from './pages/ComparePage';
 import { AboutPage } from './pages/AboutPage';
 import { TravelSplitGuidePage } from './pages/TravelSplitGuidePage';
+import { COMPARE_SLUGS } from './data/compareData';
+
+// Parse a known /compare/:slug route to its slug, or null. Unknown competitors
+// fall through to the SPA's not-found handling (redirect to "/").
+const getCompareSlug = (pathname: string): string | null => {
+  const m = pathname.match(/^\/compare\/([^/]+)\/?$/);
+  return m && COMPARE_SLUGS.includes(m[1]) ? m[1] : null;
+};
 
 // Import Hooks
 import { useAuth } from './contexts/AuthContext';
@@ -36,7 +44,7 @@ import { InstallPrompt } from './components/InstallPrompt';
 const isValidRoute = (pathname: string): boolean => {
   if (pathname === '/' || pathname === '') return true;
   if (pathname === '/privacy' || pathname === '/terms') return true;
-  if (pathname === '/compare/splitwise') return true;
+  if (getCompareSlug(pathname)) return true;
   if (pathname === '/about') return true;
   if (pathname === '/guide/travel-split') return true;
   if (/^\/join\/[^/]+\/?$/.test(pathname)) return true;
@@ -158,7 +166,7 @@ export default function App() {
     if (
       location.pathname === '/privacy' ||
       location.pathname === '/terms' ||
-      location.pathname === '/compare/splitwise' ||
+      location.pathname.startsWith('/compare/') ||
       location.pathname === '/about' ||
       location.pathname === '/guide/travel-split'
     ) return;
@@ -172,7 +180,8 @@ export default function App() {
   // Legal/compare pages render regardless of auth state, ahead of the loading gate.
   if (location.pathname === '/privacy') return <LegalPage kind="privacy" />;
   if (location.pathname === '/terms') return <LegalPage kind="terms" />;
-  if (location.pathname === '/compare/splitwise') return <ComparePage />;
+  const compareSlug = getCompareSlug(location.pathname);
+  if (compareSlug) return <ComparePage slug={compareSlug} />;
   if (location.pathname === '/about') return <AboutPage />;
   if (location.pathname === '/guide/travel-split') return <TravelSplitGuidePage />;
 

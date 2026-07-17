@@ -26,23 +26,17 @@ import { chromium } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { PAGES } from './seo-routes.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const distDir = path.resolve(__dirname, '../dist')
 
-// Public routes that should be independently indexable. Keep in sync with the
-// PAGES list in generate-sitemap.js and the isValidRoute() allowlist in App.tsx.
+// Public routes that should be independently indexable, sourced from the shared
+// registry (scripts/seo-routes.mjs) so prerender and the sitemap never drift.
 // Root ("/") already carries strong static SEO in index.html, but we prerender
 // it too so the shipped HTML contains the rendered landing body (not just the
 // <noscript> fallback).
-const ROUTES = [
-  '/',
-  '/privacy',
-  '/terms',
-  '/about',
-  '/compare/splitwise',
-  '/guide/travel-split',
-]
+const ROUTES = PAGES.map((p) => p.path)
 
 const PORT = 4183
 

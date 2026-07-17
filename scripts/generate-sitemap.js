@@ -2,52 +2,13 @@ import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
+import { PAGES } from './seo-routes.mjs';
 
 // Get current directory in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const DOMAIN = 'https://slice.fusion-labs.cc';
-
-// Pages to generate sitemap entries for
-const PAGES = [
-  {
-    path: '/',
-    file: 'src/pages/LandingPage.tsx',
-    changefreq: 'weekly',
-    priority: '1.0'
-  },
-  {
-    path: '/guide/travel-split',
-    file: 'src/pages/TravelSplitGuidePage.tsx',
-    changefreq: 'monthly',
-    priority: '0.6'
-  },
-  {
-    path: '/about',
-    file: 'src/pages/AboutPage.tsx',
-    changefreq: 'monthly',
-    priority: '0.5'
-  },
-  {
-    path: '/compare/splitwise',
-    file: 'src/pages/ComparePage.tsx',
-    changefreq: 'monthly',
-    priority: '0.6'
-  },
-  {
-    path: '/privacy',
-    file: 'src/pages/LegalPage.tsx', // privacy is a variant inside LegalPage
-    changefreq: 'yearly',
-    priority: '0.3'
-  },
-  {
-    path: '/terms',
-    file: 'src/pages/LegalPage.tsx', // terms is a variant inside LegalPage
-    changefreq: 'yearly',
-    priority: '0.3'
-  }
-];
 
 function getLastModifiedDate(filePath) {
   try {
