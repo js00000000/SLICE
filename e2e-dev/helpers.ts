@@ -113,6 +113,35 @@ export async function openExpenseModal(page: Page): Promise<void> {
 }
 
 /**
+ * Reload (or re-navigate to `url`) and run `assert`, retrying the whole cycle
+ * until it passes. A Firestore write issued from a slow client (the CI runner's
+ * network path to Firebase) can take well over a single assertion's timeout to
+ * commit server-side, and a fresh page load discards the in-memory optimistic
+ * copy of that write — so a one-shot "reload then assert the persisted value"
+ * reliably flakes on CI while passing instantly on localhost. Re-reading in a
+ * toPass loop lets the write reach the server and the fresh listeners catch up.
+ *
+ * This is the same resilient pattern already used inline in
+ * member-management.spec.ts's "host deletes a member" (the one reload-readback
+ * test that never flaked). Keep per-assert timeouts short so each cycle fails
+ * fast and the loop can re-read, and let the outer `timeout` bound the total.
+ */
+export async function reloadUntil(
+  page: Page,
+  assert: () => Promise<void>,
+  { url, timeout = 30_000 }: { url?: string; timeout?: number } = {},
+): Promise<void> {
+  await expect(async () => {
+    if (url) {
+      await page.goto(url);
+    } else {
+      await page.reload();
+    }
+    await assert();
+  }).toPass({ timeout });
+}
+
+/**
  * Best-effort teardown for the shared dev project: delete the current
  * anonymous account, which cascades to deleting the groups it created
  * (handleDeleteAccount → cleanupUserData in AuthContext). Drives the app's own

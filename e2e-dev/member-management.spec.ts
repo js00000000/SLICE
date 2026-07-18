@@ -4,6 +4,7 @@ import {
   addMemberByHost,
   addExpense,
   confirmDialog,
+  reloadUntil,
 } from './helpers';
 
 // Account is shared across the whole worker and deleted once at teardown (see
@@ -21,10 +22,14 @@ test('host adds a member and it shows in the member list', async ({ page }) => {
   await expect(page.getByText('2 members')).toBeVisible();
   await expect(page.getByText('Alice', { exact: true })).toBeVisible();
 
-  // Persisted to Firestore, so it survives a reload.
-  await page.reload();
-  await expect(page.getByText('2 members')).toBeVisible();
-  await expect(page.getByText('Alice', { exact: true })).toBeVisible();
+  // Persisted to Firestore, so it survives a reload. The member-create write can
+  // take longer than one assertion window to commit on the slow CI→Firebase path,
+  // and a reload drops the in-memory optimistic copy — so re-read until the
+  // server truth reflects Alice rather than asserting once.
+  await reloadUntil(page, async () => {
+    await expect(page.getByText('2 members')).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText('Alice', { exact: true })).toBeVisible({ timeout: 5_000 });
+  });
 });
 
 test('host renames the group', async ({ page }) => {
@@ -38,11 +43,13 @@ test('host renames the group', async ({ page }) => {
   await page.getByRole('button', { name: 'Save' }).click();
 
   // The rename propagates to the dashboard heading via the group-doc listener.
-  await page.goto(`/group/${groupId}`);
-  await expect(page.getByRole('heading', { level: 1, name: 'Beach Trip' })).toBeVisible();
-
-  await page.reload();
-  await expect(page.getByRole('heading', { level: 1, name: 'Beach Trip' })).toBeVisible();
+  // The group-doc update may not have committed before this fresh dashboard load
+  // reads it, so re-navigate until the renamed heading shows.
+  await reloadUntil(
+    page,
+    () => expect(page.getByRole('heading', { level: 1, name: 'Beach Trip' })).toBeVisible({ timeout: 5_000 }),
+    { url: `/group/${groupId}` },
+  );
 });
 
 test('host deletes a member after confirmation', async ({ page }) => {
@@ -121,6 +128,6 @@ test('member updates their own display name', async ({ page }) => {
   // member's row).
   await expect(page.getByText('Captain')).toBeVisible();
 
-  await page.reload();
-  await expect(page.getByText('Captain')).toBeVisible();
+  // Survives a reload once committed; re-read to absorb the CI→Firebase commit lag.
+  await reloadUntil(page, () => expect(page.getByText('Captain')).toBeVisible({ timeout: 5_000 }));
 });

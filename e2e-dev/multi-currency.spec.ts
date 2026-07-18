@@ -4,6 +4,7 @@ import {
   addCurrency,
   openExpenseModal,
   confirmDialog,
+  reloadUntil,
 } from './helpers';
 
 // Account is shared across the whole worker and deleted once at teardown (see
@@ -22,10 +23,13 @@ test('host adds a currency with an exchange rate and it persists', async ({ page
   await expect(section.getByText('JPY · Exchange Rate')).toBeVisible();
   await expect(section.locator('input[type="number"]').first()).toHaveValue('0.21');
 
-  // Persisted to Firestore — survives a full reload.
-  await page.reload();
-  await expect(section.getByText('JPY · Exchange Rate')).toBeVisible();
-  await expect(section.locator('input[type="number"]').first()).toHaveValue('0.21');
+  // Persisted to Firestore — survives a full reload. The group-doc update can lag
+  // behind a single assertion window on the CI→Firebase path, and the reload
+  // drops the optimistic copy, so re-read until the stored rate comes back.
+  await reloadUntil(page, async () => {
+    await expect(section.getByText('JPY · Exchange Rate')).toBeVisible({ timeout: 5_000 });
+    await expect(section.locator('input[type="number"]').first()).toHaveValue('0.21', { timeout: 5_000 });
+  });
 });
 
 test('expense in a foreign currency shows original + converted amounts', async ({ page }) => {
@@ -43,7 +47,12 @@ test('expense in a foreign currency shows original + converted amounts', async (
   // Settings → add JPY @ 0.21, then go back to the dashboard.
   await page.goto(`/group/${groupId}/members`);
   await addCurrency(page, { code: 'JPY', rate: '0.21' });
-  await expect(page.locator('section').filter({ hasText: 'Currencies' }).getByText('JPY · Exchange Rate')).toBeVisible();
+  // Confirm the currency committed server-side before leaving this page: the
+  // dashboard reads the group doc on a fresh load, and if the write hasn't
+  // landed yet the expense modal renders no currency chips at all (the observed
+  // CI flake). Re-read here so JPY is durable before we depend on it.
+  await reloadUntil(page, () =>
+    expect(page.locator('section').filter({ hasText: 'Currencies' }).getByText('JPY · Exchange Rate')).toBeVisible({ timeout: 5_000 }));
 
   // Go back to the dashboard and wait for the page to settle.
   await page.goto(`/group/${groupId}`);
@@ -122,7 +131,9 @@ test('removing a currency requires confirmation and is blocked while in use', as
   await confirmDialog(page);
   await expect(section.getByText('KRW · Exchange Rate')).toHaveCount(0);
   await addCurrency(page, { code: 'JPY', rate: '0.21' });
-  await expect(section.getByText('JPY · Exchange Rate')).toBeVisible();
+  // JPY must be committed server-side before the dashboard expense modal can
+  // offer it as a chip on a fresh load — re-read until it's durable.
+  await reloadUntil(page, () => expect(section.getByText('JPY · Exchange Rate')).toBeVisible({ timeout: 5_000 }));
 
   // Add a JPY expense so JPY is now in use.
   await page.goto(`/group/${groupId}`);
@@ -133,6 +144,10 @@ test('removing a currency requires confirmation and is blocked while in use', as
   await page.getByRole('button', { name: 'Select All' }).click();
   await page.getByRole('button', { name: 'Confirm' }).click();
   await expect(page).toHaveURL(new RegExp(`/group/${groupId}/expenses$`));
+  // The delete-block below only triggers if the members page (a fresh load) can
+  // read an expense still referencing JPY. Confirm the expense committed
+  // server-side before navigating away, so the guard sees it.
+  await reloadUntil(page, () => expect(page.getByRole('heading', { name: 'Sushi' })).toBeVisible({ timeout: 5_000 }));
 
   // Return to settings and try to remove JPY — should show an error toast
   // because an expense still references it.
