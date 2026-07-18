@@ -573,7 +573,7 @@ export function LandingPage({
                   className={`grid transition-[grid-template-rows] duration-300 ease-out ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
                 >
                   <div className="overflow-hidden">
-                    <p className="px-5 md:px-6 pb-5 md:pb-6 text-sm text-gray-500 font-medium leading-relaxed">{a}</p>
+                    <p className="px-5 md:px-6 py-4 text-sm text-gray-500 font-medium leading-relaxed">{a}</p>
                   </div>
                 </div>
               </div>
