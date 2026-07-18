@@ -125,7 +125,7 @@ export function LandingPage({
     },
     {
       q: '可以把 SLICE 安裝成 App 嗎？',
-      a: '可以。SLICE 是 PWA（漸進式網頁應用），Android 使用 Chrome 選單的「安裝應用程式」，iPhone 使用 Safari 分享按鈕的「加入主畫面」，即可像 App 一樣從主畫面直接開啟，無需透過 App Store 下載。'
+      a: '可以。SLICE 是 PWA（漸進式網頁應用），Android 使用 Chrome 選單的「安裝應用程式」，iPhone 則用 Safari 或 Chrome 分享按鈕的「加入主畫面」，即可像 App 一樣從主畫面直接開啟，無需透過 App Store 下載。'
     },
     {
       q: '我的資料安全嗎？',
@@ -154,7 +154,7 @@ export function LandingPage({
     },
     {
       q: 'Can I install SLICE as an app?',
-      a: 'Yes. SLICE is a PWA (progressive web app) — on Android use "Install app" from the Chrome menu; on iPhone use "Add to Home Screen" from the Safari share button. It then launches from your home screen like a native app, no App Store needed.'
+      a: 'Yes. SLICE is a PWA (progressive web app) — on Android use "Install app" from the Chrome menu; on iPhone use "Add to Home Screen" from the Safari or Chrome share button. It then launches from your home screen like a native app, no App Store needed.'
     },
     {
       q: 'Is my data private?',
