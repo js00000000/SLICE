@@ -559,7 +559,7 @@ export function LandingPage({
                   aria-expanded={isOpen}
                   aria-controls={panelId}
                   onClick={() => toggleFaq(idx)}
-                  className="w-full flex items-center justify-between gap-4 p-5 md:p-6 text-left cursor-pointer hover:bg-brand-light/40 transition-colors"
+                  className={`w-full flex items-center justify-between gap-4 p-5 md:p-6 text-left cursor-pointer transition-colors ${isOpen ? 'bg-brand-light/40' : 'hover:bg-brand-light/40'}`}
                 >
                   <h3 className="font-nunito font-black text-base md:text-lg text-main-text leading-snug">{q}</h3>
                   <span className={`shrink-0 w-9 h-9 bg-brand-light border-2 border-main-text rounded-full flex items-center justify-center transition-all duration-150 ${isOpen ? 'translate-x-[1px] translate-y-[1px] shadow-[1px_1px_0px_#1A1A2E]' : 'shadow-[2px_2px_0px_#1A1A2E]'}`}>
