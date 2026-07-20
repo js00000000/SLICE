@@ -67,8 +67,8 @@ export default function App() {
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const {
-    user, authLoading, googleLoading, guestLoading, isSoftLoggedOut,
-    handleGoogleLogin, handleGuestLogin, handleQuickStart
+    user, authLoading, googleLoading, lineLoading, guestLoading, isSoftLoggedOut,
+    handleGoogleLogin, handleLineLogin, handleGuestLogin, handleQuickStart
   } = useAuth();
   const { currentMemberId, currentMember, isLoading } = useGroup();
 
@@ -80,9 +80,9 @@ export default function App() {
   // bail out if the user signed in (e.g. anonymously) while the check was in
   // flight — otherwise a stale resolve could fire a "group not found" toast
   // even though the join is succeeding.
-  const authStateRef = useRef({ user, isSoftLoggedOut, guestLoading, googleLoading });
+  const authStateRef = useRef({ user, isSoftLoggedOut, guestLoading, googleLoading, lineLoading });
   useEffect(() => {
-    authStateRef.current = { user, isSoftLoggedOut, guestLoading, googleLoading };
+    authStateRef.current = { user, isSoftLoggedOut, guestLoading, googleLoading, lineLoading };
   });
 
   useEffect(() => {
@@ -140,7 +140,7 @@ export default function App() {
         // authenticated join flow now owns the outcome — don't surface a stale
         // "not found" toast.
         const auth = authStateRef.current;
-        const authProgressed = (auth.user && !auth.isSoftLoggedOut) || auth.guestLoading || auth.googleLoading;
+        const authProgressed = (auth.user && !auth.isSoftLoggedOut) || auth.guestLoading || auth.googleLoading || auth.lineLoading;
         if (isMounted && !authProgressed) {
           if (!exists) {
             setInvalidUrlGroup(urlToken);
@@ -235,8 +235,10 @@ export default function App() {
           )}
           <LandingPage
             onGoogleLogin={handleGoogleLogin}
+            onLineLogin={handleLineLogin}
             onQuickStart={handleQuickStart}
             isGoogleLoading={googleLoading}
+            isLineLoading={lineLoading}
             isGuestLoading={guestLoading}
             hasWebviewBanner={showWebviewBanner}
           />
@@ -259,10 +261,12 @@ export default function App() {
         )}
         <LoginView
           onGoogleLogin={handleGoogleLogin}
+          onLineLogin={handleLineLogin}
           onGuestLogin={handleGuestLogin}
           onQuickStart={handleQuickStart}
           showQuickStart={false}
           isGoogleLoading={googleLoading}
+          isLineLoading={lineLoading}
           isGuestLoading={guestLoading}
         />
       </div>

@@ -30,7 +30,7 @@ import {
   setDoc,
   serverTimestamp
 } from 'firebase/firestore';
-import { auth, googleProvider, db } from '../lib/firebase';
+import { auth, googleProvider, lineProvider, LINE_PROVIDER_ID, db } from '../lib/firebase';
 import { firebaseService } from '../lib/firebaseService';
 import { AbandonGuestConfirmationModal } from '../components/MergeConfirmationModal';
 import { fetchUserGeolocation } from '../utils/geolocation';
@@ -40,10 +40,12 @@ interface AuthContextType {
   user: User | null;
   authLoading: boolean;
   googleLoading: boolean;
+  lineLoading: boolean;
   guestLoading: boolean;
   deleteLoading: boolean;
   isSoftLoggedOut: boolean;
   handleGoogleLogin: () => Promise<void>;
+  handleLineLogin: () => Promise<void>;
   handleGuestLogin: () => Promise<void>;
   handleQuickStart: () => Promise<void>;
   handleLogout: () => Promise<void>;
@@ -58,9 +60,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [lineLoading, setLineLoading] = useState(false);
   const [guestLoading, setGuestLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [showAbandonGuestConfirm, setShowAbandonGuestConfirm] = useState(false);
+  const [abandonProvider, setAbandonProvider] = useState<'Google' | 'LINE'>('Google');
   const [isSoftLoggedOut, setIsSoftLoggedOut] = useState(() => localStorage.getItem('is_soft_logged_out') === 'true');
 
   const saveGoogleToken = (result: UserCredential) => {
@@ -105,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Redirect error catch:", error);
         const authErr = error as AuthError;
         if (authErr.code === 'auth/credential-already-in-use') {
-          // If they tried to link a Google account that already exists via redirect, 
+          // If they tried to link an account that already exists via redirect, 
           // we show the confirmation instead of auto-signing in
           setShowAbandonGuestConfirm(true);
         } else {
@@ -117,7 +121,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userDocRef = doc(db, 'users', currentUser.uid);
       try {
         const userDocSnap = await getDoc(userDocRef);
-        const loginMethod = currentUser.isAnonymous ? 'anonymous' : 'google';
+        let loginMethod = 'anonymous';
+        if (!currentUser.isAnonymous) {
+          const mainProvider = currentUser.providerData[0]?.providerId;
+          if (mainProvider === 'google.com') {
+            loginMethod = 'google';
+          } else if (mainProvider === LINE_PROVIDER_ID || mainProvider?.includes('line')) {
+            loginMethod = 'line';
+          } else {
+            loginMethod = mainProvider || 'google';
+          }
+        }
         
         // Fetch country with explicit try-catch and safe fallback so it NEVER blocks login or register
         let detectedCountry: string | null = null;
@@ -283,6 +297,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await linkWithRedirect(auth.currentUser, googleProvider);
           } else if (error.code === 'auth/credential-already-in-use') {
             // Google account already exists, show confirmation before switching
+            setAbandonProvider('Google');
             setShowAbandonGuestConfirm(true);
           } else if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
             // User closed the popup, just reset loading state
@@ -313,6 +328,86 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast.error(t('common.error'));
     } finally {
       setGoogleLoading(false);
+    }
+  };
+
+  const handleLineLogin = async () => {
+    try {
+      setLineLoading(true);
+
+      // If they were a guest and soft-logged out, we sign out completely
+      // so this LINE login is treated as a fresh start, not a link attempt.
+      if (isSoftLoggedOut && auth.currentUser?.isAnonymous) {
+        await signOut(auth);
+      }
+
+      setIsSoftLoggedOut(false);
+      localStorage.removeItem('is_soft_logged_out');
+
+      if (auth.currentUser && auth.currentUser.isAnonymous) {
+        try {
+          await linkWithPopup(auth.currentUser, lineProvider);
+          await auth.currentUser.reload();
+          setUser(Object.create(
+            Object.getPrototypeOf(auth.currentUser),
+            Object.getOwnPropertyDescriptors(auth.currentUser)
+          ));
+          toast.success(t('profile.line_link_success'));
+        } catch (err: unknown) {
+          const error = err as AuthError;
+          if (error.code === 'auth/popup-blocked') {
+            await linkWithRedirect(auth.currentUser, lineProvider);
+          } else if (error.code === 'auth/credential-already-in-use') {
+            // LINE account already exists, show confirmation before switching
+            setAbandonProvider('LINE');
+            setShowAbandonGuestConfirm(true);
+          } else if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+            console.log("LINE login popup closed by user");
+          } else {
+            throw error;
+          }
+        }
+      } else if (auth.currentUser && !auth.currentUser.isAnonymous) {
+        try {
+          await linkWithPopup(auth.currentUser, lineProvider);
+          await auth.currentUser.reload();
+          setUser(Object.create(
+            Object.getPrototypeOf(auth.currentUser),
+            Object.getOwnPropertyDescriptors(auth.currentUser)
+          ));
+          toast.success(t('profile.line_link_success'));
+        } catch (err: unknown) {
+          const error = err as AuthError;
+          if (error.code === 'auth/popup-blocked') {
+            await linkWithRedirect(auth.currentUser, lineProvider);
+          } else if (error.code === 'auth/credential-already-in-use') {
+            toast.error(t('auth.line_already_linked_error') || t('auth.account_exists'));
+          } else if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+            console.log("LINE link popup closed by user");
+          } else {
+            throw error;
+          }
+        }
+      } else {
+        try {
+          await signInWithPopup(auth, lineProvider);
+        } catch (err: unknown) {
+          const error = err as AuthError;
+          if (error.code === 'auth/popup-blocked') {
+            await signInWithRedirect(auth, lineProvider);
+          } else if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+            console.log("LINE login popup closed by user");
+          } else {
+            throw error;
+          }
+        }
+      }
+    } catch (err: unknown) {
+      const error = err as AuthError;
+      console.error("LINE login error:", error);
+      toast.error(t('common.error'));
+    } finally {
+      setLineLoading(false);
     }
   };
 
@@ -365,8 +460,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const confirmAbandon = async () => {
+    const isLine = abandonProvider === 'LINE';
+    const provider = isLine ? lineProvider : googleProvider;
+    const setLoading = isLine ? setLineLoading : setGoogleLoading;
     try {
-      setGoogleLoading(true);
+      setLoading(true);
       setShowAbandonGuestConfirm(false);
 
       const guestUser = auth.currentUser;
@@ -379,16 +477,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
       }
 
-      // 6. Sign in with Google
+      // 6. Sign in with Provider
       try {
-        await signInWithPopup(auth, googleProvider);
+        await signInWithPopup(auth, provider);
       } catch (err: unknown) {
         const popupError = err as AuthError;
         if (popupError.code === 'auth/popup-blocked') {
-          await signInWithRedirect(auth, googleProvider);
+          await signInWithRedirect(auth, provider);
         } else if (popupError.code === 'auth/popup-closed-by-user' || popupError.code === 'auth/cancelled-popup-request') {
-          // User closed the popup, just reset loading state
-          console.log("Google login popup closed by user during abandon confirmation");
+          console.log(`${abandonProvider} login popup closed by user during abandon confirmation`);
         } else {
           throw popupError;
         }
@@ -398,7 +495,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("Confirm abandon error:", error);
       toast.error(t('common.error'));
     } finally {
-      setGoogleLoading(false);
+      setLoading(false);
     }
   };
 
@@ -475,6 +572,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               toast.error(t('common.error'));
             }
           }
+        } else if (currentUser.providerData.some(p => p.providerId === LINE_PROVIDER_ID || p.providerId.includes('line'))) {
+          try {
+            await reauthenticateWithPopup(currentUser, lineProvider);
+            await deleteUser(currentUser);
+            setUser(null);
+            toast.success(t('auth.delete_account_success'));
+          } catch (reauthErr: unknown) {
+            const reauthError = reauthErr as AuthError;
+            if (reauthError.code === 'auth/popup-blocked') {
+              await reauthenticateWithRedirect(currentUser, lineProvider);
+            } else if (reauthError.code === 'auth/popup-closed-by-user' || reauthError.code === 'auth/cancelled-popup-request') {
+              console.log("Deletion re-authentication popup closed by user");
+            } else {
+              toast.error(t('common.error'));
+            }
+          }
         } else {
           toast.error(t('auth.requires_recent_login_msg') || 'Please re-login before deleting your account for security reasons.');
         }
@@ -491,10 +604,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user, 
       authLoading, 
       googleLoading, 
+      lineLoading,
       guestLoading, 
       deleteLoading,
       isSoftLoggedOut,
       handleGoogleLogin, 
+      handleLineLogin,
       handleGuestLogin, 
       handleQuickStart,
       handleLogout,
@@ -505,6 +620,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         <AbandonGuestConfirmationModal
           onClose={() => setShowAbandonGuestConfirm(false)}
           onConfirm={confirmAbandon}
+          providerName={abandonProvider}
         />
       )}
     </AuthContext.Provider>

@@ -5,6 +5,7 @@ import type { Member } from '../types';
 import { useDialog } from '../contexts/DialogContext';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useAuth } from '../contexts/AuthContext';
+import { LINE_PROVIDER_ID } from '../lib/firebase';
 import { SponsorModal } from './SponsorModal';
 
 interface ProfileModalProps {
@@ -23,14 +24,19 @@ export function ProfileModal({
   useScrollLock();
   const { t } = useTranslation();
   const { confirm } = useDialog();
-  const { user, googleLoading, deleteLoading, handleGoogleLogin } = useAuth();
+  const { user, googleLoading, lineLoading, deleteLoading, handleGoogleLogin, handleLineLogin } = useAuth();
   const [name, setName] = useState(currentMember.name || '');
   const [isSponsorOpen, setIsSponsorOpen] = useState(false);
 
   const isGoogleLinked = user?.providerData.some(p => p.providerId === 'google.com') || false;
+  const isLineLinked = user?.providerData.some(p => p.providerId === LINE_PROVIDER_ID || p.providerId.includes('line')) || false;
 
   const handleLinkGoogleClick = async () => {
     await handleGoogleLogin();
+  };
+
+  const handleLinkLineClick = async () => {
+    await handleLineLogin();
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -126,7 +132,7 @@ export function ProfileModal({
               <button
                 type="button"
                 onClick={handleLinkGoogleClick}
-                disabled={googleLoading || deleteLoading}
+                disabled={googleLoading || lineLoading || deleteLoading}
                 className="px-3.5 py-2 bg-white hover:bg-brand-light text-main-text border-2 border-main-text rounded-xl text-xs font-black font-nunito transition-colors flex items-center justify-center gap-1.5 disabled:opacity-70 cursor-pointer shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E]"
               >
                 {googleLoading ? (
@@ -135,6 +141,41 @@ export function ProfileModal({
                   <Link2 className="w-3.5 h-3.5 text-accent-orange stroke-[2.5]" />
                 )}
                 {t('profile.link_google')}
+              </button>
+            )}
+          </div>
+
+          {/* LINE Linked Area */}
+          <div className="pt-5 border-t-2 border-dashed border-main-text/10 flex items-center justify-between gap-3 flex-wrap">
+            <h3 className="text-sm font-black font-nunito text-main-text flex items-center gap-2">
+              <svg className="w-4 h-4 fill-[#06C755]" viewBox="0 0 24 24">
+                <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.412-.09-.544-.254l-2.047-2.63v2.257c0 .348-.283.63-.63.63-.347 0-.63-.282-.63-.63V8.108c0-.27.173-.51.43-.595.065-.022.134-.032.201-.032.21 0 .41.09.542.254l2.047 2.63V8.108c0-.345.282-.63.63-.63.348 0 .631.285.631.63v4.771zm-6.641 0c0 .348-.283.63-.63.63-.347 0-.63-.282-.63-.63V8.108c0-.345.283-.63.63-.63.347 0 .63.285.63.63v4.771zm-2.507 0h-2.388c-.347 0-.629-.285-.629-.63V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.141h1.759c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08-.085.643-.388 2.508-.424 3.04-.055.795.367.781.77.525 3.013-1.914 8.125-5.368 11.087-9.191C23.593 14.54 24 12.519 24 10.314" />
+              </svg>
+              {t('profile.line_account')}
+            </h3>
+
+            {isLineLinked ? (
+              <button
+                type="button"
+                disabled
+                className="px-3 py-1.5 bg-[#EAFAF3] text-[#0A7A4A] border border-[#0A7A4A]/20 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 cursor-not-allowed"
+              >
+                <span className="w-1.5 h-1.5 bg-[#0A7A4A] rounded-full animate-pulse" />
+                {t('profile.line_linked')}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleLinkLineClick}
+                disabled={googleLoading || lineLoading || deleteLoading}
+                className="px-3.5 py-2 bg-white hover:bg-brand-light text-main-text border-2 border-main-text rounded-xl text-xs font-black font-nunito transition-colors flex items-center justify-center gap-1.5 disabled:opacity-70 cursor-pointer shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E]"
+              >
+                {lineLoading ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[#06C755]" />
+                ) : (
+                  <Link2 className="w-3.5 h-3.5 text-[#06C755] stroke-[2.5]" />
+                )}
+                {t('profile.link_line')}
               </button>
             )}
           </div>

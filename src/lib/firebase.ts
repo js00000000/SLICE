@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, OAuthProvider } from "firebase/auth";
 import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
@@ -16,8 +16,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({
   prompt: 'select_account'
 });
+
+export const LINE_PROVIDER_ID = import.meta.env.VITE_LINE_PROVIDER_ID || 'oidc.line';
+
+export const lineProvider = new OAuthProvider(LINE_PROVIDER_ID);
+lineProvider.addScope('profile');
+lineProvider.addScope('openid');
+lineProvider.addScope('email');
+
 export const analytics = typeof window !== "undefined" ? getAnalytics(app) : null;
+
