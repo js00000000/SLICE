@@ -18,7 +18,6 @@ interface LandingPageProps {
   isGoogleLoading?: boolean;
   isLineLoading?: boolean;
   isGuestLoading?: boolean;
-  hasWebviewBanner?: boolean;
 }
 
 export function LandingPage({
@@ -27,8 +26,7 @@ export function LandingPage({
   onQuickStart,
   isGoogleLoading = false,
   isLineLoading = false,
-  isGuestLoading = false,
-  hasWebviewBanner = false
+  isGuestLoading = false
 }: LandingPageProps) {
   const { t, i18n } = useTranslation();
   const location = useLocation();
@@ -226,7 +224,7 @@ export function LandingPage({
         <script type="application/ld+json">{JSON.stringify(howToSchema)}</script>
         <script type="application/ld+json">{JSON.stringify(appSchema)}</script>
       </Helmet>
-    <div className={`min-h-screen bg-page-bg text-main-text selection:bg-brand-light font-plus-jakarta flex flex-col relative overflow-hidden [overflow-anchor:none] pb-12 transition-all duration-300 ${hasWebviewBanner ? 'pt-[78px] md:pt-[70px]' : ''}`}>
+    <div className="min-h-screen bg-page-bg text-main-text selection:bg-brand-light font-plus-jakarta flex flex-col relative overflow-hidden [overflow-anchor:none] pb-12 transition-all duration-300">
       {/* Premium Backdrop Ornament Details */}
       <div className="absolute top-12 left-12 w-64 h-64 bg-brand-light rounded-full blur-3xl opacity-60 pointer-events-none" />
       <div className="absolute bottom-32 right-12 w-96 h-96 bg-orange-100 rounded-full blur-3xl opacity-60 pointer-events-none" />

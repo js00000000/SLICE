@@ -46,7 +46,7 @@ const getGuideSlug = (pathname: string): string | null => {
 import { useAuth } from './contexts/AuthContext';
 import { useGroup } from './contexts/GroupContext';
 import { isWebview } from './utils/webview';
-import { WebviewWarningBanner } from './components/WebviewWarningBanner';
+import { WebviewWarningModal } from './components/WebviewWarningModal';
 import { InstallPrompt } from './components/InstallPrompt';
 
 const isValidRoute = (pathname: string): boolean => {
@@ -74,7 +74,7 @@ export default function App() {
 
   const [invalidUrlGroup, setInvalidUrlGroup] = useState<string | null>(null);
   const [checkingUrlGroup, setCheckingUrlGroup] = useState(false);
-  const [showWebviewBanner, setShowWebviewBanner] = useState(false);
+  const [showWebviewModal, setShowWebviewModal] = useState(true);
 
   // Latest auth snapshot, read inside the async existence check below so it can
   // bail out if the user signed in (e.g. anonymously) while the check was in
@@ -90,7 +90,7 @@ export default function App() {
       const isDismissed = sessionStorage.getItem('webview-warning-dismissed') === 'true';
       // Syncing from external state (UA + sessionStorage) on mount.
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setShowWebviewBanner(!isDismissed);
+      setShowWebviewModal(!isDismissed);
     }
   }, []);
 
@@ -202,7 +202,7 @@ export default function App() {
       <LoadingView />
     </div>
   );
-  
+
   if (!user || isSoftLoggedOut) {
     if (invalidUrlGroup) {
       return <Navigate to="/" replace />;
@@ -213,7 +213,7 @@ export default function App() {
     }
 
     const isRootPath = location.pathname === '/';
-    
+
     if (isRootPath) {
       return (
         <>
@@ -228,10 +228,8 @@ export default function App() {
             <meta property="twitter:title" content={t('common.seo_title')} />
             <meta property="twitter:description" content={t('common.seo_description')} />
           </Helmet>
-          {showWebviewBanner && (
-            <div className="fixed-in-container top-0 z-[100]">
-              <WebviewWarningBanner onDismiss={() => setShowWebviewBanner(false)} />
-            </div>
+          {showWebviewModal && (
+            <WebviewWarningModal onDismiss={() => setShowWebviewModal(false)} />
           )}
           <LandingPage
             onGoogleLogin={handleGoogleLogin}
@@ -240,24 +238,21 @@ export default function App() {
             isGoogleLoading={googleLoading}
             isLineLoading={lineLoading}
             isGuestLoading={guestLoading}
-            hasWebviewBanner={showWebviewBanner}
           />
         </>
       );
     }
 
     return (
-      <div className={`mobile-container transition-all duration-300 ${showWebviewBanner ? 'has-webview-banner' : ''}`}>
+      <div className="mobile-container transition-all duration-300">
         <Helmet>
           <html lang={i18n.resolvedLanguage || i18n.language || 'en'} />
           <title>{t('common.seo_title')}</title>
           <meta name="title" content={t('common.seo_title')} />
           <meta name="description" content={t('common.seo_description')} />
         </Helmet>
-        {showWebviewBanner && (
-          <div className="fixed-in-container top-0 z-[100]">
-            <WebviewWarningBanner onDismiss={() => setShowWebviewBanner(false)} />
-          </div>
+        {showWebviewModal && (
+          <WebviewWarningModal onDismiss={() => setShowWebviewModal(false)} />
         )}
         <LoginView
           onGoogleLogin={handleGoogleLogin}
@@ -274,7 +269,7 @@ export default function App() {
   }
 
   return (
-    <div className={`mobile-container transition-all duration-300 ${showWebviewBanner ? 'has-webview-banner' : ''}`}>
+    <div className="mobile-container transition-all duration-300">
       <Helmet>
         <html lang={i18n.resolvedLanguage || i18n.language || 'en'} />
         <title>{APP_NAME}</title>
@@ -286,12 +281,10 @@ export default function App() {
         <meta property="twitter:title" content={t('common.seo_title') || APP_NAME} />
         <meta property="twitter:description" content={t('common.seo_description')} />
       </Helmet>
-      {showWebviewBanner && (
-        <div className="fixed-in-container top-0 z-[100]">
-          <WebviewWarningBanner onDismiss={() => setShowWebviewBanner(false)} />
-        </div>
+      {showWebviewModal && (
+        <WebviewWarningModal onDismiss={() => setShowWebviewModal(false)} />
       )}
-      {!showWebviewBanner && !isLoading && <InstallPrompt />}
+      {!showWebviewModal && !isLoading && <InstallPrompt />}
 
       {isLoading ? (
         <AppSkeleton />

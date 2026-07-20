@@ -76,6 +76,16 @@ describe('isWebview', () => {
     expect(isWebview()).toBe(true);
   });
 
+  it('should detect Telegram in-app browser', () => {
+    setUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Telegram/10.12');
+    expect(isWebview()).toBe(true);
+  });
+
+  it('should detect WhatsApp in-app browser', () => {
+    setUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 WhatsApp/24.10.78');
+    expect(isWebview()).toBe(true);
+  });
+
   it('should detect generic Android WebView', () => {
     setUserAgent('Mozilla/5.0 (Linux; Android 13; SM-G998B Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/113.0.0.0 Mobile Safari/537.36');
     expect(isWebview()).toBe(true);
