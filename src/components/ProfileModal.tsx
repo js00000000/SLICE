@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, User as LucideUser, Link2, Loader2, Trash2 } from 'lucide-react';
+import { X, User as LucideUser, Link2, Unlink, Loader2, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Member } from '../types';
 import { useDialog } from '../contexts/DialogContext';
@@ -24,12 +24,17 @@ export function ProfileModal({
   useScrollLock();
   const { t } = useTranslation();
   const { confirm } = useDialog();
-  const { user, googleLoading, lineLoading, deleteLoading, handleGoogleLogin, handleLineLogin } = useAuth();
+  const {
+    user, googleLoading, lineLoading, deleteLoading,
+    handleGoogleLogin, handleLineLogin, handleUnlinkGoogle, handleUnlinkLine
+  } = useAuth();
   const [name, setName] = useState(currentMember.name || '');
   const [isSponsorOpen, setIsSponsorOpen] = useState(false);
 
   const isGoogleLinked = user?.providerData.some(p => p.providerId === 'google.com') || false;
   const isLineLinked = user?.providerData.some(p => p.providerId === LINE_PROVIDER_ID || p.providerId.includes('line')) || false;
+  const totalLinkedProviders = user?.providerData.length || 0;
+  const canUnlink = totalLinkedProviders >= 2;
 
   const handleLinkGoogleClick = async () => {
     await handleGoogleLogin();
@@ -37,6 +42,28 @@ export function ProfileModal({
 
   const handleLinkLineClick = async () => {
     await handleLineLogin();
+  };
+
+  const handleUnlinkGoogleClick = async () => {
+    const isConfirmed = await confirm(t('profile.google_unlink_confirm'), {
+      title: t('profile.unlink_google'),
+      confirmLabel: t('profile.unlink_google'),
+      cancelLabel: t('common.cancel')
+    });
+    if (isConfirmed) {
+      await handleUnlinkGoogle();
+    }
+  };
+
+  const handleUnlinkLineClick = async () => {
+    const isConfirmed = await confirm(t('profile.line_unlink_confirm'), {
+      title: t('profile.unlink_line'),
+      confirmLabel: t('profile.unlink_line'),
+      cancelLabel: t('common.cancel')
+    });
+    if (isConfirmed) {
+      await handleUnlinkLine();
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -120,14 +147,27 @@ export function ProfileModal({
             </h3>
 
             {isGoogleLinked ? (
-              <button
-                type="button"
-                disabled
-                className="px-3 py-1.5 bg-[#EAFAF3] text-[#0A7A4A] border border-[#0A7A4A]/20 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 cursor-not-allowed"
-              >
-                <span className="w-1.5 h-1.5 bg-[#0A7A4A] rounded-full animate-pulse" />
-                {t('profile.google_linked')}
-              </button>
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1.5 bg-[#EAFAF3] text-[#0A7A4A] border border-[#0A7A4A]/20 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-[#0A7A4A] rounded-full animate-pulse" />
+                  {t('profile.google_linked')}
+                </span>
+                {canUnlink && (
+                  <button
+                    type="button"
+                    onClick={handleUnlinkGoogleClick}
+                    disabled={googleLoading || lineLoading || deleteLoading}
+                    className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-bold font-nunito transition-colors flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
+                  >
+                    {googleLoading ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-red-600" />
+                    ) : (
+                      <Unlink className="w-3.5 h-3.5 stroke-[2.5]" />
+                    )}
+                    {t('profile.unlink_google')}
+                  </button>
+                )}
+              </div>
             ) : (
               <button
                 type="button"
@@ -155,14 +195,27 @@ export function ProfileModal({
             </h3>
 
             {isLineLinked ? (
-              <button
-                type="button"
-                disabled
-                className="px-3 py-1.5 bg-[#EAFAF3] text-[#0A7A4A] border border-[#0A7A4A]/20 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 cursor-not-allowed"
-              >
-                <span className="w-1.5 h-1.5 bg-[#0A7A4A] rounded-full animate-pulse" />
-                {t('profile.line_linked')}
-              </button>
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1.5 bg-[#EAFAF3] text-[#0A7A4A] border border-[#0A7A4A]/20 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-[#0A7A4A] rounded-full animate-pulse" />
+                  {t('profile.line_linked')}
+                </span>
+                {canUnlink && (
+                  <button
+                    type="button"
+                    onClick={handleUnlinkLineClick}
+                    disabled={googleLoading || lineLoading || deleteLoading}
+                    className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-bold font-nunito transition-colors flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
+                  >
+                    {lineLoading ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-red-600" />
+                    ) : (
+                      <Unlink className="w-3.5 h-3.5 stroke-[2.5]" />
+                    )}
+                    {t('profile.unlink_line')}
+                  </button>
+                )}
+              </div>
             ) : (
               <button
                 type="button"

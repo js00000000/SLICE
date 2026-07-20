@@ -13,6 +13,7 @@ import {
   getRedirectResult,
   reauthenticateWithPopup,
   reauthenticateWithRedirect,
+  unlink,
   signOut,
   deleteUser,
   GoogleAuthProvider,
@@ -46,6 +47,8 @@ interface AuthContextType {
   isSoftLoggedOut: boolean;
   handleGoogleLogin: () => Promise<void>;
   handleLineLogin: () => Promise<void>;
+  handleUnlinkGoogle: () => Promise<void>;
+  handleUnlinkLine: () => Promise<void>;
   handleGuestLogin: () => Promise<void>;
   handleQuickStart: () => Promise<void>;
   handleLogout: () => Promise<void>;
@@ -411,6 +414,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const handleUnlinkGoogle = async () => {
+    if (!auth.currentUser) return;
+    if (auth.currentUser.providerData.length <= 1) {
+      toast.error(t('profile.cannot_unlink_sole_provider'));
+      return;
+    }
+    try {
+      setGoogleLoading(true);
+      const googleData = auth.currentUser.providerData.find(p => p.providerId === 'google.com');
+      if (!googleData) return;
+
+      await unlink(auth.currentUser, googleData.providerId);
+      await auth.currentUser.reload();
+      setUser(Object.create(
+        Object.getPrototypeOf(auth.currentUser),
+        Object.getOwnPropertyDescriptors(auth.currentUser)
+      ));
+      toast.success(t('profile.google_unlink_success'));
+    } catch (err: unknown) {
+      const error = err as AuthError;
+      console.error("Unlink Google error:", error);
+      if (error.code === 'auth/requires-recent-login') {
+        toast.error(t('auth.requires_recent_login_msg'));
+      } else {
+        toast.error(t('common.error'));
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleUnlinkLine = async () => {
+    if (!auth.currentUser) return;
+    if (auth.currentUser.providerData.length <= 1) {
+      toast.error(t('profile.cannot_unlink_sole_provider'));
+      return;
+    }
+    try {
+      setLineLoading(true);
+      const lineData = auth.currentUser.providerData.find(
+        p => p.providerId === LINE_PROVIDER_ID || p.providerId.includes('line')
+      );
+      if (!lineData) return;
+
+      await unlink(auth.currentUser, lineData.providerId);
+      await auth.currentUser.reload();
+      setUser(Object.create(
+        Object.getPrototypeOf(auth.currentUser),
+        Object.getOwnPropertyDescriptors(auth.currentUser)
+      ));
+      toast.success(t('profile.line_unlink_success'));
+    } catch (err: unknown) {
+      const error = err as AuthError;
+      console.error("Unlink LINE error:", error);
+      if (error.code === 'auth/requires-recent-login') {
+        toast.error(t('auth.requires_recent_login_msg'));
+      } else {
+        toast.error(t('common.error'));
+      }
+    } finally {
+      setLineLoading(false);
+    }
+  };
+
   const handleQuickStart = async () => {
     try {
       setGuestLoading(true);
@@ -610,6 +677,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isSoftLoggedOut,
       handleGoogleLogin, 
       handleLineLogin,
+      handleUnlinkGoogle,
+      handleUnlinkLine,
       handleGuestLogin, 
       handleQuickStart,
       handleLogout,
