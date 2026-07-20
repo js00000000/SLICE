@@ -72,8 +72,8 @@ export function DialogProvider({ children }: { children: ReactNode }) {
           <div className="fixed inset-0 bg-main-text/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={type === 'alert' ? handleConfirm : undefined} />
           
           <div className="bg-white w-full max-w-sm rounded-[24px] border-3 border-main-text shadow-[6px_6px_0px_#1A1A2E] z-10 overflow-hidden animate-in zoom-in-95 fade-in duration-200 flex flex-col">
-            <div className="p-6">
-              <div className="flex flex-col items-center text-center space-y-4">
+            <div className="p-6 min-w-0">
+              <div className="flex flex-col items-center text-center space-y-4 min-w-0">
                 
                 {/* Visual Accent Tilted Icon Badge */}
                 <div className={`w-14 h-14 border-2 border-main-text rounded-2xl flex items-center justify-center shadow-[2px_2px_0px_#1A1A2E] shrink-0 ${
@@ -87,9 +87,9 @@ export function DialogProvider({ children }: { children: ReactNode }) {
                   }
                 </div>
                 
-                <div className="space-y-1.5 w-full">
-                  <h3 className="text-xl font-nunito font-black text-main-text leading-tight">{title}</h3>
-                  <p className="text-gray-500 font-medium text-sm whitespace-pre-wrap leading-relaxed">{message}</p>
+                <div className="space-y-1.5 w-full min-w-0">
+                  <h3 className="text-xl font-nunito font-black text-main-text leading-tight break-words [word-break:break-word]">{title}</h3>
+                  <p className="text-gray-500 font-medium text-sm whitespace-pre-wrap break-words [word-break:break-word] leading-relaxed">{message}</p>
                 </div>
               </div>
             </div>

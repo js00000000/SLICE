@@ -444,9 +444,6 @@ export function GroupManagementPage() {
                               ({t('members.you')})
                             </span>
                           )}
-                          {m.isHost && (
-                            <Shield className="w-3.5 h-3.5 text-amber-500 fill-amber-500 stroke-main-text" />
-                          )}
                           {m.userId ? (
                             <span className="text-[10px] text-success-green font-black uppercase font-nunito bg-success-light border border-success-green/20 px-1.5 py-0.5 rounded-md">
                               {t('members.claimed')}
@@ -455,6 +452,9 @@ export function GroupManagementPage() {
                             <span className="text-[10px] text-gray-500 font-black uppercase font-nunito bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded-md">
                               {t('members.not_claimed')}
                             </span>
+                          )}
+                          {m.isHost && (
+                            <Shield className="w-3.5 h-3.5 text-amber-500 fill-amber-500 stroke-main-text" />
                           )}
                         </div>
                       </div>
@@ -500,8 +500,8 @@ export function GroupManagementPage() {
           </div>
 
           {currentMember.isHost && (
-            <div className="bg-white rounded-[20px] border-3 border-main-text p-4 mt-2 shadow-[2px_2px_0px_#1A1A2E]">
-              <div className="flex gap-2">
+            <div className="bg-white rounded-[20px] border-3 border-main-text p-4 pr-5 mt-2 shadow-[2px_2px_0px_#1A1A2E]">
+              <div className="flex gap-2 items-center">
                 <input
                   type="text"
                   maxLength={20}
@@ -509,12 +509,12 @@ export function GroupManagementPage() {
                   value={newMemberName}
                   onChange={(e) => setNewMemberName(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleAddMember()}
-                  className="flex-grow px-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none text-base font-bold bg-white"
+                  className="flex-grow min-w-0 px-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none text-base font-bold bg-white"
                 />
                 <button
                   onClick={handleAddMember}
                   disabled={!newMemberName.trim()}
-                  className="px-4 py-2 bg-accent-orange text-white border-2 border-main-text rounded-xl font-nunito font-black text-sm shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] disabled:opacity-50 disabled:transform-none disabled:shadow-none cursor-pointer flex items-center gap-1 whitespace-nowrap"
+                  className="px-4 py-2 bg-accent-orange text-white border-2 border-main-text rounded-xl font-nunito font-black text-sm shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] disabled:opacity-50 disabled:transform-none disabled:shadow-none cursor-pointer flex items-center gap-1 whitespace-nowrap shrink-0"
                 >
                   <Plus className="w-4 h-4 stroke-[3]" />
                   {t('common.add')}
