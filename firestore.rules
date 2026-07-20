@@ -117,6 +117,15 @@ service cloud.firestore {
           // Defense-in-depth: If settling up, ensure settledBy matches the host/auth UID
           (!request.resource.data.keys().hasAll(['settledAt', 'settledBy']) || request.resource.data.settledBy == request.auth.uid)
         )
+        // Defense-in-depth: Currency settings cannot be modified while group is settled
+        && (
+          !('settledAt' in resource.data)
+          || !('settledAt' in request.resource.data)
+          || (
+            (!('defaultCurrency' in request.resource.data) || request.resource.data.defaultCurrency == resource.data.defaultCurrency)
+            && (!('currencies' in request.resource.data) || request.resource.data.currencies == resource.data.currencies)
+          )
+        )
         // joinId is immutable once set (and can't be removed). Otherwise a host
         // could re-point their group's joinId at a token they saw elsewhere and
         // publish a /joinIds mapping that hijacks someone else's invite link.

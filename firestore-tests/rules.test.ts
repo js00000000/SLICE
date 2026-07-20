@@ -239,3 +239,64 @@ describe('expense membership gate', () => {
     await assertFails(getDoc(doc(asUser('outsider-uid'), 'groups', GID, 'expenses', 'e1')));
   });
 });
+
+describe('settled group currency settings lock', () => {
+  it('SECURITY: host cannot modify exchange rates on a settled group', async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, 'groups', GID), {
+        name: 'Settled Trip',
+        createdBy: HOST,
+        joinId: TOKEN,
+        settledAt: '2026-07-21T00:00:00.000Z',
+        settledBy: HOST,
+        defaultCurrency: 'TWD',
+        currencies: [{ code: 'TWD', rate: 1 }, { code: 'USD', rate: 30 }],
+      });
+    });
+    await assertFails(
+      updateDoc(doc(asUser(HOST), 'groups', GID), {
+        currencies: [{ code: 'TWD', rate: 1 }, { code: 'USD', rate: 32 }],
+      }),
+    );
+  });
+
+  it('SECURITY: host cannot change default currency on a settled group', async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, 'groups', GID), {
+        name: 'Settled Trip',
+        createdBy: HOST,
+        joinId: TOKEN,
+        settledAt: '2026-07-21T00:00:00.000Z',
+        settledBy: HOST,
+        defaultCurrency: 'TWD',
+        currencies: [{ code: 'TWD', rate: 1 }, { code: 'USD', rate: 30 }],
+      });
+    });
+    await assertFails(
+      updateDoc(doc(asUser(HOST), 'groups', GID), {
+        defaultCurrency: 'USD',
+      }),
+    );
+  });
+
+  it('host CAN unsettle a settled group', async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, 'groups', GID), {
+        name: 'Settled Trip',
+        createdBy: HOST,
+        joinId: TOKEN,
+        settledAt: '2026-07-21T00:00:00.000Z',
+        settledBy: HOST,
+        defaultCurrency: 'TWD',
+        currencies: [{ code: 'TWD', rate: 1 }],
+      });
+    });
+    const { deleteField } = await import('firebase/firestore');
+    await assertSucceeds(
+      updateDoc(doc(asUser(HOST), 'groups', GID), {
+        settledAt: deleteField(),
+        settledBy: deleteField(),
+      }),
+    );
+  });
+});
