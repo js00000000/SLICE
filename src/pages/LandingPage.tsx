@@ -113,7 +113,7 @@ export function LandingPage({
     },
     {
       q: '需要註冊帳號嗎？',
-      a: '不需要。訪客模式可直接開始使用，資料儲存於本機，日後想保留紀錄時再連結 Google 帳號即可。'
+      a: '不需要。訪客模式可直接開始使用，日後想跨裝置保留紀錄時再連結 Google 或 LINE 帳號即可。'
     },
     {
       q: '可以不平均分攤嗎？',
@@ -142,7 +142,7 @@ export function LandingPage({
     },
     {
       q: 'Do I need to register?',
-      a: 'No. Guest mode works instantly — your data lives on this device until you choose to link a Google account.'
+      a: 'No. Guest mode works instantly — your data lives on this device until you choose to link a Google or LINE account.'
     },
     {
       q: 'Can I split expenses unevenly?',
