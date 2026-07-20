@@ -13,8 +13,9 @@ A modern, mobile-friendly group expense splitting application built with React, 
   - **Multiple Payers**: Support for expenses paid by more than one person.
   - **Custom Split Mode**: Specify exact amounts for each member instead of just equal distribution.
 - 🔐 **Authentication & Data Integrity**: 
-  - Support for **Anonymous Guest sign-in** and **Google Authentication**.
-  - Safe migration path for guest users to Google accounts, with built-in protection against accidental data overwrites.
+  - Support for **Anonymous Guest sign-in**, **Google Authentication**, and **LINE Authentication**.
+  - Safe migration path for guest users to Google or LINE accounts, with built-in protection against accidental data overwrites.
+  - Multi-provider support: link both Google & LINE login methods to a single account with safe unlinking.
 - 👥 **Smart Member Binding**: Bind your user account to a specific group member to track your own balances and expenses easily.
 - 📊 **Optimized Settlement**: 
   - Uses a **Greedy Algorithm** to minimize the total number of reimbursement transactions.
@@ -41,7 +42,7 @@ A modern, mobile-friendly group expense splitting application built with React, 
 
 1. Create a new Firebase project at [Firebase Console](https://console.firebase.google.com/).
 2. Enable **Firestore Database**.
-3. Enable **Authentication** and activate the **Google** and **Anonymous** providers.
+3. Enable **Authentication** and activate the **Google**, **LINE (OpenID Connect / OIDC)**, and **Anonymous** providers.
 4. Add a Web App to your project and copy the configuration.
 5. Environment variables are required for the app to connect to your Firebase instance.
 
@@ -57,6 +58,7 @@ VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
 VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
+VITE_LINE_PROVIDER_ID=oidc.line # Optional custom OIDC provider ID for LINE
 ```
 
 ## Development

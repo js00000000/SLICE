@@ -94,9 +94,9 @@ const splitwise: CompetitorEntry = {
     faqs: [
       { q: 'SLICE 真的完全免費嗎？', a: '是。SLICE 沒有付費方案、沒有廣告、沒有記帳次數限制，由獨立開發者維護，僅接受自願性質的贊助。' },
       { q: '可以把 Splitwise 的資料匯入 SLICE 嗎？', a: '目前沒有自動匯入功能。建議把 Splitwise 上未結清的帳先結掉，新的行程直接在 SLICE 開新群組記帳。' },
-      { q: '不註冊的話，我的資料會不見嗎？', a: '不會。訪客模式會建立匿名帳號，資料儲存在雲端（Google Firebase）；想跨裝置保留紀錄時，隨時可以升級連結 Google 帳號，資料會完整保留。' },
+      { q: '不註冊的話，我的資料會不見嗎？', a: '不會。訪客模式會建立匿名帳號，資料儲存在雲端（Google Firebase）；想跨裝置保留紀錄時，隨時可以升級連結 Google 或 LINE 帳號，資料會完整保留。' },
       { q: 'Splitwise 免費版有哪些限制？', a: `以${DATA_AS_OF_ZH}的公開資訊，Splitwise 免費版會顯示廣告、每天可新增的支出筆數有上限，且多幣別換匯、收據掃描等進階功能需訂閱 Pro；實際限制請以官方為準。SLICE 則完全免費、無廣告、記帳次數無上限。` },
-      { q: '分帳紀錄可以匯出或備份嗎？', a: 'SLICE 目前沒有 CSV／PDF 匯出功能，但你的帳目會即時儲存在雲端帳號中；連結 Google 帳號後即可跨裝置同步，換手機也不怕遺失紀錄。' }
+      { q: '分帳紀錄可以匯出或備份嗎？', a: 'SLICE 目前沒有 CSV／PDF 匯出功能，但你的帳目會即時儲存在雲端帳號中；連結 Google 或 LINE 帳號後即可跨裝置同步，換手機也不怕遺失紀錄。' }
     ],
     cta: '免費開始分帳',
     disclaimer:
@@ -141,9 +141,9 @@ const splitwise: CompetitorEntry = {
     faqs: [
       { q: 'Is SLICE really completely free?', a: 'Yes. SLICE has no paid tier, no ads, and no limits on expense entries. It is maintained by an independent developer and funded only by voluntary sponsorship.' },
       { q: 'Can I import my Splitwise data into SLICE?', a: 'There is no automatic import at the moment. We recommend settling outstanding balances in Splitwise first, then starting fresh groups in SLICE for new trips.' },
-      { q: "If I don't register, will I lose my data?", a: 'No. Guest mode creates an anonymous account and your data is stored in the cloud (Google Firebase). You can link a Google account at any time to keep your records across devices — nothing is lost when you upgrade.' },
+      { q: "If I don't register, will I lose my data?", a: 'No. Guest mode creates an anonymous account and your data is stored in the cloud (Google Firebase). You can link a Google or LINE account at any time to keep your records across devices — nothing is lost when you upgrade.' },
       { q: 'What are the limits on the Splitwise free tier?', a: `As of ${DATA_AS_OF_EN}, the Splitwise free tier shows ads and caps how many expenses you can add per day, and advanced features like currency conversion and receipt scanning require a Pro subscription — check their site for the current limits. SLICE, by contrast, is completely free with no ads and no cap on expense entries.` },
-      { q: 'Can I export or back up my expense history?', a: 'SLICE does not offer CSV/PDF export yet, but your data is saved to your cloud account in real time. Link a Google account to sync across devices so you never lose records when switching phones.' }
+      { q: 'Can I export or back up my expense history?', a: 'SLICE does not offer CSV/PDF export yet, but your data is saved to your cloud account in real time. Link a Google or LINE account to sync across devices so you never lose records when switching phones.' }
     ],
     cta: 'Start splitting for free',
     disclaimer:
@@ -173,7 +173,7 @@ const tricount: CompetitorEntry = {
       { feature: '價格', slice: '完全免費、無廣告', sliceGood: true, competitor: '免費（由 bunq 提供）', competitorGood: true },
       { feature: '多幣別', slice: '免費支援，群組自訂匯率', sliceGood: true, competitor: '免費支援多幣別', competitorGood: true },
       { feature: '最少轉帳結算', slice: '內建自動計算，一目了然', sliceGood: true, competitor: '提供結算餘額', competitorGood: true },
-      { feature: '跨裝置同步', slice: '連結 Google 帳號即同步', sliceGood: true, competitor: '需帳號／App 同步', competitorGood: true },
+      { feature: '跨裝置同步', slice: '連結 Google / LINE 帳號即同步', sliceGood: true, competitor: '需帳號／App 同步', competitorGood: true },
       { feature: '離線使用', slice: '需連線（PWA 有基本快取）', sliceGood: false, competitor: '原生 App 離線體驗較成熟', competitorGood: true },
       { feature: '銀行整合', slice: '無（專注分帳）', sliceGood: false, competitor: '可與 bunq 銀行帳戶整合', competitorGood: true }
     ],
@@ -219,7 +219,7 @@ const tricount: CompetitorEntry = {
       { feature: 'Pricing', slice: 'Completely free, no ads', sliceGood: true, competitor: 'Free (provided by bunq)', competitorGood: true },
       { feature: 'Multi-currency', slice: 'Free, with per-group custom rates', sliceGood: true, competitor: 'Multi-currency supported, free', competitorGood: true },
       { feature: 'Minimal-transfer settlement', slice: 'Built in, automatic', sliceGood: true, competitor: 'Provides settlement balances', competitorGood: true },
-      { feature: 'Cross-device sync', slice: 'Link a Google account to sync', sliceGood: true, competitor: 'Syncs via account/app', competitorGood: true },
+      { feature: 'Cross-device sync', slice: 'Link a Google or LINE account to sync', sliceGood: true, competitor: 'Syncs via account/app', competitorGood: true },
       { feature: 'Offline use', slice: 'Online-first (basic PWA caching)', sliceGood: false, competitor: 'More mature offline in native apps', competitorGood: true },
       { feature: 'Bank integration', slice: 'None (focused splitter)', sliceGood: false, competitor: 'Integrates with bunq accounts', competitorGood: true }
     ],
@@ -289,7 +289,7 @@ const settleUp: CompetitorEntry = {
     faqs: [
       { q: 'SLICE 和 Settle Up 最大的差別是什麼？', a: 'SLICE 完全免費、無廣告、免安裝、免註冊，原生繁體中文；Settle Up 免費版通常有廣告，去廣告與部分進階功能需訂閱。若你要的是零成本、零門檻的群組分帳，SLICE 更直接。' },
       { q: 'Settle Up 免費版有廣告嗎？', a: `以${DATA_AS_OF_ZH}的公開資訊，Settle Up 免費版通常會顯示廣告，付費（進階）方案可去除廣告並解鎖部分功能；實際內容請以官方為準。SLICE 則全程無廣告。` },
-      { q: '不註冊的話資料會不見嗎？', a: '不會。SLICE 訪客模式會建立匿名帳號，資料存在雲端；連結 Google 帳號後即可跨裝置同步保留。' },
+      { q: '不註冊的話資料會不見嗎？', a: '不會。SLICE 訪客模式會建立匿名帳號，資料存在雲端；連結 Google 或 LINE 帳號後即可跨裝置同步保留。' },
       { q: 'SLICE 可以在電腦瀏覽器用嗎？', a: '可以。SLICE 是網頁優先設計，手機、平板、電腦瀏覽器都能直接用，也可以「加入主畫面」當成 App 使用。' },
       { q: 'SLICE 支援多幣別嗎？', a: '支援，且免費。可為群組設定自訂匯率，適合出國旅遊多幣別記帳。' }
     ],
@@ -335,7 +335,7 @@ const settleUp: CompetitorEntry = {
     faqs: [
       { q: 'What is the biggest difference between SLICE and Settle Up?', a: 'SLICE is completely free, ad-free, install-free and account-free, natively in Traditional Chinese; Settle Up\'s free tier typically has ads, and removing ads plus some advanced features requires a subscription. If you want zero-cost, zero-friction group splitting, SLICE is more direct.' },
       { q: 'Does the Settle Up free tier have ads?', a: `As of ${DATA_AS_OF_EN}, the Settle Up free tier typically shows ads, while the paid (premium) plan removes ads and unlocks some features — check their site for specifics. SLICE has no ads at any point.` },
-      { q: "If I don't register, will I lose my data?", a: 'No. SLICE\'s guest mode creates an anonymous account and stores data in the cloud; link a Google account to keep it synced across devices.' },
+      { q: "If I don't register, will I lose my data?", a: 'No. SLICE\'s guest mode creates an anonymous account and stores data in the cloud; link a Google or LINE account to keep it synced across devices.' },
       { q: 'Can I use SLICE in a desktop browser?', a: 'Yes. SLICE is web-first, so it works directly in phone, tablet, and desktop browsers, and you can "add to home screen" to use it like an app.' },
       { q: 'Does SLICE support multiple currencies?', a: 'Yes, for free. Set custom exchange rates per group — handy for multi-currency logging on overseas trips.' }
     ],
