@@ -8,6 +8,7 @@ import { APP_NAME } from '../constants';
 import { ExpenseModal } from '../components/ExpenseModal';
 import { ProfileModal } from '../components/ProfileModal';
 import { MemberBreakdownModal } from '../components/MemberBreakdownModal';
+import { shareGroup } from '../utils/shareGroup';
 import type { Member } from '../types';
 import { BottomNav } from '../components/BottomNav';
 import { AppHeader } from '../components/AppHeader';
@@ -21,7 +22,8 @@ import { formatCurrency } from '../utils/format';
 
 export function DashboardPage() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isZh = i18n.resolvedLanguage?.startsWith('zh') ?? false;
   const { handleDeleteAccount } = useAuth();
   const {
     groupId,
@@ -159,11 +161,7 @@ export function DashboardPage() {
           </div>
           
           <button
-            onClick={() => {
-              const url = `${window.location.origin}/join/${currentGroup?.joinId || groupId}`;
-              navigator.clipboard.writeText(url);
-              toast.success(t('groups.link_copied'));
-            }}
+            onClick={() => shareGroup({ groupName: currentGroup?.name, joinId: currentGroup?.joinId, groupId, isZh })}
             className="flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-brand-light text-accent-orange rounded-xl font-nunito font-black text-sm border-2 border-main-text shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] cursor-pointer hover:bg-white transition-all shrink-0"
             title={t('common.share')}
           >

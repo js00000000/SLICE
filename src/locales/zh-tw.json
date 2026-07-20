@@ -96,7 +96,14 @@
     "currency_code_invalid": "幣別代碼須為 1–4 個字",
     "currency_rate_invalid": "匯率必須是正數",
     "currency_duplicate": "此幣別已存在",
-    "currency_updated": "幣別設定已更新"
+    "currency_updated": "幣別設定已更新",
+    "share_modal_title": "分享群組與邀請",
+    "share_actions": "選擇分享方式",
+    "share_native": "手機/系統原生分享",
+    "share_line": "分享到 LINE",
+    "copy_invite_text": "複製完整邀請文案 (包含連結)",
+    "invite_text_copied": "已複製完整邀請文案",
+    "other_apps": "其他通訊軟體"
   },
   "members": {
     "title": "成員",

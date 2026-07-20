@@ -96,7 +96,14 @@
     "currency_code_invalid": "Currency code must be 1–4 characters",
     "currency_rate_invalid": "Exchange rate must be a positive number",
     "currency_duplicate": "This currency already exists",
-    "currency_updated": "Currency settings updated"
+    "currency_updated": "Currency settings updated",
+    "share_modal_title": "Share Group & Invite",
+    "share_actions": "Sharing Options",
+    "share_native": "System Share Sheet",
+    "share_line": "Share to LINE",
+    "copy_invite_text": "Copy Full Invite Message",
+    "invite_text_copied": "Invite message copied",
+    "other_apps": "Other Apps"
   },
   "members": {
     "title": "Members",

@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { Share2, Lock, CheckCircle2, Undo2 } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
-import toast from 'react-hot-toast';
 import { APP_NAME } from '../constants';
 import { BalancesView } from '../components/BalancesView';
 import { SettledCTACard } from '../components/SettledCTACard';
 import { ProfileModal } from '../components/ProfileModal';
+import { shareGroup } from '../utils/shareGroup';
 import { BottomNav } from '../components/BottomNav';
 import { AppHeader } from '../components/AppHeader';
 import { useGroup } from '../contexts/GroupContext';
@@ -14,6 +14,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 export function SettlementsPage() {
   const { t, i18n } = useTranslation();
+  const isZh = i18n.resolvedLanguage?.startsWith('zh') ?? false;
   const { user, handleDeleteAccount } = useAuth();
   const {
     groupId,
@@ -77,11 +78,7 @@ export function SettlementsPage() {
           </div>
           
           <button
-            onClick={() => {
-              const url = `${window.location.origin}/join/${currentGroup?.joinId || groupId}`;
-              navigator.clipboard.writeText(url);
-              toast.success(t('groups.link_copied'));
-            }}
+            onClick={() => shareGroup({ groupName: currentGroup?.name, joinId: currentGroup?.joinId, groupId, isZh })}
             className="flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-brand-light text-accent-orange rounded-xl font-nunito font-black text-sm border-2 border-main-text shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] cursor-pointer hover:bg-white transition-all shrink-0"
             title={t('common.share')}
           >
@@ -137,10 +134,10 @@ export function SettlementsPage() {
           )
         )}
 
-        {/* Growth-loop CTAs, shown only once everything is settled */}
-        {isSettled && <SettledCTACard isHost={isHost} />}
+        {/* Growth-loop CTAs for settled groups */}
+        {isSettled && <SettledCTACard isHost={isHost} animationDelay="60ms" />}
 
-        {/* Balances list */}
+        {/* Balances component */}
         <BalancesView
           members={members}
           expenses={expenses}
