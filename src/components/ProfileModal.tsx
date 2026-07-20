@@ -147,27 +147,30 @@ export function ProfileModal({
             </h3>
 
             {isGoogleLinked ? (
-              <div className="flex items-center gap-2">
-                <span className="px-3 py-1.5 bg-[#EAFAF3] text-[#0A7A4A] border border-[#0A7A4A]/20 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5">
+              canUnlink ? (
+                <button
+                  type="button"
+                  onClick={handleUnlinkGoogleClick}
+                  disabled={googleLoading || lineLoading || deleteLoading}
+                  className="px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-600 border-2 border-red-500 rounded-xl text-xs font-black font-nunito transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-[2px_2px_0px_rgba(239,68,68,0.2)] active:translate-x-[1px] active:translate-y-[1px]"
+                >
+                  {googleLoading ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-red-600" />
+                  ) : (
+                    <Unlink className="w-3.5 h-3.5 stroke-[2.5]" />
+                  )}
+                  {t('profile.unlink_google')}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  className="px-3 py-1.5 bg-[#EAFAF3] text-[#0A7A4A] border border-[#0A7A4A]/20 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 cursor-not-allowed"
+                >
                   <span className="w-1.5 h-1.5 bg-[#0A7A4A] rounded-full animate-pulse" />
                   {t('profile.google_linked')}
-                </span>
-                {canUnlink && (
-                  <button
-                    type="button"
-                    onClick={handleUnlinkGoogleClick}
-                    disabled={googleLoading || lineLoading || deleteLoading}
-                    className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-bold font-nunito transition-colors flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
-                  >
-                    {googleLoading ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-red-600" />
-                    ) : (
-                      <Unlink className="w-3.5 h-3.5 stroke-[2.5]" />
-                    )}
-                    {t('profile.unlink_google')}
-                  </button>
-                )}
-              </div>
+                </button>
+              )
             ) : (
               <button
                 type="button"
@@ -195,27 +198,30 @@ export function ProfileModal({
             </h3>
 
             {isLineLinked ? (
-              <div className="flex items-center gap-2">
-                <span className="px-3 py-1.5 bg-[#EAFAF3] text-[#0A7A4A] border border-[#0A7A4A]/20 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5">
+              canUnlink ? (
+                <button
+                  type="button"
+                  onClick={handleUnlinkLineClick}
+                  disabled={googleLoading || lineLoading || deleteLoading}
+                  className="px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-600 border-2 border-red-500 rounded-xl text-xs font-black font-nunito transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-[2px_2px_0px_rgba(239,68,68,0.2)] active:translate-x-[1px] active:translate-y-[1px]"
+                >
+                  {lineLoading ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-red-600" />
+                  ) : (
+                    <Unlink className="w-3.5 h-3.5 stroke-[2.5]" />
+                  )}
+                  {t('profile.unlink_line')}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  className="px-3 py-1.5 bg-[#EAFAF3] text-[#0A7A4A] border border-[#0A7A4A]/20 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 cursor-not-allowed"
+                >
                   <span className="w-1.5 h-1.5 bg-[#0A7A4A] rounded-full animate-pulse" />
                   {t('profile.line_linked')}
-                </span>
-                {canUnlink && (
-                  <button
-                    type="button"
-                    onClick={handleUnlinkLineClick}
-                    disabled={googleLoading || lineLoading || deleteLoading}
-                    className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-bold font-nunito transition-colors flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
-                  >
-                    {lineLoading ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-red-600" />
-                    ) : (
-                      <Unlink className="w-3.5 h-3.5 stroke-[2.5]" />
-                    )}
-                    {t('profile.unlink_line')}
-                  </button>
-                )}
-              </div>
+                </button>
+              )
             ) : (
               <button
                 type="button"
