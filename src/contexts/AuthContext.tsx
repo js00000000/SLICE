@@ -106,6 +106,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then((result) => {
         if (result) {
           saveGoogleToken(result);
+          if (result.operationType === 'link') {
+            const isLine = result.providerId === LINE_PROVIDER_ID || result.providerId?.includes('line');
+            toast.success(t(isLine ? 'profile.line_link_success' : 'profile.google_link_success'));
+          }
         }
       })
       .catch((error: unknown) => {
@@ -305,6 +309,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           } else if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
             // User closed the popup, just reset loading state
             console.log("Google login popup closed by user");
+          } else {
+            throw error;
+          }
+        }
+      } else if (auth.currentUser && !auth.currentUser.isAnonymous) {
+        try {
+          const result = await linkWithPopup(auth.currentUser, googleProvider);
+          saveGoogleToken(result);
+          await auth.currentUser.reload();
+          setUser(Object.create(
+            Object.getPrototypeOf(auth.currentUser),
+            Object.getOwnPropertyDescriptors(auth.currentUser)
+          ));
+          toast.success(t('profile.google_link_success'));
+        } catch (err: unknown) {
+          const error = err as AuthError;
+          if (error.code === 'auth/popup-blocked') {
+            await linkWithRedirect(auth.currentUser, googleProvider);
+          } else if (error.code === 'auth/credential-already-in-use') {
+            toast.error(t('auth.google_already_linked_error') || t('auth.account_exists'));
+          } else if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+            console.log("Google link popup closed by user");
           } else {
             throw error;
           }

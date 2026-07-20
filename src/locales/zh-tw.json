@@ -48,6 +48,7 @@
     "delete_account_success": "帳號已成功刪除",
     "requires_recent_login_msg": "基於安全考量，刪除帳號需要最近曾重新登入。請先登出並重新登入後再試一次。",
     "account_exists": "帳號已存在",
+    "google_already_linked_error": "此 Google 帳號已經被其他使用者連結",
     "line_already_linked_error": "此 LINE 帳號已經被其他使用者連結",
     "abandon_guest_msg": "你目前正使用訪客帳號。若要連結 {{provider}} 帳號，你必須捨棄目前的訪客資料。或者，你也可以直接切換到 {{provider}} 帳號。",
     "abandon_confirm": "捨棄訪客資料並切換",

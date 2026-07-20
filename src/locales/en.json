@@ -48,6 +48,7 @@
     "delete_account_success": "Account deleted successfully",
     "requires_recent_login_msg": "For security reasons, you must have recently logged in to delete your account. Please log out and log back in, then try again.",
     "account_exists": "Account Already Exists",
+    "google_already_linked_error": "This Google account is already linked to another user.",
     "line_already_linked_error": "This LINE account is already linked to another user.",
     "abandon_guest_msg": "You are currently logged in as a guest. To link this to your {{provider}} account, you must abandon your guest data. Or, switch directly to your {{provider}} account.",
     "abandon_confirm": "Abandon Guest Data & Switch",
