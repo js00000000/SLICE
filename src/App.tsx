@@ -74,7 +74,7 @@ export default function App() {
 
   const [invalidUrlGroup, setInvalidUrlGroup] = useState<string | null>(null);
   const [checkingUrlGroup, setCheckingUrlGroup] = useState(false);
-  const [showWebviewModal, setShowWebviewModal] = useState(true);
+  const [showWebviewModal, setShowWebviewModal] = useState(false);
 
   // Latest auth snapshot, read inside the async existence check below so it can
   // bail out if the user signed in (e.g. anonymously) while the check was in
