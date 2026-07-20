@@ -13,6 +13,7 @@ interface OptionSelectProps {
   options: SelectOption[];
   onChange: (id: string) => void;
   size?: 'sm' | 'md';
+  disabled?: boolean;
 }
 
 /**
@@ -20,7 +21,7 @@ interface OptionSelectProps {
  * chevron, plus a portaled option panel (orange active row with check mark).
  * Same design as the payer select in the expense modal and the paid-by filter.
  */
-export function OptionSelect({ value, options, onChange, size = 'sm' }: OptionSelectProps) {
+export function OptionSelect({ value, options, onChange, size = 'sm', disabled = false }: OptionSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [panelPos, setPanelPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -65,8 +66,9 @@ export function OptionSelect({ value, options, onChange, size = 'sm' }: OptionSe
       <button
         ref={triggerRef}
         type="button"
-        onClick={() => setIsOpen(prev => !prev)}
-        className={`w-full flex items-center justify-between gap-2 text-base font-bold text-main-text ${triggerPadding} border-2 border-main-text rounded-xl bg-white shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] transition-all cursor-pointer`}
+        disabled={disabled}
+        onClick={() => !disabled && setIsOpen(prev => !prev)}
+        className={`w-full flex items-center justify-between gap-2 text-base font-bold text-main-text ${triggerPadding} border-2 border-main-text rounded-xl bg-white shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] transition-all ${disabled ? 'opacity-50 cursor-not-allowed shadow-none active:transform-none' : 'cursor-pointer'}`}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >

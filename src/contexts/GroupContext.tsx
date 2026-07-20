@@ -40,7 +40,7 @@ interface GroupContextType {
   handleUnclaimMember: (memberId: string) => Promise<void>;
   handleUpdateProfile: (data: Partial<Member>) => Promise<void>;
   handleUpdateGroupName: (newName: string) => Promise<void>;
-  handleUpdateGroupCurrencySettings: (defaultCurrency: string, currencies: GroupCurrency[]) => Promise<void>;
+  handleUpdateGroupCurrencySettings: (defaultCurrency: string, currencies: GroupCurrency[]) => Promise<boolean>;
   handleAddExpense: (expenseData: ExpenseInput) => Promise<void>;
   handleUpdateExpense: (expenseId: string, expenseData: Partial<ExpenseInput>) => Promise<void>;
   handleDeleteExpense: (expense: Expense) => Promise<void>;
@@ -528,19 +528,26 @@ export function GroupProvider({ children }: { children: ReactNode }) {
   }, [user, groupId, currentMemberId]);
   const isSettled = !!currentGroup?.settledAt;
 
-  const handleUpdateGroupCurrencySettings = async (defaultCurrency: string, currencies: GroupCurrency[]) => {
-    if (!user || !groupId) return;
+  const handleUpdateGroupCurrencySettings = async (defaultCurrency: string, currencies: GroupCurrency[]): Promise<boolean> => {
+    if (!user || !groupId) return false;
     const member = members.find(m => m.userId === user.uid);
     if (!member?.isHost) {
       toast.error(t('common.error_host_only'));
-      return;
+      return false;
     }
     // Rate edits retroactively change conversions, so a settled group is locked.
     if (isSettled) {
       toast.error(t('settle.locked_msg'));
-      return;
+      return false;
     }
-    await firebaseService.updateGroupCurrencySettings(groupId, defaultCurrency, currencies);
+    try {
+      await firebaseService.updateGroupCurrencySettings(groupId, defaultCurrency, currencies);
+      return true;
+    } catch (err) {
+      console.error("Update group currency settings error:", err);
+      toast.error(t('common.error'));
+      return false;
+    }
   };
 
   const handleAddExpense = async (expenseData: ExpenseInput) => {

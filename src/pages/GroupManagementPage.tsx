@@ -30,7 +30,7 @@ export function GroupManagementPage() {
   const { confirm } = useDialog();
   const { handleDeleteAccount } = useAuth();
   const {
-    members, expenses, completedSettlements, currentMember, currentGroup,
+    members, expenses, completedSettlements, currentMember, currentGroup, isSettled,
     handleUpdateProfile, handleDeleteMember, handleUpdateGroupName, handleDeleteGroup,
     handleCreateMemberByHost, handleLeaveGroup, handleUnclaimMember,
     handleUpdateGroupCurrencySettings
@@ -92,21 +92,34 @@ export function GroupManagementPage() {
     );
     if (!isConfirmed) return;
     const recomputed = recomputeCurrenciesForNewDefault(groupCurrencies, newDefault);
-    await handleUpdateGroupCurrencySettings(newDefault, recomputed);
-    toast.success(t('groups.currency_updated'));
+    const success = await handleUpdateGroupCurrencySettings(newDefault, recomputed);
+    if (success) {
+      toast.success(t('groups.currency_updated'));
+    }
   };
 
   const handleSaveCurrencyRate = async (code: string) => {
     const draft = rateDrafts[code];
     if (draft === undefined) return;
+    const currentCurrency = groupCurrencies.find(c => c.code === code);
+    if (!currentCurrency) return;
+
     const rate = parseFloat(draft);
     if (!Number.isFinite(rate) || rate <= 0) {
       toast.error(t('groups.currency_rate_invalid'));
+      setRateDrafts(prev => ({ ...prev, [code]: String(currentCurrency.rate) }));
       return;
     }
+
+    if (rate === currentCurrency.rate) return;
+
     const updated = groupCurrencies.map(c => (c.code === code ? { code, rate } : c));
-    await handleUpdateGroupCurrencySettings(defaultCurrency, updated);
-    toast.success(t('groups.currency_updated'));
+    const success = await handleUpdateGroupCurrencySettings(defaultCurrency, updated);
+    if (success) {
+      toast.success(t('groups.currency_updated'));
+    } else {
+      setRateDrafts(prev => ({ ...prev, [code]: String(currentCurrency.rate) }));
+    }
   };
 
   const handleAddCurrency = async () => {
@@ -124,10 +137,12 @@ export function GroupManagementPage() {
       toast.error(t('groups.currency_rate_invalid'));
       return;
     }
-    await handleUpdateGroupCurrencySettings(defaultCurrency, [...groupCurrencies, { code, rate }]);
-    setNewCurrencyCode('');
-    setNewCurrencyRate('');
-    toast.success(t('groups.currency_updated'));
+    const success = await handleUpdateGroupCurrencySettings(defaultCurrency, [...groupCurrencies, { code, rate }]);
+    if (success) {
+      setNewCurrencyCode('');
+      setNewCurrencyRate('');
+      toast.success(t('groups.currency_updated'));
+    }
   };
 
   const handleRemoveCurrency = async (code: string) => {
@@ -145,11 +160,13 @@ export function GroupManagementPage() {
       cancelLabel: t('common.cancel'),
     });
     if (!isConfirmed) return;
-    await handleUpdateGroupCurrencySettings(
+    const success = await handleUpdateGroupCurrencySettings(
       defaultCurrency,
       groupCurrencies.filter(c => c.code !== code),
     );
-    toast.success(t('groups.currency_updated'));
+    if (success) {
+      toast.success(t('groups.currency_updated'));
+    }
   };
 
   const handleDeleteMemberByHost = async (member: Member) => {
@@ -298,6 +315,7 @@ export function GroupManagementPage() {
                   value={defaultCurrency}
                   options={groupCurrencies.map(c => ({ id: c.code, label: c.code }))}
                   onChange={handleChangeDefaultCurrency}
+                  disabled={isSettled}
                 />
               ) : (
                 <span className="text-base font-bold text-main-text font-nunito">{defaultCurrency}</span>
@@ -318,24 +336,26 @@ export function GroupManagementPage() {
                       inputMode="decimal"
                       min="0"
                       step="any"
+                      disabled={isSettled}
                       value={rateDrafts[c.code] ?? String(c.rate)}
                       onChange={(e) => setRateDrafts(prev => ({ ...prev, [c.code]: e.target.value }))}
-                      className="no-spinner flex-grow min-w-0 px-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none text-base font-bold bg-white"
+                      onBlur={() => handleSaveCurrencyRate(c.code)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.currentTarget.blur();
+                        }
+                      }}
+                      className="no-spinner flex-grow min-w-0 px-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none text-base font-bold bg-white font-nunito disabled:opacity-50 disabled:bg-gray-100 disabled:cursor-not-allowed"
                     />
                     <span className="text-base font-nunito font-black text-main-text whitespace-nowrap">{defaultCurrency}</span>
                     <button
-                      onClick={() => handleSaveCurrencyRate(c.code)}
-                      disabled={rateDrafts[c.code] === undefined || rateDrafts[c.code] === String(c.rate)}
-                      className="px-4 py-2 bg-accent-orange text-white border-2 border-main-text rounded-xl font-nunito font-black text-xs shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] disabled:opacity-50 disabled:transform-none disabled:shadow-none cursor-pointer whitespace-nowrap"
-                    >
-                      {t('common.save')}
-                    </button>
-                    <button
+                      type="button"
+                      disabled={isSettled}
                       onClick={() => handleRemoveCurrency(c.code)}
-                      className="p-1.5 border-2 border-main-text text-red-500 bg-white rounded-lg transition-all duration-150 cursor-pointer hover:bg-red-50 hover:scale-105 active:scale-95"
+                      className="p-2 border-2 border-main-text text-red-500 bg-white rounded-xl transition-all duration-150 cursor-pointer hover:bg-red-50 hover:scale-105 active:scale-95 shrink-0 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed"
                       title={t('common.delete')}
                     >
-                      <X className="w-4.5 h-4.5 stroke-[2.5]" />
+                      <Trash2 className="w-4.5 h-4.5 stroke-[2.5]" />
                     </button>
                   </div>
                 ) : (
@@ -354,24 +374,26 @@ export function GroupManagementPage() {
                   <input
                     type="text"
                     maxLength={4}
+                    disabled={isSettled}
                     placeholder={t('groups.currency_code_placeholder')}
                     value={newCurrencyCode}
                     onChange={(e) => setNewCurrencyCode(e.target.value)}
-                    className="w-24 px-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none text-base font-bold bg-white font-nunito"
+                    className="w-24 px-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none text-base font-bold bg-white font-nunito disabled:opacity-50 disabled:bg-gray-100 disabled:cursor-not-allowed"
                   />
                   <input
                     type="number"
                     inputMode="decimal"
                     min="0"
                     step="any"
+                    disabled={isSettled}
                     placeholder={t('groups.exchange_rate')}
                     value={newCurrencyRate}
                     onChange={(e) => setNewCurrencyRate(e.target.value)}
-                    className="no-spinner flex-grow min-w-0 px-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none text-base font-bold bg-white"
+                    className="no-spinner flex-grow min-w-0 px-3 py-2 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none text-base font-bold bg-white disabled:opacity-50 disabled:bg-gray-100 disabled:cursor-not-allowed"
                   />
                   <button
                     onClick={handleAddCurrency}
-                    disabled={!newCurrencyCode.trim() || !newCurrencyRate.trim()}
+                    disabled={isSettled || !newCurrencyCode.trim() || !newCurrencyRate.trim()}
                     className="px-4 py-2 bg-accent-orange text-white border-2 border-main-text rounded-xl font-nunito font-black text-sm shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] disabled:opacity-50 disabled:transform-none disabled:shadow-none cursor-pointer flex items-center gap-1 whitespace-nowrap"
                   >
                     <Plus className="w-4 h-4 stroke-[3]" />
