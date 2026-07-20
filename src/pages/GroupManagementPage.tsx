@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
-import { Users, Shield, X, Plus, Copy, Trash2, Share2, Settings, UserMinus, Coins } from 'lucide-react';
+import { Users, Shield, X, Plus, Copy, Trash2, Share2, Settings, Unlink, Coins } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { BottomNav } from '../components/BottomNav';
 import { AppHeader } from '../components/AppHeader';
@@ -412,10 +412,19 @@ export function GroupManagementPage() {
                       {m.name[0]}
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-bold text-main-text flex items-center gap-1">
-                        {m.name}
+                      <span className="font-bold text-main-text flex items-center gap-1.5 flex-wrap">
+                        <span>{m.name}</span>
                         {m.id === currentMember.id && <span className="text-[10px] text-accent-orange font-black uppercase font-nunito bg-[#FFF0EA] px-1.5 py-0.2 rounded">({t('members.you')})</span>}
                         {m.isHost && <Shield className="w-3.5 h-3.5 text-amber-500 fill-amber-500 stroke-main-text" />}
+                        {m.userId ? (
+                          <span className="text-[10px] text-success-green font-black uppercase font-nunito bg-success-light border border-success-green/20 px-1.5 py-0.5 rounded-md">
+                            {t('members.claimed')}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-gray-500 font-black uppercase font-nunito bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded-md">
+                            {t('members.not_claimed')}
+                          </span>
+                        )}
                       </span>
                       <span className={`text-xs font-bold font-nunito ${Math.abs(balance) < 0.01 ? 'text-success-green' : balance > 0 ? 'text-accent-orange' : 'text-red-500'}`}>
                         {Math.abs(balance) < 0.01 
@@ -435,7 +444,7 @@ export function GroupManagementPage() {
                         className="p-1.5 border-2 border-main-text text-main-text bg-white rounded-lg transition-all duration-150 cursor-pointer hover:bg-brand-light hover:scale-105 active:scale-95"
                         title={t('members.unclaim_member')}
                       >
-                        <UserMinus className="w-4.5 h-4.5 stroke-[2.5]" />
+                        <Unlink className="w-4.5 h-4.5 stroke-[2.5]" />
                       </button>
                     )}
                     {m.id !== currentMember.id && currentMember.isHost && (

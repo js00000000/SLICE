@@ -112,7 +112,7 @@
     "enter_name": "Enter member name",
     "you": "You",
     "claimed": "Claimed",
-    "not_claimed": "Not Claimed",
+    "not_claimed": "Unclaimed",
     "delete_member": "Delete Member",
     "delete_member_msg": "Are you sure you want to delete '{{name}}'? This cannot be undone.",
     "unclaim_member": "Release Member",
