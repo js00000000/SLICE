@@ -430,9 +430,10 @@ export function GroupProvider({ children }: { children: ReactNode }) {
   };
 
   const handleCreateMember = async (name: string) => {
-    if (!user || !groupId || !name.trim()) return;
+    const trimmedName = name.trim().slice(0, 20);
+    if (!user || !groupId || !trimmedName) return;
     try {
-      await firebaseService.createMember(groupId, name, user.uid);
+      await firebaseService.createMember(groupId, trimmedName, user.uid);
       await finalizeJoin(groupId);
     } catch (error) {
       console.error("Create member error:", error);
@@ -441,13 +442,14 @@ export function GroupProvider({ children }: { children: ReactNode }) {
   };
 
   const handleCreateMemberByHost = async (name: string) => {
-    if (!user || !groupId || !name.trim()) return;
+    const trimmedName = name.trim().slice(0, 20);
+    if (!user || !groupId || !trimmedName) return;
     const currentMember = members.find(m => m.userId === user.uid);
     if (!currentMember?.isHost) {
       toast.error(t('common.error_host_only'));
       return;
     }
-    await firebaseService.createMember(groupId, name, null);
+    await firebaseService.createMember(groupId, trimmedName, null);
   };
 
   const handleDeleteMember = async (memberId: string) => {
@@ -475,7 +477,11 @@ export function GroupProvider({ children }: { children: ReactNode }) {
 
   const handleUpdateProfile = async (data: Partial<Member>) => {
     if (!user || !groupId || !currentMemberId) return;
-    await firebaseService.updateMember(groupId, currentMemberId, data);
+    const payload = { ...data };
+    if (payload.name) {
+      payload.name = payload.name.trim().slice(0, 20);
+    }
+    await firebaseService.updateMember(groupId, currentMemberId, payload);
     toast.success(t('profile.settings_updated'));
   };
 

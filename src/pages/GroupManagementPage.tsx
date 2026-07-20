@@ -199,7 +199,7 @@ export function GroupManagementPage() {
 
   const handleAddMember = async () => {
     if (newMemberName.trim()) {
-      await handleCreateMemberByHost(newMemberName.trim());
+      await handleCreateMemberByHost(newMemberName.trim().slice(0, 20));
       setNewMemberName('');
       toast.success(t('common.success'));
     }
@@ -428,27 +428,37 @@ export function GroupManagementPage() {
               const isClaimedByOthers = m.userId && m.userId !== currentMember.userId;
 
               return (
-                <div key={m.id} className="flex items-center justify-between p-4 bg-white hover:bg-page-bg/30 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-brand-light text-accent-orange border-2 border-main-text rounded-xl flex items-center justify-center font-nunito font-black text-base shadow-[2px_2px_0px_#1A1A2E]">
+                <div key={m.id} className="flex items-center justify-between p-4 bg-white hover:bg-page-bg/30 transition-colors gap-3">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-10 h-10 bg-brand-light text-accent-orange border-2 border-main-text rounded-xl flex items-center justify-center font-nunito font-black text-base shadow-[2px_2px_0px_#1A1A2E] shrink-0">
                       {m.name[0]}
                     </div>
-                    <div className="flex flex-col">
-                      <span className="font-bold text-main-text flex items-center gap-1.5 flex-wrap">
-                        <span>{m.name}</span>
-                        {m.id === currentMember.id && <span className="text-[10px] text-accent-orange font-black uppercase font-nunito bg-[#FFF0EA] px-1.5 py-0.2 rounded">({t('members.you')})</span>}
-                        {m.isHost && <Shield className="w-3.5 h-3.5 text-amber-500 fill-amber-500 stroke-main-text" />}
-                        {m.userId ? (
-                          <span className="text-[10px] text-success-green font-black uppercase font-nunito bg-success-light border border-success-green/20 px-1.5 py-0.5 rounded-md">
-                            {t('members.claimed')}
-                          </span>
-                        ) : (
-                          <span className="text-[10px] text-gray-500 font-black uppercase font-nunito bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded-md">
-                            {t('members.not_claimed')}
-                          </span>
-                        )}
-                      </span>
-                      <span className={`text-xs font-bold font-nunito ${Math.abs(balance) < 0.01 ? 'text-success-green' : balance > 0 ? 'text-accent-orange' : 'text-red-500'}`}>
+                    <div className="flex flex-col min-w-0 flex-1 justify-center">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="font-bold text-main-text truncate min-w-0" title={m.name}>
+                          {m.name}
+                        </span>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {m.id === currentMember.id && (
+                            <span className="text-[10px] text-accent-orange font-black uppercase font-nunito bg-[#FFF0EA] px-1.5 py-0.5 rounded border border-accent-orange/20">
+                              ({t('members.you')})
+                            </span>
+                          )}
+                          {m.isHost && (
+                            <Shield className="w-3.5 h-3.5 text-amber-500 fill-amber-500 stroke-main-text" />
+                          )}
+                          {m.userId ? (
+                            <span className="text-[10px] text-success-green font-black uppercase font-nunito bg-success-light border border-success-green/20 px-1.5 py-0.5 rounded-md">
+                              {t('members.claimed')}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-gray-500 font-black uppercase font-nunito bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded-md">
+                              {t('members.not_claimed')}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <span className={`text-xs font-bold font-nunito truncate ${Math.abs(balance) < 0.01 ? 'text-success-green' : balance > 0 ? 'text-accent-orange' : 'text-red-500'}`}>
                         {Math.abs(balance) < 0.01 
                           ? t('members.settled') 
                           : balance > 0 
@@ -458,7 +468,7 @@ export function GroupManagementPage() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     {isClaimedByOthers && currentMember.isHost && (
                       <button
                         type="button"
@@ -494,6 +504,7 @@ export function GroupManagementPage() {
               <div className="flex gap-2">
                 <input
                   type="text"
+                  maxLength={20}
                   placeholder={t('members.enter_name')}
                   value={newMemberName}
                   onChange={(e) => setNewMemberName(e.target.value)}

@@ -183,10 +183,12 @@ service cloud.firestore {
         // gained: becoming createdBy of that post-batch group requires either
         // already owning it or creating it in this batch, and the group
         // create rule pins createdBy to request.auth.uid.
+        // Client caps member names at 20 characters; string.size() in rules
+        // counts UTF-8 bytes, so 20 CJK chars are up to 80 bytes.
         allow create: if isAdmin() || (
           isAuthenticated()
           && request.resource.data.name is string
-          && request.resource.data.name.size() <= 50
+          && request.resource.data.name.size() <= 80
           && (getAfter(/databases/$(database)/documents/groups/$(groupId)).data.createdBy == request.auth.uid
               || (request.resource.data.userId == request.auth.uid
                   && (!('isHost' in request.resource.data) || request.resource.data.isHost == false)))
@@ -198,7 +200,7 @@ service cloud.firestore {
         allow update: if isAdmin() || (
           isAuthenticated()
           && request.resource.data.name is string
-          && request.resource.data.name.size() <= 50
+          && request.resource.data.name.size() <= 80
           && (get(/databases/$(database)/documents/groups/$(groupId)).data.createdBy == request.auth.uid
               || (resource.data.userId == request.auth.uid
                   && (request.resource.data.userId == request.auth.uid || request.resource.data.userId == null)

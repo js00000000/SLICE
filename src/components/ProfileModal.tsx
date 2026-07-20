@@ -69,7 +69,7 @@ export function ProfileModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave({
-      name: name.trim()
+      name: name.trim().slice(0, 20)
     });
   };
 
@@ -125,7 +125,7 @@ export function ProfileModal({
                   disabled={deleteLoading}
                   className="w-full text-base font-bold text-main-text pl-11 pr-4 py-3 border-2 border-main-text rounded-xl focus:ring-2 focus:ring-accent-orange focus:outline-none placeholder-gray-400 bg-white disabled:bg-gray-50 disabled:text-gray-400 transition-all"
                   required
-                  maxLength={30}
+                  maxLength={20}
                 />
               </div>
             </div>

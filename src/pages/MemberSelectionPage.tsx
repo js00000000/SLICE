@@ -96,7 +96,7 @@ export function MemberSelectionPage() {
 
           {/* Create Member Form */}
           <form 
-            onSubmit={(e) => { e.preventDefault(); handleCreateMember(newName); }}
+            onSubmit={(e) => { e.preventDefault(); handleCreateMember(newName.trim().slice(0, 20)); }}
             className="space-y-3"
           >
             <div className="flex items-center gap-1.5">
@@ -107,6 +107,7 @@ export function MemberSelectionPage() {
             <div className="flex gap-2">
               <input 
                 type="text" 
+                maxLength={20}
                 value={newName} 
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder={t('profile.display_name')}
