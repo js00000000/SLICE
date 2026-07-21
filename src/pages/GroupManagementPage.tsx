@@ -2,12 +2,12 @@ import { useMemo, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
-import { Users, Shield, X, Plus, Copy, Trash2, Share2, Settings, Unlink, Coins } from 'lucide-react';
+import { Users, Shield, X, Plus, Copy, Trash2, Share2, Settings, Unlink, Coins, Link } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { BottomNav } from '../components/BottomNav';
 import { AppHeader } from '../components/AppHeader';
 import { ProfileModal } from '../components/ProfileModal';
-import { shareGroup } from '../utils/shareGroup';
+import { shareGroup, copyGroupLink } from '../utils/shareGroup';
 import { useGroup } from '../contexts/GroupContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext';
@@ -238,6 +238,26 @@ export function GroupManagementPage() {
               </span>
             </div>
           </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => copyGroupLink({ joinId: currentGroup?.joinId || currentGroup?.id, groupId, isZh, copiedToastMsg: t('groups.link_copied') })}
+              className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-white text-main-text rounded-xl font-nunito font-black text-sm border-2 border-main-text shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] cursor-pointer hover:bg-brand-light transition-all shrink-0"
+              title={t('common.copy_link')}
+            >
+              <Link className="w-4 h-4 stroke-[2.5]" />
+              <span className="hidden xs:inline">{t('common.copy_link')}</span>
+            </button>
+
+            <button
+              onClick={() => shareGroup({ groupName: currentGroup?.name, joinId: currentGroup?.joinId || currentGroup?.id, groupId, isZh })}
+              className="flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-brand-light text-accent-orange rounded-xl font-nunito font-black text-sm border-2 border-main-text shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] cursor-pointer hover:bg-white transition-all shrink-0"
+              title={t('common.share')}
+            >
+              <Share2 className="w-4 h-4 stroke-[2.5]" />
+              <span className="hidden xs:inline">{t('common.share') || 'Share'}</span>
+            </button>
+          </div>
         </div>
 
         {/* Group Info Section */}
@@ -285,17 +305,6 @@ export function GroupManagementPage() {
                   <Copy className="w-4 h-4 stroke-[2]" />
                 </button>
               </div>
-            </div>
-
-            <div className="flex items-center justify-between border-t border-dashed border-gray-100 pt-3">
-              <span className="text-xs font-black uppercase font-nunito tracking-wider text-main-text/50">{t('common.share')}</span>
-              <button
-                onClick={() => shareGroup({ groupName: currentGroup?.name, joinId: currentGroup?.joinId || currentGroup?.id, groupId, isZh })}
-                className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-brand-light text-accent-orange rounded-xl font-nunito font-black text-xs border-2 border-main-text shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] cursor-pointer hover:bg-white transition-all shrink-0"
-              >
-                <Share2 className="w-3.5 h-3.5 stroke-[2.5]" />
-                {t('groups.share_link')}
-              </button>
             </div>
           </div>
         </section>

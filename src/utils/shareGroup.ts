@@ -8,6 +8,27 @@ interface ShareGroupOptions {
   copiedToastMsg?: string;
 }
 
+export function getGroupJoinUrl(joinId?: string, groupId?: string): string {
+  const code = joinId || groupId || '';
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://slice.fusion-labs.cc';
+  return `${origin}/join/${code}`;
+}
+
+export async function copyGroupLink({
+  joinId,
+  groupId,
+  isZh,
+  copiedToastMsg,
+}: Omit<ShareGroupOptions, 'groupName'>) {
+  const joinUrl = getGroupJoinUrl(joinId, groupId);
+  try {
+    await navigator.clipboard.writeText(joinUrl);
+    toast.success(copiedToastMsg || (isZh ? '已複製邀請連結' : 'Invite link copied'));
+  } catch {
+    toast.error(isZh ? '複製失敗，請手動複製' : 'Failed to copy');
+  }
+}
+
 export async function shareGroup({
   groupName = '',
   joinId,
@@ -15,9 +36,7 @@ export async function shareGroup({
   isZh,
   copiedToastMsg,
 }: ShareGroupOptions) {
-  const code = joinId || groupId || '';
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://slice.fusion-labs.cc';
-  const joinUrl = `${origin}/join/${code}`;
+  const joinUrl = getGroupJoinUrl(joinId, groupId);
   const title = groupName || (isZh ? '未命名旅程' : 'Untitled Group');
 
   const inviteText = isZh
@@ -48,9 +67,10 @@ export async function shareGroup({
   // Desktop or fallback: copy full invite context to clipboard
   try {
     await navigator.clipboard.writeText(inviteText);
-    toast.success(copiedToastMsg || (isZh ? '已複製' : 'Copied'));
+    toast.success(copiedToastMsg || (isZh ? '已複製完整邀請文案' : 'Invite message copied'));
   } catch {
     // Edge-case fallback if clipboard fails
     toast.error(isZh ? '複製失敗，請手動複製' : 'Failed to copy');
   }
 }
+

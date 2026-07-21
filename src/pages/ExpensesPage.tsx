@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Share2 } from 'lucide-react';
+import { Share2, Link } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
@@ -9,7 +9,7 @@ import type { Expense } from '../types';
 import { ExpensesList } from '../components/ExpensesList';
 import { ExpenseModal } from '../components/ExpenseModal';
 import { ProfileModal } from '../components/ProfileModal';
-import { shareGroup } from '../utils/shareGroup';
+import { shareGroup, copyGroupLink } from '../utils/shareGroup';
 import { BottomNav } from '../components/BottomNav';
 import { AppHeader } from '../components/AppHeader';
 import { useGroup } from '../contexts/GroupContext';
@@ -121,14 +121,25 @@ export function ExpensesPage() {
             </div>
           </div>
 
-          <button
-            onClick={() => shareGroup({ groupName: currentGroup?.name, joinId: currentGroup?.joinId, groupId, isZh })}
-            className="flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-brand-light text-accent-orange rounded-xl font-nunito font-black text-sm border-2 border-main-text shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] cursor-pointer hover:bg-white transition-all shrink-0"
-            title={t('common.share')}
-          >
-            <Share2 className="w-4 h-4 stroke-[2.5]" />
-            <span className="hidden xs:inline">{t('common.share') || 'Share'}</span>
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => copyGroupLink({ joinId: currentGroup?.joinId || currentGroup?.id, groupId, isZh, copiedToastMsg: t('groups.link_copied') })}
+              className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-white text-main-text rounded-xl font-nunito font-black text-sm border-2 border-main-text shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] cursor-pointer hover:bg-brand-light transition-all shrink-0"
+              title={t('common.copy_link')}
+            >
+              <Link className="w-4 h-4 stroke-[2.5]" />
+              <span className="hidden xs:inline">{t('common.copy_link')}</span>
+            </button>
+
+            <button
+              onClick={() => shareGroup({ groupName: currentGroup?.name, joinId: currentGroup?.joinId || currentGroup?.id, groupId, isZh })}
+              className="flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-brand-light text-accent-orange rounded-xl font-nunito font-black text-sm border-2 border-main-text shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] cursor-pointer hover:bg-white transition-all shrink-0"
+              title={t('common.share')}
+            >
+              <Share2 className="w-4 h-4 stroke-[2.5]" />
+              <span className="hidden xs:inline">{t('common.share') || 'Share'}</span>
+            </button>
+          </div>
         </div>
 
         {/* Expenses List */}
