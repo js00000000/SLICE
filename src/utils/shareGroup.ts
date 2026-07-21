@@ -64,10 +64,10 @@ export async function shareGroup({
     }
   }
 
-  // Desktop or fallback: copy full invite context to clipboard
+  // Desktop or fallback: copy direct join link to clipboard
   try {
-    await navigator.clipboard.writeText(inviteText);
-    toast.success(copiedToastMsg || (isZh ? '已複製完整邀請文案' : 'Invite message copied'));
+    await navigator.clipboard.writeText(joinUrl);
+    toast.success(copiedToastMsg || (isZh ? '已複製邀請連結' : 'Invite link copied'));
   } catch {
     // Edge-case fallback if clipboard fails
     toast.error(isZh ? '複製失敗，請手動複製' : 'Failed to copy');
