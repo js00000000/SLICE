@@ -39,9 +39,11 @@ export async function shareGroup({
   const joinUrl = getGroupJoinUrl(joinId, groupId);
   const title = groupName || (isZh ? '未命名旅程' : 'Untitled Group');
 
-  const inviteText = isZh
-    ? `🎉 邀請你加入「${title}」的 SLICE 🍕 分帳群組！\n不用下載 APP，點擊連結即可一起上記帳與結算：\n${joinUrl}`
-    : `🎉 You're invited to join "${title}" on SLICE 🍕!\nNo app download needed — tap the link to start splitting:\n${joinUrl}`;
+  // Native share sheets append `url` separately from `text`, so the link must
+  // NOT also be embedded in `text` there — otherwise it shows up twice.
+  const shareBody = isZh
+    ? `🎉 邀請你加入「${title}」的 SLICE 🍕 分帳群組！\n不用下載 APP，點擊連結即可一起上記帳與結算：`
+    : `🎉 You're invited to join "${title}" on SLICE 🍕!\nNo app download needed — tap the link to start splitting:`;
 
   const isMobile =
     typeof navigator !== 'undefined' &&
@@ -52,7 +54,7 @@ export async function shareGroup({
     try {
       await navigator.share({
         title: `${title} - SLICE 🍕`,
-        text: inviteText,
+        text: shareBody,
         url: joinUrl,
       });
       return;
