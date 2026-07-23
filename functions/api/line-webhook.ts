@@ -70,14 +70,13 @@ export const onRequestPost: PagesFunction<{
       
       const welcomeText = `🎉 感謝邀請 SLICE 記帳機器人！\n\n為了在此群組同步結算明細，請點選以下連結將此 LINE 群組與您的 SLICE 網頁群組進行綁定：\n\n👉 ${bindUrl}\n\n（綁定後，當主辦人點擊「結算群組」時，我就會把結算明細發送到這裡喔！）`;
 
-      await replyLineMessage(replyToken, welcomeText, env.LINE_CHANNEL_ACCESS_TOKEN);
+      await replyLineMessages(replyToken, [{ type: "text", text: welcomeText }], env.LINE_CHANNEL_ACCESS_TOKEN);
       continue;
     }
 
     // 4.2 處理收到文字訊息的事件
     if (event.type === "message" && event.message?.type === "text") {
       const replyToken = event.replyToken;
-      const userMessage = event.message.text.trim();
 
       // 判斷是否需要回應：
       // 1. 如果是 1 對 1 私訊 (user)，一律回應
@@ -105,15 +104,17 @@ export const onRequestPost: PagesFunction<{
         continue;
       }
 
-      // TODO: 在這裡擴充你的分帳邏輯或對接 Firebase Firestore。
-      // 例如：
-      // - 解析指令 (例如: /add 150 午餐)
-      // - 利用 Firebase REST API 或 Firebase Web SDK 將明細寫入 Firestore
-      
-      // 目前預設做一個簡單的回覆測試 (Echo)
-      const replyText = `收到您的訊息了！您說的是：\n"${userMessage}"\n\n(此為 SLICE LINE Webhook 測試回覆)`;
-      
-      await replyLineMessage(replyToken, replyText, env.LINE_CHANNEL_ACCESS_TOKEN);
+      // 回覆服務選單與說明 (Flex Message)
+      const appUrl = env.APP_URL || "https://slice-test.pages.dev";
+      const servicesFlex = createServicesFlexMessage(appUrl, event.source?.groupId || null);
+
+      await replyLineMessages(replyToken, [
+        {
+          type: "flex",
+          altText: "【SLICE】服務選單與說明",
+          contents: servicesFlex,
+        }
+      ], env.LINE_CHANNEL_ACCESS_TOKEN);
     }
   }
 
@@ -150,9 +151,9 @@ async function verifyLineSignature(body: string, channelSecret: string, signatur
 }
 
 /**
- * 呼叫 LINE Messaging API 回覆訊息
+ * 呼叫 LINE Messaging API 回覆多筆訊息 (支援 Text 或 Flex)
  */
-async function replyLineMessage(replyToken: string, text: string, channelAccessToken: string): Promise<void> {
+async function replyLineMessages(replyToken: string, messages: Record<string, unknown>[], channelAccessToken: string): Promise<void> {
   const url = "https://api.line.me/v2/bot/message/reply";
   
   const response = await fetch(url, {
@@ -163,12 +164,7 @@ async function replyLineMessage(replyToken: string, text: string, channelAccessT
     },
     body: JSON.stringify({
       replyToken,
-      messages: [
-        {
-          type: "text",
-          text,
-        },
-      ],
+      messages,
     }),
   });
 
@@ -176,4 +172,139 @@ async function replyLineMessage(replyToken: string, text: string, channelAccessT
     const errorText = await response.text();
     console.error("Failed to reply to LINE:", response.status, errorText);
   }
+}
+
+/**
+ * 產生美觀的服務說明選單 Flex Message
+ */
+function createServicesFlexMessage(appUrl: string, lineGroupId: string | null) {
+  const footerContents: Record<string, unknown>[] = [
+    {
+      type: "button",
+      style: "primary" as const,
+      height: "sm" as const,
+      color: "#1A1A2E",
+      action: {
+        type: "uri",
+        label: "造訪 SLICE 官網",
+        uri: appUrl,
+      },
+    },
+  ];
+
+  if (lineGroupId) {
+    footerContents.push({
+      type: "button",
+      style: "secondary" as const,
+      height: "sm" as const,
+      color: "#FF6B35",
+      action: {
+        type: "uri",
+        label: "綁定此 LINE 群組",
+        uri: `${appUrl}/group-bind?lineGroupId=${lineGroupId}`,
+      },
+    });
+  }
+
+  return {
+    type: "bubble" as const,
+    size: "mega" as const,
+    header: {
+      type: "box",
+      layout: "vertical",
+      backgroundColor: "#FF6B35",
+      contents: [
+        {
+          type: "text",
+          text: "SLICE 記帳助手",
+          weight: "bold" as const,
+          color: "#FFFFFF",
+          size: "lg",
+        },
+      ],
+    },
+    body: {
+      type: "box",
+      layout: "vertical",
+      spacing: "md" as const,
+      contents: [
+        {
+          type: "text",
+          text: "哈囉！我是 SLICE 記帳助理。我可以協助您在 LINE 中進行快速分帳與結算通知！",
+          size: "sm",
+          color: "#1A1A2E",
+          wrap: true,
+          weight: "bold" as const,
+        },
+        {
+          type: "separator",
+          margin: "lg" as const,
+        },
+        {
+          type: "text",
+          text: "💡 我們提供的服務：",
+          weight: "bold" as const,
+          size: "sm",
+          color: "#FF6B35",
+          margin: "md" as const,
+        },
+        {
+          type: "box",
+          layout: "vertical",
+          spacing: "sm" as const,
+          margin: "sm" as const,
+          contents: [
+            {
+              type: "box",
+              layout: "horizontal",
+              contents: [
+                {
+                  type: "text",
+                  text: "•",
+                  size: "sm",
+                  color: "#FF6B35",
+                  flex: 1,
+                },
+                {
+                  type: "text",
+                  text: "群組綁定：邀請我加入群組後，點擊專屬連結可與網頁端群組綁定。",
+                  size: "sm",
+                  color: "#555555",
+                  wrap: true,
+                  flex: 11,
+                },
+              ],
+            },
+            {
+              type: "box",
+              layout: "horizontal",
+              contents: [
+                {
+                  type: "text",
+                  text: "•",
+                  size: "sm",
+                  color: "#FF6B35",
+                  flex: 1,
+                },
+                {
+                  type: "text",
+                  text: "自動結算通知：主辦人於網頁點擊結算後，可手動將精美的結算付款明細推播至此 LINE 群組中。",
+                  size: "sm",
+                  color: "#555555",
+                  wrap: true,
+                  flex: 11,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    footer: {
+      type: "box",
+      layout: "vertical",
+      spacing: "sm" as const,
+      contents: footerContents,
+    },
+  };
 }
