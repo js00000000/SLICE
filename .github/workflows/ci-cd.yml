@@ -140,7 +140,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: test
-      url: https://preview.slice.pages.dev
+      url: https://preview.slice-75o.pages.dev
     steps:
       - uses: actions/checkout@v5
 
@@ -208,7 +208,7 @@ jobs:
           done
           echo "dev site did not become reachable" >&2; exit 1
         env:
-          E2E_BASE_URL: https://preview.slice.pages.dev
+          E2E_BASE_URL: https://preview.slice-75o.pages.dev
 
       # Runs the authenticated suite against the just-deployed dev site (which is
       # built against the dev Firebase project). Tests create throwaway anonymous
@@ -216,7 +216,7 @@ jobs:
       - name: Run authenticated e2e against dev URL
         run: npm run test:e2e:dev
         env:
-          E2E_BASE_URL: https://preview.slice.pages.dev
+          E2E_BASE_URL: https://preview.slice-75o.pages.dev
 
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
