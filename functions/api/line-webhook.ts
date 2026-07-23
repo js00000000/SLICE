@@ -87,9 +87,15 @@ export const onRequestPost: PagesFunction<{
       if (event.source?.type === "user") {
         shouldReply = true;
       } else if (event.source?.type === "group") {
+        console.log("LINE_BOT_USER_ID configured:", env.LINE_BOT_USER_ID);
+        console.log("Mentions in event message:", JSON.stringify(event.message.mention));
+
         const isMentionedById = env.LINE_BOT_USER_ID && event.message.mention?.mentions?.some(
           m => m.userId === env.LINE_BOT_USER_ID
         );
+
+        console.log("isMentionedById result:", isMentionedById);
+
         if (isMentionedById) {
           shouldReply = true;
         }
