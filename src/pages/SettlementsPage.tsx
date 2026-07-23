@@ -14,6 +14,7 @@ import { useGroup } from '../contexts/GroupContext';
 import { useAuth } from '../contexts/AuthContext';
 import { calculateBalancesAndSettlements } from '../lib/settlement';
 import { buildRateMap } from '../utils/currency';
+import { firebaseService } from '../lib/firebaseService';
 
 export function SettlementsPage() {
   const { t, i18n } = useTranslation();
@@ -78,13 +79,30 @@ export function SettlementsPage() {
       });
 
       if (!res.ok) {
-        throw new Error('Failed to send LINE notification');
+        const errText = await res.text();
+        if (res.status === 502 && (errText.includes('Failed to send messages') || errText.includes('is not available'))) {
+          try {
+            await firebaseService.updateGroupLineGroupId(groupId, '');
+          } catch (unbindErr) {
+            console.error('Failed to auto-unbind lineGroupId:', unbindErr);
+          }
+          throw new Error('BOT_KICKED');
+        }
+        throw new Error(errText || 'Failed to send LINE notification');
       }
 
       toast.success(isZh ? '已成功發送結算通知到 LINE 群組！' : 'Successfully sent LINE notification!');
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      toast.error(isZh ? '無法發送 LINE 通知，請確認機器人已被邀請進入 LINE 群組中！' : 'Failed to send LINE notification. Please verify the bot is in the group.');
+      if (err.message === 'BOT_KICKED') {
+        toast.error(
+          isZh
+            ? '無法發送 LINE 通知：機器人已被移出該 LINE 群組。已自動解除綁定。'
+            : 'Failed to send LINE notification: The bot has been removed from the LINE group. Binding has been automatically cleared.'
+        );
+      } else {
+        toast.error(isZh ? '無法發送 LINE 通知，請確認機器人已被邀請進入 LINE 群組中！' : 'Failed to send LINE notification. Please verify the bot is in the group.');
+      }
     } finally {
       setSendingLineNotify(false);
     }

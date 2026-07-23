@@ -3,6 +3,9 @@ export const onRequestPost: PagesFunction<{
   LINE_CHANNEL_ACCESS_TOKEN: string;
   APP_URL?: string;
   LINE_BOT_USER_ID?: string;
+  FIREBASE_PROJECT_ID?: string;
+  FIREBASE_CLIENT_EMAIL?: string;
+  FIREBASE_PRIVATE_KEY?: string;
 }> = async (context) => {
   const { request, env } = context;
 
@@ -74,7 +77,28 @@ export const onRequestPost: PagesFunction<{
       continue;
     }
 
-    // 4.2 處理收到文字訊息的事件
+    // 4.2 當機器人退出或被移出群組時 (leave)
+    if (event.type === "leave" && event.source?.type === "group" && event.source.groupId) {
+      const lineGroupId = event.source.groupId;
+      
+      if (env.FIREBASE_PROJECT_ID && env.FIREBASE_CLIENT_EMAIL && env.FIREBASE_PRIVATE_KEY) {
+        try {
+          await unbindLineGroupIdFromFirestore(
+            env.FIREBASE_PROJECT_ID,
+            env.FIREBASE_CLIENT_EMAIL,
+            env.FIREBASE_PRIVATE_KEY,
+            lineGroupId
+          );
+        } catch (dbErr) {
+          console.error("Failed to unbind lineGroupId in webhook:", dbErr);
+        }
+      } else {
+        console.warn("Missing FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, or FIREBASE_PRIVATE_KEY. Skipping DB unbind.");
+      }
+      continue;
+    }
+
+    // 4.3 處理收到文字訊息的事件
     if (event.type === "message" && event.message?.type === "text") {
       const replyToken = event.replyToken;
 
@@ -307,4 +331,149 @@ function createServicesFlexMessage(appUrl: string, lineGroupId: string | null) {
       contents: footerContents,
     },
   };
+}
+
+/**
+ * Helpers for Firestore Admin REST API operations
+ */
+
+function base64url(buffer: ArrayBuffer): string {
+  const binary = String.fromCharCode(...new Uint8Array(buffer));
+  return btoa(binary)
+    .replace(/=/g, "")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_");
+}
+
+function stringToBase64url(str: string): string {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(str);
+  return base64url(data.buffer);
+}
+
+async function getFirestoreAccessToken(clientEmail: string, privateKeyPem: string): Promise<string> {
+  const cleanKey = privateKeyPem
+    .replace(/\\n/g, "\n")
+    .replace(/-----BEGIN PRIVATE KEY-----/g, "")
+    .replace(/-----END PRIVATE KEY-----/g, "")
+    .replace(/\s+/g, "");
+
+  const binaryKey = Uint8Array.from(atob(cleanKey), c => c.charCodeAt(0));
+
+  const key = await crypto.subtle.importKey(
+    "pkcs8",
+    binaryKey.buffer,
+    {
+      name: "RSASSA-PKCS1-v1_5",
+      hash: { name: "SHA-256" },
+    },
+    false,
+    ["sign"]
+  );
+
+  const header = {
+    alg: "RS256",
+    typ: "JWT",
+  };
+
+  const now = Math.floor(Date.now() / 1000);
+  const payload = {
+    iss: clientEmail,
+    scope: "https://www.googleapis.com/auth/datastore",
+    aud: "https://oauth2.googleapis.com/token",
+    exp: now + 3600,
+    iat: now,
+  };
+
+  const tokenString = `${stringToBase64url(JSON.stringify(header))}.${stringToBase64url(JSON.stringify(payload))}`;
+  const encoder = new TextEncoder();
+  const tokenData = encoder.encode(tokenString);
+
+  const signatureBuffer = await crypto.subtle.sign(
+    { name: "RSASSA-PKCS1-v1_5" },
+    key,
+    tokenData
+  );
+
+  const signedJwt = `${tokenString}.${base64url(signatureBuffer)}`;
+
+  const res = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${signedJwt}`,
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Failed to exchange JWT for access token: ${errorText}`);
+  }
+
+  const data: { access_token: string } = await res.json();
+  return data.access_token;
+}
+
+async function unbindLineGroupIdFromFirestore(
+  projectId: string,
+  clientEmail: string,
+  privateKey: string,
+  lineGroupId: string
+): Promise<void> {
+  const token = await getFirestoreAccessToken(clientEmail, privateKey);
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents:runQuery`;
+
+  const queryPayload = {
+    structuredQuery: {
+      from: [{ collectionId: "groups" }],
+      where: {
+        fieldFilter: {
+          field: { fieldPath: "lineGroupId" },
+          op: "EQUAL",
+          value: { stringValue: lineGroupId }
+        }
+      }
+    }
+  };
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(queryPayload)
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Firestore query failed: ${errText}`);
+  }
+
+  const results = await res.json() as Array<{ document?: { name: string } }>;
+
+  for (const result of results) {
+    if (!result.document) continue;
+    const docPath = result.document.name;
+    
+    const patchUrl = `https://firestore.googleapis.com/v1/${docPath}?updateMask.fieldPaths=lineGroupId`;
+    
+    const patchBody = {
+      fields: {}
+    };
+
+    const patchRes = await fetch(patchUrl, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(patchBody)
+    });
+
+    if (!patchRes.ok) {
+      const patchErr = await patchRes.text();
+      console.error(`Failed to patch group ${docPath}:`, patchErr);
+    }
+  }
 }
