@@ -86,27 +86,27 @@ function createSettlementFlexMessage(
     contents: [
       {
         type: "text",
-        text: s.fromName,
         size: "sm",
-        color: "#555555",
-        flex: 3,
-        align: "start" as const,
-      },
-      {
-        type: "text",
-        text: "➔",
-        size: "sm",
-        color: "#FF6B35",
-        flex: 1,
-        align: "start" as const,
-      },
-      {
-        type: "text",
-        text: s.toName,
-        size: "sm",
-        color: "#555555",
-        flex: 3,
-        align: "start" as const,
+        wrap: true,
+        flex: 7,
+        contents: [
+          {
+            type: "span",
+            text: s.fromName,
+            color: "#555555",
+          },
+          {
+            type: "span",
+            text: " ➔ ",
+            color: "#FF6B35",
+            weight: "bold" as const,
+          },
+          {
+            type: "span",
+            text: s.toName,
+            color: "#555555",
+          },
+        ],
       },
       {
         type: "text",
