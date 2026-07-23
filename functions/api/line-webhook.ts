@@ -2,6 +2,7 @@ export const onRequestPost: PagesFunction<{
   LINE_CHANNEL_SECRET: string;
   LINE_CHANNEL_ACCESS_TOKEN: string;
   APP_URL?: string;
+  LINE_BOT_USER_ID?: string;
 }> = async (context) => {
   const { request, env } = context;
 
@@ -39,6 +40,14 @@ export const onRequestPost: PagesFunction<{
       message?: {
         type: string;
         text: string;
+        mention?: {
+          mentions?: Array<{
+            index: number;
+            length: number;
+            type: string;
+            userId?: string;
+          }>;
+        };
       };
     }>;
   };
@@ -69,6 +78,34 @@ export const onRequestPost: PagesFunction<{
     if (event.type === "message" && event.message?.type === "text") {
       const replyToken = event.replyToken;
       const userMessage = event.message.text.trim();
+
+      // 判斷是否需要回應：
+      // 1. 如果是 1 對 1 私訊 (user)，一律回應
+      // 2. 如果是群組 (group)，只在被標記 (Mentioned) 時才回應
+      let shouldReply = false;
+
+      if (event.source?.type === "user") {
+        shouldReply = true;
+      } else if (event.source?.type === "group") {
+        // 方法 A: 比對是否標記了此機器人的 LINE User ID (來自環境變數 LINE_BOT_USER_ID)
+        const isMentionedById = env.LINE_BOT_USER_ID && event.message.mention?.mentions?.some(
+          m => m.userId === env.LINE_BOT_USER_ID
+        );
+
+        // 方法 B: 防呆檢查文字中是否包含常見的標籤關鍵字
+        const lowerText = userMessage.toLowerCase();
+        const hasMentionKeyword = lowerText.includes("@slice") || 
+                                  lowerText.includes("@記帳") || 
+                                  lowerText.includes("@bot");
+
+        if (isMentionedById || hasMentionKeyword) {
+          shouldReply = true;
+        }
+      }
+
+      if (!shouldReply) {
+        continue;
+      }
 
       // TODO: 在這裡擴充你的分帳邏輯或對接 Firebase Firestore。
       // 例如：
