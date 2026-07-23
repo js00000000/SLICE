@@ -30,7 +30,7 @@ export const onRequestPost: PagesFunction<{
     return new Response("Missing required parameters", { status: 400 });
   }
 
-  const appUrl = env.APP_URL || "https://slice-test.pages.dev";
+  const appUrl = env.APP_URL || "https://preview.slice.pages.dev";
 
   // 2. 構建 LINE Flex Message JSON 結構
   const flexMessage = createSettlementFlexMessage(groupName, groupId, settlements, currencySymbol, appUrl);

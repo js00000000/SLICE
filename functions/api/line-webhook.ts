@@ -65,7 +65,7 @@ export const onRequestPost: PagesFunction<{
       const replyToken = event.replyToken;
       const lineGroupId = event.source.groupId;
       
-      const appUrl = env.APP_URL || "https://slice-test.pages.dev";
+      const appUrl = env.APP_URL || "https://preview.slice.pages.dev";
       const bindUrl = `${appUrl}/group-bind?lineGroupId=${lineGroupId}`;
       
       const welcomeText = `🎉 感謝邀請 SLICE 記帳機器人！\n\n為了在此群組同步結算明細，請點選以下連結將此 LINE 群組與您的 SLICE 網頁群組進行綁定：\n\n👉 ${bindUrl}\n\n（綁定後，當主辦人點擊「結算群組」時，我就會把結算明細發送到這裡喔！）`;
@@ -105,7 +105,7 @@ export const onRequestPost: PagesFunction<{
       }
 
       // 回覆服務選單與說明 (Flex Message)
-      const appUrl = env.APP_URL || "https://slice-test.pages.dev";
+      const appUrl = env.APP_URL || "https://preview.slice.pages.dev";
       const servicesFlex = createServicesFlexMessage(appUrl, event.source?.groupId || null);
 
       await replyLineMessages(replyToken, [
