@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Share2, Lock, CheckCircle2, Undo2 } from 'lucide-react';
+import { Share2, Lock, CheckCircle2, Undo2, Loader2, Send } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 import { APP_NAME } from '../constants';
 import { BalancesView } from '../components/BalancesView';
 import { SettledCTACard } from '../components/SettledCTACard';
@@ -11,6 +12,8 @@ import { BottomNav } from '../components/BottomNav';
 import { AppHeader } from '../components/AppHeader';
 import { useGroup } from '../contexts/GroupContext';
 import { useAuth } from '../contexts/AuthContext';
+import { calculateBalancesAndSettlements } from '../lib/settlement';
+import { buildRateMap } from '../utils/currency';
 
 export function SettlementsPage() {
   const { t, i18n } = useTranslation();
@@ -34,6 +37,51 @@ export function SettlementsPage() {
   } = useGroup();
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [sendingLineNotify, setSendingLineNotify] = useState(false);
+
+  const handleSendLineNotification = async () => {
+    if (!groupId || !currentGroup?.lineGroupId) return;
+    setSendingLineNotify(true);
+    try {
+      const { settlements: calculated } = calculateBalancesAndSettlements(
+        members,
+        expenses,
+        completedSettlements,
+        buildRateMap(currentGroup)
+      );
+
+      const settlementsWithName = calculated.map(s => ({
+        fromName: members.find(m => m.id === s.from)?.name || 'Unknown',
+        toName: members.find(m => m.id === s.to)?.name || 'Unknown',
+        amount: s.amount
+      }));
+
+      const res = await fetch('/api/send-settlement', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          lineGroupId: currentGroup.lineGroupId,
+          groupName: currentGroup.name,
+          groupId: groupId,
+          settlements: settlementsWithName,
+          currencySymbol: currentGroup.defaultCurrency || '$'
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to send LINE notification');
+      }
+
+      toast.success(isZh ? '已成功發送結算通知到 LINE 群組！' : 'Successfully sent LINE notification!');
+    } catch (err) {
+      console.error(err);
+      toast.error(isZh ? '無法發送 LINE 通知，請確認機器人已被邀請進入 LINE 群組中！' : 'Failed to send LINE notification. Please verify the bot is in the group.');
+    } finally {
+      setSendingLineNotify(false);
+    }
+  };
 
   // Manual title fallback
   useEffect(() => {
@@ -89,34 +137,56 @@ export function SettlementsPage() {
 
         {/* Settled banner / Settle Up action */}
         {isSettled ? (
-          <div
-            className="stagger-item p-5 bg-success-light border-3 border-success-green rounded-[24px] shadow-[4px_4px_0px_#1A1A2E] flex items-center justify-between gap-4"
-            style={{ animationDelay: '40ms' }}
-          >
-            <div className="flex items-start gap-3 min-w-0">
-              <div className="w-10 h-10 bg-white border-2 border-main-text rounded-xl flex items-center justify-center rotate-[-4deg] shrink-0 shadow-[2px_2px_0px_#1A1A2E]">
-                <CheckCircle2 className="w-5 h-5 text-success-green stroke-[2.5]" />
+          <div className="stagger-item space-y-3" style={{ animationDelay: '40ms' }}>
+            <div
+              className="p-5 bg-success-light border-3 border-success-green rounded-[24px] shadow-[4px_4px_0px_#1A1A2E] flex items-center justify-between gap-4"
+            >
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="w-10 h-10 bg-white border-2 border-main-text rounded-xl flex items-center justify-center rotate-[-4deg] shrink-0 shadow-[2px_2px_0px_#1A1A2E]">
+                  <CheckCircle2 className="w-5 h-5 text-success-green stroke-[2.5]" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-base font-nunito font-black text-main-text leading-tight">
+                    {t('settle.settled_title')}
+                  </p>
+                  <p className="text-xs font-bold text-main-text/70 mt-1">
+                    {currentGroup?.settledAt
+                      ? t('settle.settled_on', {
+                          date: currentGroup.settledAt.toDate().toLocaleDateString(i18n.resolvedLanguage),
+                        })
+                      : t('settle.settled_subtitle')}
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="text-base font-nunito font-black text-main-text leading-tight">
-                  {t('settle.settled_title')}
-                </p>
-                <p className="text-xs font-bold text-main-text/70 mt-1">
-                  {currentGroup?.settledAt
-                    ? t('settle.settled_on', {
-                        date: currentGroup.settledAt.toDate().toLocaleDateString(i18n.resolvedLanguage),
-                      })
-                    : t('settle.settled_subtitle')}
-                </p>
-              </div>
+              {isHost && (
+                <button
+                  onClick={handleUnsettleGroup}
+                  className="flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-white text-main-text rounded-xl font-nunito font-black text-sm border-2 border-main-text shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] cursor-pointer hover:bg-page-bg transition-all shrink-0"
+                >
+                  <Undo2 className="w-4 h-4 stroke-[2.5]" />
+                  <span>{t('settle.undo_action')}</span>
+                </button>
+              )}
             </div>
-            {isHost && (
+
+            {/* LINE Group notification button, manually triggered */}
+            {currentGroup?.lineGroupId && (
               <button
-                onClick={handleUnsettleGroup}
-                className="flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-white text-main-text rounded-xl font-nunito font-black text-sm border-2 border-main-text shadow-[2px_2px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#1A1A2E] cursor-pointer hover:bg-page-bg transition-all shrink-0"
+                onClick={handleSendLineNotification}
+                disabled={sendingLineNotify}
+                className="w-full flex items-center justify-center gap-2 px-5 py-4 bg-accent-orange text-white rounded-[20px] font-nunito font-black text-base border-3 border-main-text shadow-[4px_4px_0px_#1A1A2E] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[2px_2px_0px_#1A1A2E] hover:bg-[#ff7b4b] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Undo2 className="w-4 h-4 stroke-[2.5]" />
-                <span>{t('settle.undo_action')}</span>
+                {sendingLineNotify ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>{isZh ? '發送通知中...' : 'Sending...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-5 h-5" />
+                    <span>{isZh ? '發送結算通知到 LINE 群組' : 'Send settlement to LINE Group'}</span>
+                  </>
+                )}
               </button>
             )}
           </div>

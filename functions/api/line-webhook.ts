@@ -1,6 +1,7 @@
 export const onRequestPost: PagesFunction<{
   LINE_CHANNEL_SECRET: string;
   LINE_CHANNEL_ACCESS_TOKEN: string;
+  APP_URL?: string;
 }> = async (context) => {
   const { request, env } = context;
 
@@ -30,7 +31,12 @@ export const onRequestPost: PagesFunction<{
     events?: Array<{
       type: string;
       replyToken: string;
-      message: {
+      source?: {
+        type: string;
+        groupId?: string;
+        userId?: string;
+      };
+      message?: {
         type: string;
         text: string;
       };
@@ -45,8 +51,22 @@ export const onRequestPost: PagesFunction<{
   const events = payload.events || [];
 
   for (const event of events) {
-    // 處理收到文字訊息的事件
-    if (event.type === "message" && event.message.type === "text") {
+    // 4.1 當機器人被邀請加入群組時 (join)
+    if (event.type === "join" && event.source?.type === "group" && event.source.groupId) {
+      const replyToken = event.replyToken;
+      const lineGroupId = event.source.groupId;
+      
+      const appUrl = env.APP_URL || "https://slice-test.pages.dev";
+      const bindUrl = `${appUrl}/group-bind?lineGroupId=${lineGroupId}`;
+      
+      const welcomeText = `🎉 感謝邀請 SLICE 記帳機器人！\n\n為了在此群組同步結算明細，請點選以下連結將此 LINE 群組與您的 SLICE 網頁群組進行綁定：\n\n👉 ${bindUrl}\n\n（綁定後，當主辦人點擊「結算群組」時，我就會把結算明細發送到這裡喔！）`;
+
+      await replyLineMessage(replyToken, welcomeText, env.LINE_CHANNEL_ACCESS_TOKEN);
+      continue;
+    }
+
+    // 4.2 處理收到文字訊息的事件
+    if (event.type === "message" && event.message?.type === "text") {
       const replyToken = event.replyToken;
       const userMessage = event.message.text.trim();
 

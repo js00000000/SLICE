@@ -366,6 +366,13 @@ export const firebaseService = {
     });
   },
 
+  async updateGroupLineGroupId(groupId: string, lineGroupId: string) {
+    await updateDoc(doc(db, 'groups', groupId), {
+      lineGroupId,
+      updatedAt: serverTimestamp(),
+    });
+  },
+
   // Writes the default currency and the full currency list (which always
   // contains the default at rate 1) in one update so a default change plus
   // its rate recompute is atomic.

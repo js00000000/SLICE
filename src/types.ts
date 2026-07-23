@@ -31,6 +31,7 @@ export interface Group {
   // whose entry always has rate 1.
   defaultCurrency?: string;
   currencies?: GroupCurrency[];
+  lineGroupId?: string; // LINE Group ID bound to this SLICE group
 }
 
 export interface Payment {

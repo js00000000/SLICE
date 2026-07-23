@@ -25,6 +25,7 @@ import { LegalPage } from './pages/LegalPage';
 import { ComparePage } from './pages/ComparePage';
 import { AboutPage } from './pages/AboutPage';
 import { GuidePage } from './pages/GuidePage';
+import { GroupBindPage } from './pages/GroupBindPage';
 import { COMPARE_SLUGS } from './data/compareData';
 import { GUIDE_SLUGS } from './data/guideData';
 
@@ -52,6 +53,7 @@ import { InstallPrompt } from './components/InstallPrompt';
 const isValidRoute = (pathname: string): boolean => {
   if (pathname === '/' || pathname === '') return true;
   if (pathname === '/privacy' || pathname === '/terms') return true;
+  if (pathname === '/group-bind') return true;
   if (getCompareSlug(pathname)) return true;
   if (pathname === '/about') return true;
   if (getGuideSlug(pathname)) return true;
@@ -317,6 +319,7 @@ export default function App() {
 
             <Route path="/group/:groupId/members" element={<GroupManagementPage />} />
             <Route path="/join/:joinId" element={<JoinGroupPage />} />
+            <Route path="/group-bind" element={<GroupBindPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
