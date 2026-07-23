@@ -41,7 +41,7 @@ export const onRequestPost: PagesFunction<{
         type: string;
         text: string;
         mention?: {
-          mentions?: Array<{
+          mentionees?: Array<{
             index: number;
             length: number;
             type: string;
@@ -90,7 +90,7 @@ export const onRequestPost: PagesFunction<{
         console.log("LINE_BOT_USER_ID configured:", env.LINE_BOT_USER_ID);
         console.log("Mentions in event message:", JSON.stringify(event.message.mention));
 
-        const isMentionedById = env.LINE_BOT_USER_ID && event.message.mention?.mentions?.some(
+        const isMentionedById = env.LINE_BOT_USER_ID && event.message.mention?.mentionees?.some(
           m => m.userId === env.LINE_BOT_USER_ID
         );
 
