@@ -18,6 +18,9 @@ export function GroupBindPage() {
   const { user } = useAuth();
   const { myGroups, isLoading } = useGroup();
 
+  // 僅篩選目前使用者為「主辦人」的群組
+  const hostGroups = myGroups.filter((g) => g.createdBy === user?.uid);
+
   const lineGroupId = searchParams.get('lineGroupId');
   const [bindingGroupId, setBindingGroupId] = useState<string | null>(null);
 
@@ -112,10 +115,12 @@ export function GroupBindPage() {
               </h2>
             </div>
 
-            {myGroups.length === 0 ? (
+            {hostGroups.length === 0 ? (
               <div className="text-center py-6 space-y-3">
                 <p className="text-sm text-gray-500 font-medium">
-                  {isZh ? '您目前尚未建立或加入任何群組。' : 'You do not have any groups yet.'}
+                  {isZh 
+                    ? '您目前沒有擔任主辦人的群組（僅主辦人可進行 LINE 群組綁定）。' 
+                    : 'You do not host any groups yet (only the host can bind a LINE group).'}
                 </p>
                 <button
                   onClick={() => navigate('/')}
@@ -126,7 +131,7 @@ export function GroupBindPage() {
               </div>
             ) : (
               <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
-                {myGroups.map((g) => {
+                {hostGroups.map((g) => {
                   const isBinding = bindingGroupId === g.id;
                   const isAlreadyBound = g.lineGroupId === lineGroupId;
 
