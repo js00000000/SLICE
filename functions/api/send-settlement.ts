@@ -88,7 +88,7 @@ function createSettlementFlexMessage(
         type: "text",
         size: "sm",
         wrap: true,
-        flex: 7,
+        flex: 1,
         contents: [
           {
             type: "span",
@@ -110,11 +110,11 @@ function createSettlementFlexMessage(
       },
       {
         type: "text",
-        text: `${currencySymbol}${s.amount.toFixed(0)}`,
+        text: `${currencySymbol} ${s.amount.toFixed(0)}`,
         size: "sm",
         weight: "bold" as const,
         color: "#1A1A2E",
-        flex: 3,
+        flex: 0,
         align: "end" as const,
       },
     ],
