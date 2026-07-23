@@ -43,11 +43,12 @@ export function SettlementsPage() {
     if (!groupId || !currentGroup?.lineGroupId) return;
     setSendingLineNotify(true);
     try {
+      const rates = buildRateMap(currentGroup);
       const { settlements: calculated } = calculateBalancesAndSettlements(
         members,
         expenses,
         completedSettlements,
-        buildRateMap(currentGroup)
+        rates
       );
 
       const settlementsWithName = calculated.map(s => ({
@@ -55,6 +56,11 @@ export function SettlementsPage() {
         toName: members.find(m => m.id === s.to)?.name || 'Unknown',
         amount: s.amount
       }));
+
+      const totalSpend = expenses.reduce((sum, exp) => {
+        const rate = exp.currency !== undefined ? (rates[exp.currency] ?? 1) : 1;
+        return sum + parseFloat(exp.amount.toString()) * rate;
+      }, 0);
 
       const res = await fetch('/api/send-settlement', {
         method: 'POST',
@@ -66,7 +72,8 @@ export function SettlementsPage() {
           groupName: currentGroup.name,
           groupId: groupId,
           settlements: settlementsWithName,
-          currencySymbol: currentGroup.defaultCurrency || '$'
+          currencySymbol: currentGroup.defaultCurrency || '$',
+          totalSpend
         })
       });
 

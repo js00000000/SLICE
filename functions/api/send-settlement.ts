@@ -16,6 +16,7 @@ export const onRequestPost: PagesFunction<{
     groupId: string;
     settlements: Array<{ fromName: string; toName: string; amount: number }>;
     currencySymbol?: string;
+    totalSpend?: number;
   };
 
   try {
@@ -24,7 +25,7 @@ export const onRequestPost: PagesFunction<{
     return new Response("Invalid JSON body", { status: 400 });
   }
 
-  const { lineGroupId, groupName, groupId, settlements, currencySymbol = "$" } = body;
+  const { lineGroupId, groupName, groupId, settlements, currencySymbol = "$", totalSpend } = body;
 
   if (!lineGroupId || !groupName || !groupId || !settlements) {
     return new Response("Missing required parameters", { status: 400 });
@@ -33,7 +34,7 @@ export const onRequestPost: PagesFunction<{
   const appUrl = env.APP_URL || "https://preview.slice-75o.pages.dev";
 
   // 2. 構建 LINE Flex Message JSON 結構
-  const flexMessage = createSettlementFlexMessage(groupName, groupId, settlements, currencySymbol, appUrl);
+  const flexMessage = createSettlementFlexMessage(groupName, groupId, settlements, currencySymbol, appUrl, totalSpend);
 
   // 3. 呼叫 LINE Push Message API 發送訊息到群組
   const lineResponse = await fetch("https://api.line.me/v2/bot/message/push", {
@@ -74,7 +75,8 @@ function createSettlementFlexMessage(
   groupId: string,
   settlements: Array<{ fromName: string; toName: string; amount: number }>,
   currencySymbol: string,
-  appUrl: string
+  appUrl: string,
+  totalSpend?: number
 ) {
   // 建立結算明細區塊的內容
   const settlementRows = settlements.map((s) => ({
@@ -96,7 +98,7 @@ function createSettlementFlexMessage(
         size: "sm",
         color: "#FF6B35",
         flex: 1,
-        align: "center" as const,
+        align: "start" as const,
       },
       {
         type: "text",
@@ -136,6 +138,49 @@ function createSettlementFlexMessage(
     });
   }
 
+  // 構建 Body 區塊內容列表
+  const bodyContents: any[] = [
+    {
+      type: "text",
+      text: groupName,
+      weight: "bold" as const,
+      size: "xl",
+      color: "#1A1A2E",
+    },
+  ];
+
+  if (totalSpend !== undefined) {
+    bodyContents.push({
+      type: "text",
+      text: `群組總支出：${currencySymbol} ${Math.round(totalSpend).toLocaleString('zh-TW')}`,
+      size: "sm",
+      weight: "bold" as const,
+      color: "#FF6B35",
+      margin: "sm",
+    });
+  }
+
+  bodyContents.push(
+    {
+      type: "text",
+      text: "主辦人已完成帳單結算，建議付款明細如下：",
+      size: "xs",
+      color: "#aaaaaa",
+      wrap: true,
+      margin: "sm",
+    },
+    {
+      type: "separator",
+      margin: "md",
+    },
+    {
+      type: "box",
+      layout: "vertical",
+      margin: "md",
+      contents: settlementRows,
+    }
+  );
+
   return {
     type: "bubble",
     size: "mega" as const,
@@ -156,33 +201,7 @@ function createSettlementFlexMessage(
     body: {
       type: "box",
       layout: "vertical",
-      contents: [
-        {
-          type: "text",
-          text: groupName,
-          weight: "bold" as const,
-          size: "xl",
-          color: "#1A1A2E",
-        },
-        {
-          type: "text",
-          text: "主辦人已完成帳單結算，建議付款明細如下：",
-          size: "xs",
-          color: "#aaaaaa",
-          wrap: true,
-          margin: "sm",
-        },
-        {
-          type: "separator",
-          margin: "md",
-        },
-        {
-          type: "box",
-          layout: "vertical",
-          margin: "md",
-          contents: settlementRows,
-        },
-      ],
+      contents: bodyContents,
     },
     footer: {
       type: "box",
