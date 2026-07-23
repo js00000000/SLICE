@@ -152,7 +152,7 @@ function createSettlementFlexMessage(
   if (totalSpend !== undefined) {
     bodyContents.push({
       type: "text",
-      text: `群組總支出：${currencySymbol} ${Math.round(totalSpend).toLocaleString('zh-TW')}`,
+      text: `總支出：${currencySymbol} ${Math.round(totalSpend).toLocaleString('zh-TW')}`,
       size: "sm",
       weight: "bold" as const,
       color: "#FF6B35",
