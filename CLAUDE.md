@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 npm run dev          # Vite dev server
 npm run build        # tsc -b && vite build  (REQUIRED before committing — see GEMINI.md)
-npm run build:dev    # build with --mode local
+npm run build:dev    # build with --mode dev
 npm run build:deploy # build + prerender public routes (CI deploy jobs only; needs chromium)
 npm run prerender    # scripts/prerender.js — prerender public routes over an existing dist/
 npm run lint         # eslint .

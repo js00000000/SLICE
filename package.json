@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "node scripts/generate-sitemap.js && tsc -b && vite build",
-    "build:dev": "node scripts/generate-sitemap.js && tsc -b && vite build --mode local",
+    "build:dev": "node scripts/generate-sitemap.js && tsc -b && vite build --mode dev",
     "prerender": "node scripts/prerender.js",
     "build:deploy": "npm run build && npm run prerender",
     "lint": "eslint .",
