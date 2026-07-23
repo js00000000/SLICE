@@ -49,3 +49,8 @@ brag-output/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Wrangler & Cloudflare local environment vars
+.wrangler/
+.dev.vars
+

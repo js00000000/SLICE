@@ -1,0 +1,8 @@
+# Cloudflare Pages Functions local environment variables
+# Copy this file to '.dev.vars' and fill in the values.
+# DO NOT commit '.dev.vars' to Git.
+
+LINE_CHANNEL_SECRET=your_line_channel_secret_here
+LINE_CHANNEL_ACCESS_TOKEN=your_line_channel_access_token_here
+LINE_BOT_USER_ID=your_line_bot_user_id_here
+APP_URL=http://localhost:8788
