@@ -133,10 +133,18 @@ async function run() {
         await page.evaluate(dedupeManagedHead)
 
         const html = await page.content()
+        // Write flat files (`dist/about.html`), NOT directory indexes
+        // (`dist/about/index.html`). Cloudflare Pages serves a directory index
+        // only at the trailing-slash URL and 308-redirects `/about` -> `/about/`.
+        // Our canonical/sitemap/internal links all use the no-slash form, so a
+        // directory index makes the one 200 URL (`/about/`) canonicalize to a
+        // URL (`/about`) that itself redirects — contradictory signals that leave
+        // Google on "crawled, currently not indexed". A flat `about.html` is
+        // served at `/about` with a 200 (no redirect), matching the canonical.
         const outPath =
           route === '/'
             ? path.join(distDir, 'index.html')
-            : path.join(distDir, route.replace(/^\//, ''), 'index.html')
+            : path.join(distDir, route.replace(/^\//, '') + '.html')
         fs.mkdirSync(path.dirname(outPath), { recursive: true })
         fs.writeFileSync(outPath, html, 'utf8')
         console.log(`[prerender] wrote ${path.relative(distDir, outPath)}`)
